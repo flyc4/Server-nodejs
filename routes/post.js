@@ -338,10 +338,14 @@ var deletecomment = function(req, res){
 
 //-------------------react native 와 연동---------------------------------------  
 
-//게시물 목록 보여주기
+//게시물 목록 보여주기 (/process/community에 해당하는 함수). 현재 사용자의 ObjectId도 반환
 var listpost = function(req, res) {
 	console.log('post 모듈 안에 있는 listpost 호출됨.');
     
+    var paramjwt = req.body.jwt || req.query.jwt || req.params.jwt;
+    var secret = "HS256";
+    var paramnickNm = jwt.verify(paramjwt,secret).nickNm; 
+
     var database = req.app.get('database');
     function connectDB() {
     var databaseUrl = exports.config.db_url;
@@ -351,11 +355,12 @@ var listpost = function(req, res) {
          var db = client.db('communities'); // 어떤 컬렉션에서 받을 지 선택하는 듯
         console.log('데이터베이스에 연결됨: '+databaseUrl);
     });
-    }
-      
+    } 
+
+    
+
     // 데이터베이스 객체가 초기화된 경우
 	if (database.db) { 
-		// 1. 글 리스트
 		
 		var paramCommunitySearchValue = req.body.communitysearchvalue || req.query.communitysearchvalue|| " ";
         var paramCommunitySearchSelect = req.body.communitysearchselect || req.query.communitysearchselect||" ";  
@@ -376,14 +381,35 @@ var listpost = function(req, res) {
 				res.end();
                 return; 
             }  
-            var count = cursor.length; //results: Object -> Array 변환 후 길이 구함    
-            
-            var context = {
-						posts: cursor,
-						pageCount: count,
-					};   
-            res.send(context); 
-            return;
+            var count = cursor.length; //results: Object -> Array 변환 후 길이 구함     
+
+            //paramnickNm을 기반으로 user의 ObjectId 찾기
+            database.UserModel.findOne({nickNm: paramnickNm}, function(err, user) {
+                if (err) {
+                    console.error('사용자 조회 중 에러 발생 : ' + err.stack);
+
+                    res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                    res.write('<h2>사용자 조회 중 에러 발생</h2>');
+                    res.write('<p>' + err.stack + '</p>');
+                    res.end();
+                    return;
+                } 
+                if(user == null){
+                    console.log("요청 받은 nickNm이 없음"); 
+                    res.end();      
+                    return;
+                }   
+                else{  
+                    console.log("user._id: ",user._id); 
+                    context = {
+                        userid: user._id, 
+                        posts: cursor,
+                        pageCount: count,
+                    };   
+                res.send(context); 
+                return;
+                };     
+            })//UserModel.findOne 닫기
         }).populate('writer', 'nickNm loginId').sort({'created_at': -1});
     }//if(database.db) 닫기
      
