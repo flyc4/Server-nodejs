@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+		
+		<title>시간표 리스트</title>
+		
+  		<link href="/public/semantic.min.css" rel="stylesheet" >
+		
+		<style>
+			* {
+				padding:0;
+				margin:0;
+				box-sizing:border-box;
+			}
+			
+			html {
+				width:100%;
+				height:100%;
+			}
+			
+			body {
+				width:100%;
+				height:100%;
+				color: #000;
+				background-color: #fff;
+			}
+					
+			.container {
+				margin-right: auto;
+				margin-left: auto;
+				padding-left: 20px;
+				padding-right: 20px;
+			}
+	
+			span {
+				color: #333;
+			}
+
+			#board_title {
+				font-size:1.2em;
+				font-weight:bold;
+				color:teal;
+			}
+
+        </style>
+		
+		<script src="/public/jquery-2.1.4.min.js"></script>
+        <script src="/public/semantic.min.js"></script>
+	</head>
+	<body>
+    	
+    	<div class="container">
+    		<br>
+    		 
+			<div class="ui raised segment"> 
+				<a class="ui blue ribbon label">시간표 리스트</a> 
+                
+                <div align = "right"> <!-- 시간표 추가--> 
+                    <a href="/public/timetable/addtimetable.html" class="ui button">시간표 추가</a>
+                    
+                    <!-- 홈으로 돌아가기 -->
+                    <a href="/home" class="ui button">홈 화면</a>
+                </div>
+				<div class="ui blue fluid card">   
+                    <div class="content">
+				        <div class="ui grid">
+                            <div class="two wide column">번호</div>
+                            <div class="eight wide column">시간표 이름</div>
+                            <div class= "one wide column">강의 수</div>
+                            <div class="two wide column" align = "center">작성일</div> 
+                            <div class="three wide column">기본 설정 여부</div>
+			   			</div>
+						<div class="ui very relaxed selection celled list">  
+                            
+                                    <% 
+                                        for(var curNo=0;curNo<timetable.length;curNo++){ 
+                                        var curTitle = timetable[curNo].title; 
+                                        var curId = timetable[curNo]._id;
+                                        var courseCount = timetable[curNo].courses.length;  
+                                        var curDate = timetable[curNo].created_at;
+                                    %> 
+                                    <div class="item">
+                                        <div class="ui grid">
+                                            <div class="two wide column"><%=curNo+1%></div>
+                                            <div class="eight wide column" onclick="javascript:window.location='/process/showtimetable/<%=curId%>'">
+                                            <h4><%=curTitle %></h4> 
+                                            </div> 
+
+                                            <!-- 수강 신청한 강의 수. &nbsp;로 글자 위치 조절--> 
+                                            <div class="one wide column" align = "center" > 
+                                            <h4><%=courseCount%></h4></div> 
+
+                                            <div class="two wide column" align = "center"><%=curDate.getFullYear()%> - 
+                                                                  <%=curDate.getMonth()+1%> - 
+                                                                   <%=curDate.getDate()%> &nbsp;</div>
+
+                                            <div class="three wide column"><%if(timetable[curNo].isdefaultview){%><h4>기본 보기로 설정된 시간표<%}%></h4></div> 
+                                            
+                                        </div>    
+                                    </div>  
+                                    <%}%> <!-- for 문 닫기-->
+					   </div>
+				    </div>
+			    </div>
+		    </div> 
+        </div>
+	</body>
+</html>
+
