@@ -22,8 +22,8 @@ module.exports = {
         ,{file:'./post', path:'/process/showpost', method:'showpost', type:'post'} 
         ,{file:'./post', path:'/process/community', method:'listpost', type:'post'}
         ,{file:'./post', path:'/process/checkeditablepost', method:'checkeditablepost', type:'post'}
-        ,{file:'./post', path:'/process/saveeditedpost', method:'saveeditedpost', type:'post'} 
-        ,{file:'./post', path:'/process/deletepost/:id', method:'deletepost', type:'get'} 
+        ,{file:'./post', path:'/process/editpost', method:'editpost', type:'post'} 
+        ,{file:'./post', path:'/process/deletepost', method:'deletepost', type:'post'} 
         ,{file:'./post', path:'/process/addcomment', method:'addcomment', type:'post'} 
         ,{file:'./post', path:'/process/deletecomment', method:'deletecomment', type:'post'} 
         

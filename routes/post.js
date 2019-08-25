@@ -12,6 +12,7 @@ var mongoose = require('mongoose');
 var expressSession = require('express-session');
 var jwt = require('jsonwebtoken');
 
+/*
 var addpost = function(req, res) {
 	console.log('post 모듈 안에 있는 addpost 호출됨.');
     
@@ -85,158 +86,7 @@ var addpost = function(req, res) {
 	}
 	
 }; //addpost 닫기
-
-/*
-var editpost = function(req, res) { //유효 사용자인지 확인 후 edit.ejs 호출
-	console.log('post 모듈 안에 있는 editpost 호출됨.');
-  
-    // URL 파라미터로 전달됨
-    var paramId = req.body.id || req.query.id || req.params.id;
-    var database = req.app.get('database');
-	
-    // 데이터베이스 객체가 초기화된 경우
-	if (database.db) {
-		// 1. 글 리스트
-		database.PostModel.load(paramId, function(err, results) {
-			if (err) {
-                console.error('게시판 글 조회 중 에러 발생 : ' + err.stack);
-                
-                res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-				res.write('<h2>수정 대상 글 조회 중 에러 발생</h2>');
-                res.write('<p>' + err.stack + '</p>');
-				res.end();
-                return;
-            } 
-            if (results) {
-				if( expressSession.nickNm!= results._doc.writer.nickNm){
-                    console.log("다른 사람의 게시물 수정 시도"); 
-                    alert("다른 사람의 게시물 수정 시도");
-                    res.redirect("/process/community");
-                } 
-                var context = {
-					title: '글 편집',
-					posts: results,
-					Entities: Entities
-				};
-                req.app.render('editpost',context, function(err, html) {
-					if (err) {
-                        console.error('응답 웹문서 생성 중 에러 발생 : ' + err.stack);
-                
-                        res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-                        res.write('<h2>응답 웹문서 생성 중 에러 발생</h2>');
-                        res.write('<p>' + err.stack + '</p>');
-                        res.end();
-                        return;
-                    }
-					res.end(html);
-				});			 
-			} else {
-				res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-				res.write('<h2>글 수정 시도 실패</h2>');
-				res.end();
-			}
-		});
-	} else {
-		res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-		res.write('<h2>데이터베이스 연결 실패</h2>');
-		res.end();
-	   }    
-}; // editpost 닫기  
-
-var saveeditedpost = function(req, res) { //editpost.ejs 에서 작성한 내용을 기존 document에 옮기는 과정.
-	console.log('post 모듈 안에 있는 saveeditedpost 호출됨.');
-        
-    var paramTitle = req.body.title || req.query.title;
-    var paramContents = req.body.contents || req.query.contents;  
-    var paramId = req.body.id || req.query.id || req.params.id;
-    
-    var database = req.app.get('database');
-    
-    console.log('요청 파라미터 : ' + paramTitle + ', ' + paramContents + ', ' + paramId);
-	
-	// 데이터베이스 객체가 초기화된 경우
-	if (database.db) {
-            
-            database.PostModel.load(paramId,function(err,result){ 
-                if(err){
-                    console.error('게시판 글 조회 중 에러 발생 : ' + err.stack);
-                    res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-                    res.write('<h2>수정 대상 글 조회 중 에러 발생</h2>');
-                    res.write('<p>' + err.stack + '</p>');
-                    res.end();
-                    return;
-                } 
-                database.PostModel.findOneAndUpdate({_id: paramId}, 
-                                                    { $set: { title: paramTitle, contents: paramContents,                   created_at: Date.now()}  
-                                                    }, {new: true}, function(err,doc){
-                    if(err){
-                    console.error('게시판 글 조회 중 에러 발생 : ' + err.stack);
-                    res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-                    res.write('<h2>수정 대상 글 조회 중 에러 발생</h2>');
-                    res.write('<p>' + err.stack + '</p>');
-                    res.end();
-                    return;
-                    } 
-                   
-                    return res.redirect('/process/showpost/' + result.id);  
-                }) 
-            });
-    } else {
-        res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-        res.write('<h2>데이터베이스 연결 실패</h2>');
-        res.end();
-    }
-}; //saveeditedpost 닫기 
 */
-
-
-var deletepost = function(req, res) {  // 유효 사용자 확인 후 선택한 포스트 삭제
-	console.log('post 모듈 안에 있는 deletepost 호출됨.');
-  
-    // URL 파라미터로 전달됨
-    var paramId = req.body.id || req.query.id || req.params.id;
-    var database = req.app.get('database');
-	
-    // 데이터베이스 객체가 초기화된 경우
-	if (database.db) {
-		// 1. 글 리스트
-		database.PostModel.load(paramId, function(err, results) {
-			if (err) {
-                console.error('게시판 글 조회 중 에러 발생 : ' + err.stack);
-                
-                res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-				res.write('<h2>삭제 대상 글 조회 중 에러 발생</h2>');
-                res.write('<p>' + err.stack + '</p>');
-				res.end();
-                return;
-            } 
-            if (results) {  
-                console.log("result's title: ", results._doc.title);
-				if( expressSession.nickNm != results._doc.writer.nickNm && expressSession.isadmin == false ){
-                    console.log("다른 사람의 게시물 삭제 시도"); 
-                    alert("다른 사람의 게시물 삭제 시도");
-                    res.redirect("/process/community");
-                } 
-               database.PostModel.deleteOne({_id: paramId}, function(err, results){
-               if (err) {
-                    console.error('삭제 과정 중 에러 발생 : ' + err.stack);
-                    res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-                    res.write('<h2>삭제 과정 중 에러 발생</h2>');
-                    res.write('<p>' + err.stack + '</p>');
-                    res.end();
-                    return res.redirect("/process/community");
-               }		
-			     })
-		    };
-	    })  
-        return res.redirect("/process/community");
-    }else {
-		res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-		res.write('<h2>데이터베이스 연결 실패</h2>');
-		res.end();
-	   }    
-}; //deletepost 닫기 
-
 var addcomment = function(req, res) {
 	console.log('post 모듈 안에 있는 addcomment 호출됨.');
     var paramId = req.body.id || req.query.id || req.param.id;
@@ -356,9 +206,6 @@ var listpost = function(req, res) {
         console.log('데이터베이스에 연결됨: '+databaseUrl);
     });
     } 
-
-    
-
     // 데이터베이스 객체가 초기화된 경우
 	if (database.db) { 
 		
@@ -420,22 +267,88 @@ var listpost = function(req, res) {
 	} 
 }; //listpost 닫기    
 
+var addpost = function(req, res) {
+    console.log('post 모듈 안에 있는 addpost 호출됨.');
+    
+    var paramTitle = req.body.title || req.query.title;
+    var paramContents = req.body.contents || req.query.contents;
+    var paramuserId = req.body.userid || req.query.userid;
+
+    var context= {msg: ''}
+
+    var database = req.app.get('database');
+    
+    console.log('paramTitle: ' + paramTitle + ', paramContents: ' + paramContents + ', paramuserId: ' + 
+    paramuserId);
+	
+	// 데이터베이스 객체가 초기화된 경우
+	if (database.db) {
+        
+        // 1. 아이디를 이용해 사용자 검색
+		database.UserModel.findOne({_id: paramuserId}, function(err, result) {
+			if (err) {
+                console.error('작성자 조회 중 에러 발생 : ' + err.stack);
+                
+                res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+				res.write('<h2>작성자 조회 중  에러 발생</h2>');
+                res.write('<p>' + err.stack + '</p>');
+				res.end();
+                return;
+            }
+			if (result == undefined ) {
+				context.msg = 'logged out or such user does not exist';
+				res.json(context);
+				return;
+            } 
+            else{
+                // save()로 저장
+                // PostModel 인스턴스 생성
+                var post = new database.PostModel({
+                    title: paramTitle,
+                    contents: paramContents,
+                    writer: result._id
+                });
+                post.savePost(function(err, result) {
+                        if (err) {
+                            console.error('응답 웹문서 생성 중 에러 발생 : ' + err.stack);
+
+                            res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                            res.write('<h2>응답 웹문서 생성 중 에러 발생</h2>');
+                            res.write('<p>' + err.stack + '</p>');
+                            res.end();
+                            return;
+                        }
+                    console.log("글 데이터 추가함.");
+                    console.log('post._id: ' + post._id);    		   
+                }) 
+            context.msg = "You wrote new post"    			
+            res.json(context); 
+            return;  
+            }
+        })//UserModel.findOne 닫기
+	} else {
+		res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+		res.write('<h2>데이터베이스 연결 실패</h2>');
+		res.end();
+	}	
+}; //addpost 닫기
+
 
 // 1개의 게시물의 내용을 보여 줌
 var showpost = function(req, res) {
 	console.log('post 모듈 안에 있는 showpost 호출됨.');
   
     // URL 파라미터로 전달됨
-    var paramId = req.params.id || req.body.id || req.query.id;
+    var parampostId = req.params.postid || req.body.postid || req.query.postid;
 	
     var database = req.app.get('database');
     
-    console.log('showpost 요청 파라미터 : ' + paramId);
+    console.log('showpost 요청 파라미터 : ' + parampostId);
 	
     // 데이터베이스 객체가 초기화된 경우
 	if (database.db) {
 		// 1. 글 리스트
-		database.PostModel.load(paramId, function(err, results){
+		database.PostModel.load(parampostId, function(err, results){
 			if (err) { 
                 console.error('게시판 글 조회 중 에러 발생 : ' + err.stack);
                 
@@ -484,24 +397,20 @@ var showpost = function(req, res) {
 var checkeditablepost = function(req, res) { //유효 사용자인지 확인 후 edit.ejs 호출
 	console.log('post 모듈 안에 있는 checkeditablepost 호출됨.');
   
-    // parampostid: 게시물의 ObjectId  
-    // paramjwt: 요청한 사용자의 jwt 
+    // parampostId: 게시물의 ObjectId   
     // secret: paramjwt decode 위해서 선언  
-    // paramnickNm: paramjwt를 verify해서 얻은 nickNm. 요청한 사용자의 nickNm
+    // paramuserId: 요청한 사용자의 id
     
-    var parampostid = req.body.postid || req.query.postid || req.params.postid; 
-    var paramjwt = req.body.jwt || req.query.jwt || req.params.jwt; 
-    var secret = "HS256";
-    var paramnickNm = jwt.verify(paramjwt,secret).nickNm;  
+    var parampostId = req.body.postid || req.query.postid || req.params.postid;  
+    var paramuserId = req.body.userid || req.query.userid || req.params.userid; 
     
     var database = req.app.get('database'); 
     
-    console.log("요청 파라미터: parampostid: ",parampostid , " , ", "paramnickNm: ",paramnickNm)
+    console.log("요청 파라미터: parampostId: ",parampostId , " , ", "paramuserId: ",paramuserId)
     
     // 데이터베이스 객체가 초기화된 경우
 	if (database.db) {
-		// 1. 글 리스트
-		database.PostModel.load(parampostid, function(err, result) {
+		database.PostModel.load(parampostId, function(err, result) {
 			if (err) {
                 console.error('게시판 글 조회 중 에러 발생 : ' + err.stack);
                 
@@ -511,13 +420,96 @@ var checkeditablepost = function(req, res) { //유효 사용자인지 확인 후
 				res.end();
                 return;
             } 
-            if (result) {
-			     
-                //paramnickNm을 기반으로 user의 ObjectId 찾기
-                database.UserModel.findOne({nickNm: paramnickNm}, function(err, user) {
+            if (result) {  
+                console.log("result.writer._id",result.writer._id); 
+                
+                var context = {
+                    ismine: result.writer._id.toString() == paramuserId
+                }; 
+                res.send(context); 
+                return;     
+            }
+			else {
+				res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+				res.write('<h2>글 수정 시도 실패</h2>');
+				res.end();
+            } 
+        })//PostModel.load 닫기
+	} else {
+		res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+		res.write('<h2>데이터베이스 연결 실패</h2>');
+		res.end();
+	   }    
+}; // checkeditablepost 닫기  
+
+//편집할 게시물의 제목과 내용을 불러오고, 게시물의 수정사항 반영
+var editpost = function(req, res) { 
+	console.log('post 모듈 안에 있는 editpost 호출됨.');
+        
+    var paramTitle = req.body.title || req.query.title;
+    var paramContents = req.body.contents || req.query.contents;  
+    var parampostId = req.body.postid || req.query.postid || req.params.postid;
+    
+    var database = req.app.get('database');
+    
+    console.log('paramTItle: ' + paramTitle + ', paramContents: ' + paramContents + ', parampostId: ' + parampostId);
+	
+	// 데이터베이스 객체가 초기화된 경우
+	if (database.db) {
+             
+        database.PostModel.findOneAndUpdate({_id: parampostId}, 
+                                            { $set: { title: paramTitle, contents: paramContents,                   created_at: Date.now()}  
+                                            }, {new: true}, function(err,doc){
+            if(err){
+            console.error('게시판 글 조회 중 에러 발생 : ' + err.stack);
+            res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+            res.write('<h2>수정 대상 글 조회 중 에러 발생</h2>');
+            res.write('<p>' + err.stack + '</p>');
+            res.end();
+            return;
+            } 
+            return;  
+        }) 
+    } else {
+        res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+        res.write('<h2>데이터베이스 연결 실패</h2>');
+        res.end();
+    }
+}; //editpost 닫기  
+
+// 유효 사용자 확인 후 선택한 게시물 삭제. 단, 관리자의 경우(isadmin==true) 모든 게시물 삭제 가능 
+var deletepost = function(req, res) {  
+	console.log('post 모듈 안에 있는 deletepost 호출됨.');
+  
+    // URL 파라미터로 전달됨
+    var parampostId = req.body.postid || req.query.postid || req.params.postid; 
+    var paramuserId = req.body.userid || req.query.userid || req.params.userid;
+    
+    //msg: 삭제 완료 혹은 삭제 요청 거부에 대한 메시지, where: 응답 종료 후 이동할 네비게이션 지정
+    var context = {msg: '', deleted: false} 
+    
+    var database = req.app.get('database');
+	
+    // 데이터베이스 객체가 초기화된 경우
+	if (database.db) {
+
+		database.PostModel.load(parampostId, function(err, result) {
+			if (err) {
+                console.error('게시판 글 조회 중 에러 발생 : ' + err.stack);
+                
+                res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+				res.write('<h2>삭제 대상 글 조회 중 에러 발생</h2>');
+                res.write('<p>' + err.stack + '</p>');
+				res.end();
+                return;
+            }  
+            if (result) {  
+                
+                //paramuserId에 해당하는 user를 찾음. 해당 user가 admin인지 확인하기 위함
+                database.UserModel.findOne({_id: paramuserId}, function(err, user) {
                     if (err) {
                         console.error('사용자 조회 중 에러 발생 : ' + err.stack);
-
+    
                         res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
                         res.write('<h2>사용자 조회 중 에러 발생</h2>');
                         res.write('<p>' + err.stack + '</p>');
@@ -528,81 +520,43 @@ var checkeditablepost = function(req, res) { //유효 사용자인지 확인 후
                         console.log("요청 받은 nickNm이 없음"); 
                         res.end();      
                         return;
-                    }   
-                    else{  
-                        console.log("user._id: ",user._id); 
-                        console.log("result.writer._id",result.writer._id);
-                        var context = {
-                            ismine: user._id.equals(result.writer._id),
-				        };
-                        res.send(context); 
-                        return;     
-                    }
+                    }     
+                if( paramuserId != result.writer._id && user.isadmin == false ){
+                    console.log("다른 사람의 게시물 삭제 시도"); 
+                    context.msg = "You cannot delete this post";  
+                    res.send(context); 
+                    res.end();
+                    return;
+                } 
+               database.PostModel.deleteOne({_id: parampostId}, function(err, results){
+                    if (err) {
+                            console.error('삭제 과정 중 에러 발생 : ' + err.stack);
+                            res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                            res.write('<h2>삭제 과정 중 에러 발생</h2>');
+                            res.write('<p>' + err.stack + '</p>');
+                            res.end();
+                    }		
+			    }) 
+                context.msg = "삭제 완료"; 
+                context.deleted = true;
+                res.send(context); 
+                return;
                 })//UserModel.findOne 닫기 
-			} else {
-				res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-				res.write('<h2>글 수정 시도 실패</h2>');
-				res.end();
-			}
-		});
-	} else {
+                
+	        }//if (result) 닫기  
+        })//PostModel.load 닫기
+    }else {
 		res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
 		res.write('<h2>데이터베이스 연결 실패</h2>');
 		res.end();
 	   }    
-}; // checkeditablepost 닫기  
-
-var saveeditedpost = function(req, res) { //editpost.ejs 에서 작성한 내용을 기존 document에 옮기는 과정.
-	console.log('post 모듈 안에 있는 saveeditedpost 호출됨.');
-        
-    var paramTitle = req.body.title || req.query.title;
-    var paramContents = req.body.contents || req.query.contents;  
-    var paramId = req.body.id || req.query.id || req.params.id;
-    
-    var database = req.app.get('database');
-    
-    console.log('요청 파라미터 : ' + paramTitle + ', ' + paramContents + ', ' + paramId);
-	
-	// 데이터베이스 객체가 초기화된 경우
-	if (database.db) {
-            
-            database.PostModel.load(paramId,function(err,result){ 
-                if(err){
-                    console.error('게시판 글 조회 중 에러 발생 : ' + err.stack);
-                    res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-                    res.write('<h2>수정 대상 글 조회 중 에러 발생</h2>');
-                    res.write('<p>' + err.stack + '</p>');
-                    res.end();
-                    return;
-                } 
-                database.PostModel.findOneAndUpdate({_id: paramId}, 
-                                                    { $set: { title: paramTitle, contents: paramContents,                   created_at: Date.now()}  
-                                                    }, {new: true}, function(err,doc){
-                    if(err){
-                    console.error('게시판 글 조회 중 에러 발생 : ' + err.stack);
-                    res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-                    res.write('<h2>수정 대상 글 조회 중 에러 발생</h2>');
-                    res.write('<p>' + err.stack + '</p>');
-                    res.end();
-                    return;
-                    } 
-                   
-                    return res.redirect('/process/showpost/' + result.id);  
-                }) 
-            });
-    } else {
-        res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-        res.write('<h2>데이터베이스 연결 실패</h2>');
-        res.end();
-    }
-}; //saveeditedpost 닫기 
-
+};
 
 module.exports.listpost = listpost;
 module.exports.addpost = addpost;
 module.exports.showpost = showpost; 
 module.exports.checkeditablepost = checkeditablepost;  
-module.exports.saveeditedpost = saveeditedpost;
+module.exports.editpost = editpost;
 module.exports.deletepost = deletepost; 
 module.exports.addcomment = addcomment; 
 module.exports.deletecomment = deletecomment;
