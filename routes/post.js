@@ -1,8 +1,8 @@
 /*
  * 게시판을 위한 라우팅 함수 정의
  *
- * @date 2016-11-10
- * @author Mike
+ * @date 2018-08-26
+ * @author ChangHee
  */
 
 // html-entities module is required in showpost.ejs
@@ -12,180 +12,6 @@ var mongoose = require('mongoose');
 var expressSession = require('express-session');
 var jwt = require('jsonwebtoken');
 
-/*
-var addpost = function(req, res) {
-	console.log('post 모듈 안에 있는 addpost 호출됨.');
-    
-    
-    var paramTitle = req.body.title || req.query.title;
-    var paramContents = req.body.contents || req.query.contents;
-    var paramWriter = expressSession.nickNm; 
-    var database = req.app.get('database');
-    
-    console.log('요청 파라미터 : ' + paramTitle + ', ' + paramContents + ', ' + 
-               paramWriter);
-	
-	// 데이터베이스 객체가 초기화된 경우
-	if (database.db) {
-        
-        // 1. 아이디를 이용해 사용자 검색
-		database.UserModel.findBynickNm(paramWriter, function(err, results) {
-			if (err) {
-                console.error('게시판 글 추가 중 에러 발생 : ' + err.stack);
-                
-                res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-				res.write('<h2>게시판 글 추가 중 에러 발생</h2>');
-                res.write('<p>' + err.stack + '</p>');
-				res.end();
-                
-                return;
-            }
-
-			if (results == undefined || results.length < 1) {
-				res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-				res.write('<h2>로그인이 되지 않았거나 끊겨졌습니다. 다시 로그인하시길 바랍니다.</h2>');
-				res.redirect('/login');
-				
-				return;
-			}
-			
-			var userObjectId = results[0]._doc._id;
-			console.log('사용자 ObjectId : ' + paramWriter +' -> ' + userObjectId);
-			
-			// save()로 저장
-			// PostModel 인스턴스 생성
-			var post = new database.PostModel({
-				title: paramTitle,
-				contents: paramContents,
-				writer: userObjectId
-			});
-            post.savePost(function(err, result) {
-                    if (err) {
-                        console.error('응답 웹문서 생성 중 에러 발생 : ' + err.stack);
-
-                        res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-                        res.write('<h2>응답 웹문서 생성 중 에러 발생</h2>');
-                        res.write('<p>' + err.stack + '</p>');
-                        res.end();
-                        return;
-                    }
-                console.log("글 데이터 추가함.");
-			    console.log('글 작성', '포스팅 글을 생성했습니다. : ' + post._id);    		
-                console.log("글 데이터 추가함.");    
-            })			
-			    
-        console.log('글 작성', '포스팅 글을 생성했습니다. : ' + post._id);
-        return res.redirect('/process/showpost/' + post._id); 
-        })
-        
-    	
-	} else {
-		res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-		res.write('<h2>데이터베이스 연결 실패</h2>');
-		res.end();
-	}
-	
-}; //addpost 닫기
-*/
-var addcomment = function(req, res) {
-	console.log('post 모듈 안에 있는 addcomment 호출됨.');
-    var paramId = req.body.id || req.query.id || req.param.id;
-    var paramContents = req.body.contents || req.query.contents;
-    var paramWriter = expressSession.nickNm; 
-    //var paramWriter = req.body.writer || req.query.writer;
-	
-    console.log('요청 파라미터 : ', paramContents + ', ' + paramWriter + ', ' + paramId);
-    
-	var database = req.app.get('database');
-
-	// 데이터베이스 객체가 초기화된 경우
-	if (database.db) {
-        
-        database.PostModel.findByIdAndUpdate(paramId,
-            {'$push': {'comments':{'contents':paramContents, 'writer':paramWriter}}},
-            {'new':true},function(err,result){
-            
-        if (err) {
-                console.error('댓글 검색 과정 중 에러 발생 : ' + err.stack);
-                res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-                res.write('<h2>댓글 검색 과정 중 에러 발생</h2>');
-                res.write('<p>' + err.stack + '</p>');
-                res.end();
-                return res.redirect("/process/community");
-           }
-            console.log("댓글 추가 완료");
-            console.log("댓글 추가 후 comment의 길이: ", result._doc.comments.length);
-            return res.redirect('/process/showpost/' + paramId); 
-        }); 
-        } else {
-		res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-		res.write('<h2>데이터베이스 연결 실패</h2>');
-		res.end();
-        } 	 
-}; //addcomment 닫기
-
-var deletecomment = function(req, res){
-    console.log('post 모듈 안에 있는 deletecomment 호출됨.');
-    var paramId = req.param.id || req.body.id || req.query.id;   
-    var postId = req.body.postid || req.query.postid || req.param.postid;
-    
-    console.log('요청 파라미터 : ', paramId + ", ", postId);
-    
-	var database = req.app.get('database');
-
-	// 데이터베이스 객체가 초기화된 경우
-	if (database.db) {
-        database.PostModel.findOne( {_id: postId}, function(err,result){
-            if (err) {
-                console.error('삭제할 댓글이 있는 게시물 조회 과정 중 에러 발생 : ' + err.stack);
-                res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-                res.write('<h2>삭제할 댓글이 있는 게시물 조회 과정 중 에러 발생</h2>');
-                res.write('<p>' + err.stack + '</p>');
-                res.end();
-                return res.redirect("/process/community");
-           } 
-            if(result){
-                var index = function(){
-                                for(var i =0 ; i<result._doc.comments.length; i++ ){
-                                    if(paramId == result._doc.comments[i]._id){
-                                        break;
-                                    }
-                                }    
-                            return i;
-                            }  
-                console.log("index: ", index);
-                if(expressSession.nickNm != result._doc.comments[index()].writer && expressSession.isadmin == false){
-                        console.log("다른 사람의 댓글 삭제 시도");  
-                        alert("다른 사람의 댓글 삭제 시도") 
-                        res.end();
-                        return res.redirect("/process/showpost/"+postId); 
-                        } 
-                database.PostModel.findByIdAndUpdate(postId,
-                    {'$pull': { 'comments': {'_id': paramId}}},function(err,comment){
-                    if (err) {
-                            console.error('댓글 삭제 과정 중 에러 발생 : ' + err.stack);
-                            res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-                            res.write('<h2>댓글 삭제 과정 중 에러 발생</h2>');
-                            res.write('<p>' + err.stack + '</p>');
-                            res.end(); 
-                            //here 안 뜸
-                            return res.redirect("/process/community");
-                       }  
-                     
-                    //here 안 뜸
-                    console.log("댓글 삭제 완료");
-                    return res.redirect('/process/showpost/' + postId); 
-                    })   
-            } 
-        })
-    } else {
-    res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
-    res.write('<h2>데이터베이스 연결 실패</h2>');
-    res.end();
-    } 
-    
-}; //deletecomment 닫기  
-
 //-------------------react native 와 연동---------------------------------------  
 
 //게시물 목록 보여주기 (/process/community에 해당하는 함수). 현재 사용자의 ObjectId도 반환
@@ -194,30 +20,24 @@ var listpost = function(req, res) {
     
     var paramjwt = req.body.jwt || req.query.jwt || req.params.jwt;
     var secret = "HS256";
-    var paramnickNm = jwt.verify(paramjwt,secret).nickNm; 
-
+    var paramnickNm = jwt.verify(paramjwt,secret).nickNm;   
+    
+    var paramsearchValue = req.body.searchvalue || req.query.searchvalue || req.params.searchvalue;
     var database = req.app.get('database');
-    function connectDB() {
-    var databaseUrl = exports.config.db_url;
-    var mongoose = require('mongoose');
-    MongoClient.connect(databaseUrl, function(err, database) {
-        if(err) throw err;
-         var db = client.db('communities'); // 어떤 컬렉션에서 받을 지 선택하는 듯
-        console.log('데이터베이스에 연결됨: '+databaseUrl);
-    });
-    } 
+    
+    console.log("paramsearchValue: ",paramsearchValue)
     // 데이터베이스 객체가 초기화된 경우
 	if (database.db) { 
-		
-		var paramCommunitySearchValue = req.body.communitysearchvalue || req.query.communitysearchvalue|| " ";
-        var paramCommunitySearchSelect = req.body.communitysearchselect || req.query.communitysearchselect||" ";  
-        if(paramCommunitySearchValue != " ")
+        if(paramsearchValue != " "&& paramsearchValue != undefined)
             {    
-                var query = {title: new RegExp(".*"+paramCommunitySearchValue+".*")};  
+                var query = {$or: [{title: new RegExp(".*"+paramsearchValue+".*")}, 
+                {contents: new RegExp(".*"+paramsearchValue+".*")}]};    
+                console.log("I'm here") 
             }
         else{
             var query = { };
-        }  
+        }   
+        
         // 만족하는 문서 갯수 확인 
         database.PostModel.find(query, function(err, cursor, options){
             if(err){ console.error('게시판 글 목록 조회 중 에러 발생 : ' + err.stack);
@@ -393,7 +213,6 @@ var showpost = function(req, res) {
 }; // showpost 닫기 
 
 //사용자가 요청한 게시물이 해당 사용자가 편집할 수 있는 게시물인지의 여부를 체크 
-
 var checkeditablepost = function(req, res) { //유효 사용자인지 확인 후 edit.ejs 호출
 	console.log('post 모듈 안에 있는 checkeditablepost 호출됨.');
   
@@ -481,7 +300,6 @@ var editpost = function(req, res) {
 var deletepost = function(req, res) {  
 	console.log('post 모듈 안에 있는 deletepost 호출됨.');
   
-    // URL 파라미터로 전달됨
     var parampostId = req.body.postid || req.query.postid || req.params.postid; 
     var paramuserId = req.body.userid || req.query.userid || req.params.userid;
     
@@ -550,7 +368,140 @@ var deletepost = function(req, res) {
 		res.write('<h2>데이터베이스 연결 실패</h2>');
 		res.end();
 	   }    
-};
+}; //deletepost 닫기 
+
+//--------------댓글(comment) 관련
+
+//댓글 추가 
+var addcomment = function(req, res) {
+	console.log('post 모듈 안에 있는 addcomment 호출됨.');
+    var parampostId = req.body.postid || req.query.postid || req.param.postid;
+    var paramuserId = req.body.userid || req.query.userid || req.param.userid;
+    var paramContents = req.body.contents || req.query.contents;
+     
+    var context = {msg: ' '}
+	
+    console.log('parampostId: ', parampostId + ' , paramuserId: ' + paramuserId + ' , paramContents: ' + paramContents);
+    
+	var database = req.app.get('database');
+
+	// 데이터베이스 객체가 초기화된 경우
+	if (database.db) {
+        database.UserModel.findOne({_id: paramuserId}, function(err,user){
+            if (err) {
+                    console.error('요청한 사용자 조회 중 : ' + err.stack);
+                    res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                    res.write('<h2>요청한 사용자 조회 중 에러 발생</h2>');
+                    res.write('<p>' + err.stack + '</p>');
+                    res.end(); 
+                    return; 
+            }        
+        database.PostModel.findByIdAndUpdate(parampostId,
+            {'$push': {'comments':{'contents':paramContents, 'writer':user.nickNm}}},
+            {'new':true},function(err,result){
+            
+            if (err) {
+                    console.error('댓글 검색 과정 중 에러 발생 : ' + err.stack);
+                    res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                    res.write('<h2>댓글 검색 과정 중 에러 발생</h2>');
+                    res.write('<p>' + err.stack + '</p>');
+                    res.end();
+                    return;
+                }
+            console.log("댓글 추가 완료"); 
+            context.msg = "Added comment"; 
+            res.json(context)
+            return;
+        }) //PostModel.findByIdAndUpdate 닫기
+    }) //UserModel.findOne 닫기
+
+    } else {
+            res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+            res.write('<h2>데이터베이스 연결 실패</h2>');
+            res.end();
+            } 	 
+        }; //addcomment 닫기
+//삭제할 수 있는 댓글인지 확인 후 삭제 
+var deletecomment = function(req, res){
+    console.log('post 모듈 안에 있는 deletecomment 호출됨.');
+    
+    var parampostId = req.body.postid || req.query.postid || req.params.postid; 
+    var paramuserId = req.body.userid || req.query.userid || req.params.userid;
+    var paramcommentId = req.body.commentid || req.query.commentid || req.params.commentid; 
+
+    var context = {msg: ''}
+
+    console.log('paramcommentId : ', paramcommentId + ", paramuserId: ", paramuserId);
+    
+	var database = req.app.get('database');
+
+	// 데이터베이스 객체가 초기화된 경우
+	if (database.db) {
+        database.PostModel.findOne( {_id: parampostId}, function(err,post){
+            if (err) {
+                console.error('삭제할 댓글이 있는 게시물 조회 과정 중 에러 발생 : ' + err.stack);
+                res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                res.write('<h2>삭제할 댓글이 있는 게시물 조회 과정 중 에러 발생</h2>');
+                res.write('<p>' + err.stack + '</p>');
+                res.end();
+                return;
+           } 
+            if(post){
+                database.PostModel.findOne({'comments._id': paramcommentId}, function(err,comment){
+                    if (err) {
+                            console.error('댓글 삭제 과정 중 에러 발생 : ' + err.stack);
+                            res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                            res.write('<h2>댓글 삭제 과정 중 에러 발생</h2>');
+                            res.write('<p>' + err.stack + '</p>');
+                            res.end(); 
+                            return;
+                    }    
+                    if(comment){  
+                        database.UserModel.findOne({_id: paramuserId}, function(err,user){
+                            if (err) {
+                                    console.error('요청한 사용자 조회 중 : ' + err.stack);
+                                    res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                                    res.write('<h2>요청한 사용자 조회 중 에러 발생</h2>');
+                                    res.write('<p>' + err.stack + '</p>');
+                                    res.end(); 
+                                    return;
+                            } 
+                            if(comment.writer != user.nickNm && user.isadmin == false){
+                                context.msg = "You cannot delete this comment"
+                                res.json(context); 
+                                console.log("다른 사람의 댓글 삭제 시도")
+                                return;
+                            } 
+                            else{  
+                                database.PostModel.findByIdAndUpdate(parampostId,
+                                    {'$pull': { 'comments': {'_id': paramcommentId}}}, function(err, comment){
+                                    if (err) {
+                                            console.error('삭제 과정 중 에러 발생 : ' + err.stack);
+                                            res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                                            res.write('<h2>삭제 과정 중 에러 발생</h2>');
+                                            res.write('<p>' + err.stack + '</p>');
+                                            res.end();
+                                    }		
+                                context.msg = "Deleted comment"
+                                res.json(context); 
+                                console.log("댓글 삭제 완료"); 
+                                return; 
+                                })//deleteOne 닫기
+                            }//else 닫기  
+                        }) //UserModel.findbyId 닫기   
+                    } //if(comment) 닫기
+                }) //PostModel.findOne 닫기 
+            } //if(post)닫기  
+        })//PostModel.findOne 닫기
+    } else {
+    res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+    res.write('<h2>데이터베이스 연결 실패</h2>');
+    res.end();
+    } 
+}; //deletecomment 닫기
+
+
+
 
 module.exports.listpost = listpost;
 module.exports.addpost = addpost;
