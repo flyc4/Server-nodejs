@@ -4,27 +4,30 @@ SchemaObj.createSchema = function(mongoose) {
 	
 	// 시간표 리스트 스키마 정의
 	var TimetableSchema = mongoose.Schema({ 
-    
-	    userid: {type: mongoose.Schema.ObjectId, ref: 'users'}, //시간표 주인  
-	    usernickNm:{type: String, default: " "}, 
+        
+        //_id: 각 시간표들을 구분하는 ObjectId. MongoDB에서 기본적으로 주어지는 값이므로 미작성
+	    userid: {type: mongoose.Schema.ObjectId, ref: 'users'}, //시간표 주인   
         title: {type: String, trim: true, 'default':'no title', required: true}, // 2019년 1학기 처럼 제목.
-        isdefaultview: {type: Boolean, defualt: false }, // 기본적으로 볼 시간표
-        created_at: {type: Date, 'default': Date.now},
-        courses: [{		// 과목
-	    	timetableid: {type: mongoose.Schema.ObjectId, ref: 'timetable'},  //timetablechema 참조
-            subjectname: {type: String, trim: true, 'default':'no name', required: true}, //과목명
-            professorname: {type: String, trim: true, 'default':'no professor'}, //교수명
-            day: {type: Number, trim: true, 'default':' ', required: true}, // 수강 요일( 0: 월요일, 1: 화요일...)   
+        isdefaultview: {type: Boolean, defualt: false }, // 기본적으로 보여지는 시간표
+        created_at: {type: Date, 'default': Date.now}, //생성 날짜
+        
+        // 과목
+        courses: [{		
+	    	//_id: 각 과목들을 구분하는 ObjectId. MongoDB에서 기본적으로 주어지는 값이므로 미작성
+            subject: {type: String, trim: true, 'default':'no name', required: true}, //과목명
+            professor: {type: String, trim: true, 'default':'no professor'}, //교수명
             starttime: {type: Number, trim: true, 'default':' ', required: true}, // 수업 시작 시간 
-            endtime: {type: Number, trim: true, 'default':' ', required: true},
-	    	created_at: {type: Date, 'default': Date.now},  
-            
+            endtime: {type: Number, trim: true, 'default':' ', required: true}, // 수업 종료 시간 
+            place: {type: String, trim: true, 'default':'no professor'}, // 장소 
+            timetableid: {type: mongoose.Schema.ObjectId, ref: 'timetable'},  //timetable 참조 
+            day: {type: Number, trim: true, 'default':' ', required: true}, // 수강 요일( 0: 월요일, 1: 화요일...)   
+	    	created_at: {type: Date, 'default': Date.now},  //생성 날짜
 	    }], 
 	});
 module.exports = SchemaObj; 
     
 TimetableSchema.methods = {
-    
+
     saveTimetable: function(callback) {		// 시간표 저장
 			var self = this;
 			
@@ -33,30 +36,8 @@ TimetableSchema.methods = {
 				
 				self.save(callback);
 			});
-		},
-    
-    /*sortcourses: function(Id){
-        TimetableSchema.timetables.aggregate(
-            // Initial document match (uses index, if a suitable one is available), link: https://stackoverflow.com/questions/13449874/how-to-sort-array-inside-collection-record-in-mongodb
-            
-            { $match: {
-                _id : Id
-            }},
-            // Expand the courses array into a stream of documents
-            { $unwind: '$courses'},
-
-            // Sort in ascending order
-            { $sort: {
-                'courses.day': 1
-            }},  
-            
-            { $sort: {
-                'courses.starttime': 1
-            }}
-        ) 
-    return TimetableSchema;
-    }*/ 
-},    
+		},    
+    },    
     
     
 TimetableSchema.statics = {
@@ -73,7 +54,7 @@ TimetableSchema.statics = {
                 }  
             var i = 0;
             for(; i<results.length; i++){ // 기존에 defaultview로 설정 되어 있는 게 있는 지 확인
-                if(results._doc.isdefaultview == true){
+                if(results.isdefaultview == true){
                     break;
                 }
             }

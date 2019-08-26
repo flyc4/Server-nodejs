@@ -91,7 +91,22 @@ Schema.createSchema = function(mongoose) {
         return hashed_password.length;
     }, 'hashed_password 칼럼의 값이 없습니다.'); 
     
-    //모델 객체에세 사용 가능한 메소드 정의 
+	//모델 객체에세 사용 가능한 메소드 정의  
+	UserSchema.statics = {
+		// ID로 글 찾기
+		load: function(id, callback) {
+			this.findOne({_id: id})
+				.exec(callback);
+		}, 
+        findOneBynickNm: function(paramnickNm,callback){
+			this.findOne({nickNm: paramnickNm})
+			.exec(callback);
+		}     
+    }
+
+
+
+	/*
     UserSchema.static('findByloginId', function(loginId, callback){ //로그인 아이디 기반 검색.
         return this.find({loginId: loginId}, callback);
     });
@@ -100,8 +115,8 @@ Schema.createSchema = function(mongoose) {
         return this.find({nickNm: nickNm}, callback);
     });  
     
-    UserSchema.static('findOneBynickNm', function(nickNm, callback){ //닉네임 기반 findOne
-        return this.findOne({nickNm: nickNm}, callback);
+    UserSchema.static('findOneBynickNm', function(paramnickNm, callback){ //닉네임 기반 findOne
+        return this.findOne({nickNm: paramnickNm}, callback).exec(callback);;
     }); 
     
     // 스키마에 static으로 findAll 메소드 추가
@@ -115,7 +130,7 @@ Schema.createSchema = function(mongoose) {
 	      .select(options.select)
 	      .exec(callback);
 	});
-
+*/
 	// 모델을 위한 스키마 등록
 	mongoose.model('User', UserSchema);
     

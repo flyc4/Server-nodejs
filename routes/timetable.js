@@ -1,24 +1,115 @@
-var Entities = require('html-entities').AllHtmlEntities;
-
-var mongoose = require('mongoose');
-var expressSession = require('express-session');
-var alert = require('alert-node');
+var mongoose = require('mongoose'); 
+var jwt = require('jsonwebtoken');
 var ObjectId = mongoose.Types.ObjectId;
-    function connectDB() {
-    var databaseUrl = exports.config.db_url;
-   
-    MongoClient.connect(databaseUrl, function(err, database) {
-        if(err) throw err;
-         var db = client.db('timetables'); // 어떤 컬렉션에서 받을 지 선택
-         console.log('데이터베이스에 연결됨: '+databaseUrl);
-    });
-    }
+//기본 보기로 설정한 시간표를 보여줍니다.
+var showdefaulttimetable = function(req, res) { //기본 보기로 설정된 시간표를 보여준다.  
+	console.log('timetable 모듈 안에 있는 showdefaulttimetable 호출됨.');
+    var database = req.app.get('database'); 
+    
+    // 데이터베이스 객체가 초기화된 경우
+	if (database.db) {  
+		// 1. 시간표 중에서 기본 시간표로 설정된 시간표를 보여준다.
+           
+            database.TimetableModel.findOne(
+            { 'usernickNm': expressSession.nickNm, isdefaultview: true},   
+            function(err,result){ 
+                if(err){ console.error('기본 보기로 설정한 시간표 조회 중 에러 발생 : ' + err.stack);
+                
+                res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+				res.write('<h2>기본 보기로 설정한 시간표 조회 중 에러 발생</h2>');
+                res.write('<p>' + err.stack + '</p>');
+				res.end();
+                return; 
+            } 
+            if(!result){ //기본 보기로 설정한 시간표가 없으면, userid를 찾은 후 listtimetable로 넘긴다.
+                console.log("기본 설정으로 설정한 시간표가 없어서 시간표 목록으로 넘어감"); 
+                
+                database.UserModel.findOne(
+                { 'nickNm': expressSession.nickNm},   
+                function(err,userresult){ 
+                    if(err){ console.error('시간표 항목을 조회한 사용자를 조회 중 에러 발생 : ' + err.stack);
+
+                    res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                    res.write('<h2>시간표 항목을 조회한 사용자를 조회 중 에러 발생</h2>');
+                    res.write('<p>' + err.stack + '</p>');
+                    res.end();
+                    return; 
+                    } 
+                return res.redirect("/process/listtimetable/"+userresult._id);  
+                
+                })
+            }
+            database.TimetableModel.aggregate([
+            // Initial document match (uses index, if a suitable one is available), link: https://stackoverflow.com/questions/13449874/how-to-sort-array-inside-collection-record-in-mongodb
+            { $match: { 
+                _id: new ObjectId(result._id)}},   
+            //Expand the courses array into a stream of documents
+            { "$unwind": '$courses'},
+            // Sort in ascending order
+            { $sort: {
+                'courses.day': 1
+            }},  
+            { $sort: {
+                'courses.starttime': 1
+            }},   
+            ], function(err,data){ 
+                if(err){ console.error('시간표 정렬 중 에러 발생 : ' + err.stack);
+                
+                res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+				res.write('<h2>시간표 조회 중 에러 발생</h2>');
+                res.write('<p>' + err.stack + '</p>');
+				res.end();
+                return; 
+            }    
+            var maxday = 4;
+            if(result.courses.length == 0){ //시간표 안에 신청한 강좌가 없을 때
+                var context = {timetable: result,
+                                maxday: maxday};
+            }
+            else{ //시간표 안에 신청 강좌가 있을 때. courses의 days 중 금요일(4) 보다 큰 토요일이나 일요일이 있는 지 확인
+                
+                for(var i=0;i<data.length;i++){
+                    if(data[i].courses.day>maxday){
+                        maxday = data[i].courses.day;
+                    }
+                }
+                var context = {timetable: data,
+                                maxday: maxday}; 
+                
+            }  
+            req.app.render('showtimetable', context, function(err, html) {
+					if (err) {
+                        console.error('응답 웹문서 생성 중 에러 발생 : ' + err.stack);
+                
+                        res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                        res.write('<h2>응답 웹문서 생성 중 에러 발생</h2>');
+                        res.write('<p>' + err.stack + '</p>');
+                        res.end();
+
+                        return;
+                    }
+               else{  
+                   res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                   res.end(html); 
+               } 
+            })//req.app.render 닫기 
+        }) // aggregate 닫기 
+                     
+        })//findOne 닫기 
+    }//if (database.db) 닫기
+     
+    else {
+		res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+		res.write('<h2>데이터베이스 연결 실패</h2>');
+		res.end();
+	} 
+}; //showdefaulttimetable 닫기 
+
 
 var addtimetable = function(req, res) {
 	console.log('timetable 모듈 안에 있는 addtimetable 호출됨.');
  
-    var database = req.app.get('database');
-    
+    var database = req.app.get('database')
     var paramTitle = req.body.title || req.query.title;
     var userNicknm = expressSession.nickNm; 
     
@@ -553,7 +644,91 @@ var deletecourse = function(req, res){  // paramId: course의 id, timetableId: t
     res.end();
     } 
     
-}; //deletecourse 닫기
+}; //deletecourse 닫기 
+
+//----- react native와 연동 
+
+//기본 보기로 설정한 시간표가 있다면 해당 시간표를, 없을 경우 시간표의 전체 목록을 보여줍니다. 
+
+var checkdefaulttimetable = function(req, res) { 
+	console.log('timetable 모듈 안에 있는checkdefaulttimetable 호출됨.');
+    var database = req.app.get('database');  
+
+    var paramjwt = req.body.jwt||req.query.jwt||req.param.jwt; 
+    var secret = "HS256";
+    var paramnickNm = jwt.verify(paramjwt,secret).nickNm; 
+    var context = {'checkdefaulttimetable': false, 'userid': '', timetable: {} };
+
+    // 데이터베이스 객체가 초기화된 경우. 요청한 사용자를 조회
+	if (database.db) {   
+        database.UserModel.findOneBynickNm(paramnickNm, function(err,user){
+            if(err){ 
+                console.error('checkdefaulttimetable를 요청한 사용자를 조회 중 에러 발생 : ' + err.stack); 
+                res.end(); 
+                return;  
+            }
+            if(!user){
+                console.log('checkdefaulttimetable를 요청한 사용자를 찾을 수 없음'); 
+                res.end();   
+                return;
+            }
+            if(user){  
+                context.userid = user._id; 
+                
+                
+                // 기본 보기로 설정한 시간표가 있는 지 확인
+                database.TimetableModel.findOne(
+                    { 'userid': user._id, isdefaultview: true},   
+                    function(err,result){ 
+                        if(err){ 
+                        console.error('기본 보기로 설정한 시간표 조회 중 에러 발생 : ' + err.stack);
+                        res.end();
+                        return; 
+                    } 
+                    //기본 보기로 설정한 시간표가 없을 경우
+                    if(!result){ 
+                        console.log("기본 설정으로 설정한 시간표가 없어서 시간표 목록으로 넘어감"); 
+                        res.json(context);
+                        return;    
+                    }
+                    
+                    //기본 보기로 설정한 시간표가 있을 경우
+                    database.TimetableModel.aggregate([
+                    //document match, link: https://stackoverflow.com/questions/13449874/how-to-sort-array-inside-collection-record-in-mongodb
+                    { $match: { 
+                        _id: new ObjectId(result._id)}},   
+                    
+                    //Expand the courses array into a stream of documents
+                    { "$unwind": '$courses'},
+                    // Sort in ascending order
+                    { $sort: {
+                        'courses.day': 1
+                    }},  
+                    { $sort: {
+                        'courses.starttime': 1
+                    }},   
+                    ], function(err,data){ 
+                        if(err){ 
+                            console.error('checkdefaulttimetable 안에서 시간표 정렬 중 에러 발생 : ' + err.stack);
+                            res.end();  
+                        }    
+                        else{                        
+                            context.checkdefaulttimetable = true; 
+                            context.timetable = data; 
+                            console.log('context.checkdefaulttimetable: ', context.checkdefaulttimetable) 
+                            res.json(context);   
+                            return; 
+                        }
+                    }) // aggregate 닫기 
+                })//findOne 닫기  
+            } //if(user) 닫기
+        })//UserModel.findOneBynickNm닫기
+    }//if (database.db) 닫기                
+    else {
+        console.log('데이터베이스 연결 실패');
+        res.end();
+    }  
+}; //checkdefaulttimetable 닫기 
 
 module.exports.addtimetable = addtimetable;
 module.exports.showdefaulttimetable = showdefaulttimetable;
@@ -563,5 +738,6 @@ module.exports.setdefaultview = setdefaultview;
 module.exports.unsetdefaultview = unsetdefaultview;
 module.exports.deletetimetable = deletetimetable;  
 module.exports.addcourse = addcourse;
-module.exports.deletecourse = deletecourse; 
+module.exports.deletecourse = deletecourse;  
+module.exports.checkdefaulttimetable = checkdefaulttimetable;
 

@@ -12,8 +12,6 @@ var mongoose = require('mongoose');
 var expressSession = require('express-session');
 var jwt = require('jsonwebtoken');
 
-//-------------------react native 와 연동---------------------------------------  
-
 //게시물 목록 보여주기 (/process/community에 해당하는 함수). 현재 사용자의 ObjectId도 반환
 var listpost = function(req, res) {
 	console.log('post 모듈 안에 있는 listpost 호출됨.');
@@ -32,7 +30,6 @@ var listpost = function(req, res) {
             {    
                 var query = {$or: [{title: new RegExp(".*"+paramsearchValue+".*")}, 
                 {contents: new RegExp(".*"+paramsearchValue+".*")}]};    
-                console.log("I'm here") 
             }
         else{
             var query = { };
@@ -499,9 +496,6 @@ var deletecomment = function(req, res){
     res.end();
     } 
 }; //deletecomment 닫기
-
-
-
 
 module.exports.listpost = listpost;
 module.exports.addpost = addpost;

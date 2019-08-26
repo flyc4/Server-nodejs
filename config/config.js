@@ -38,7 +38,8 @@ module.exports = {
         ,{file:'./rateclass', path:'/process/addcomment_rateclass', method:'addcomment_rateclass', type:'post'} 
         ,{file:'./rateclass', path:'/process/deletecomment_rateclass', method:'deletecomment_rateclass', type:'post'}   
         
-        //timetable(시간표)과 관련된 패스들 
+        //timetable(시간표)과 관련된 패스들  
+        ,{file:'./timetable', path:'/process/checkdefaulttimetable', method:'checkdefaulttimetable', type:'post'}
         ,{file:'./timetable', path:'/process/addtimetable', method:'addtimetable', type:'get'}
         ,{file:'./timetable', path:'/process/showdefaulttimetable', method:'showdefaulttimetable', type:'get'} 
         ,{file:'./timetable', path:'/process/showtimetable/:id', method:'showtimetable', type:'get'} 
