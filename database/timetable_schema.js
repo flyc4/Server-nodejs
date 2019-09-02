@@ -1,4 +1,6 @@
 var SchemaObj = {};
+var mongoose = require('mongoose'); 
+var ObjectId = mongoose.Types.ObjectId; 
 
 SchemaObj.createSchema = function(mongoose) {
 	
@@ -16,12 +18,19 @@ SchemaObj.createSchema = function(mongoose) {
 	    	//_id: 각 과목들을 구분하는 ObjectId. MongoDB에서 기본적으로 주어지는 값이므로 미작성
             subject: {type: String, trim: true, 'default':'no name', required: true}, //과목명
             professor: {type: String, trim: true, 'default':'no professor'}, //교수명
-            starttime: {type: Number, trim: true, 'default':' ', required: true}, // 수업 시작 시간 
+            starttime: {type: Number, trim: true, 'default':' ', required: true}, // 수업 시작 시간  
+            starttimehour: {type: Number, trim: true, 'default':' ', required: true}, // 수업 시작 시간의 시(hour). 정렬 용도
             endtime: {type: Number, trim: true, 'default':' ', required: true}, // 수업 종료 시간 
-            place: {type: String, trim: true, 'default':'no professor'}, // 장소 
+            place: {type: String, trim: true, 'default':'no place'}, // 장소 
+            day: {type: Number, trim: true, 'default':' ', required: true}, // 수강 요일( 0: 월요일, 1: 화요일...) 
+            backgroundcolor: {type: String, trim: true, 'default':'#000000'}, //시간표에 나타낼 배경색
+
             timetableid: {type: mongoose.Schema.ObjectId, ref: 'timetable'},  //timetable 참조 
-            day: {type: Number, trim: true, 'default':' ', required: true}, // 수강 요일( 0: 월요일, 1: 화요일...)   
-	    	created_at: {type: Date, 'default': Date.now},  //생성 날짜
+               
+            created_at: {type: Date, 'default': Date.now},  //생성 날짜  
+            
+            // 하나의 시간표가 복수의 starttime, endtime, day를 지닐 경우 사용.  
+            //starttime, endtime 은 하나의 시간표 안에서 day, starttime 를 기준으로 오름차순 정렬 시 0번 인덱스를 가지는 정보 
 	    }], 
 	});
 module.exports = SchemaObj; 
@@ -78,9 +87,8 @@ TimetableSchema.statics = {
                 res.redirect("process/showdefaulttimetable/" + Id);        
             }    
         })            
-    },     
-    
-    
+    },             
+
 }//imetableSchema.statics 닫기
 return TimetableSchema;
 };

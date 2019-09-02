@@ -42,7 +42,7 @@ module.exports = {
         ,{file:'./timetable', path:'/process/checkdefaulttimetable', method:'checkdefaulttimetable', type:'post'}
         ,{file:'./timetable', path:'/process/addtimetable', method:'addtimetable', type:'get'}
         ,{file:'./timetable', path:'/process/showdefaulttimetable', method:'showdefaulttimetable', type:'get'} 
-        ,{file:'./timetable', path:'/process/showtimetable/:id', method:'showtimetable', type:'get'} 
+        ,{file:'./timetable', path:'/process/showtimetable', method:'showtimetable', type:'post'} 
         //listtimetable가 파라미터로 받는 id는 user의 id다
         ,{file:'./timetable', path:'/process/listtimetable/:id', method:'listtimetable', type:'get'}
         ,{file:'./timetable', path:'/process/listtimetable/:id', method:'listtimetable', type:'post'} 
