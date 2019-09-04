@@ -10,7 +10,8 @@ module.exports = {
         {file:'./user_schema', collection:'users', schemaName:'UserSchema', modelName:'UserModel'}
         ,{file:'./post_schema', collection:'communities', schemaName:'PostSchema', modelName:'PostModel'}  
         ,{file:'./rateclass_schema', collection:'rateclasses', schemaName:'RateClassSchema', modelName:'RateClassModel'} 
-        ,{file:'./timetable_schema', collection:'timetables', schemaName:'TimetableSchema', modelName:'TimetableModel'}
+        ,{file:'./timetable_schema', collection:'timetables', schemaName:'TimetableSchema', modelName:'TimetableModel'} 
+        ,{file:'./BulletinBoards_schema', collection:'BulletinBoards', schemaName:'BulletinBoardsSchema', modelName:'BulletinBoardsModel'}
 	],
 	route_info: [
         //user 혹은 인증과 관련된 패스들
@@ -48,6 +49,9 @@ module.exports = {
         ,{file:'./timetable', path:'/process/deletetimetable', method:'deletetimetable', type:'post'} 
         ,{file:'./timetable', path:'/process/addcourse', method:'addcourse', type:'post'} 
         ,{file:'./timetable', path:'/process/editcourse', method:'editcourse', type:'post'} 
-        ,{file:'./timetable', path:'/process/deletecourse', method:'deletecourse', type:'post'}
+        ,{file:'./timetable', path:'/process/deletecourse', method:'deletecourse', type:'post'}  
+        
+        //BulluetinBoards와 관련된 패스들
+        ,{file:'./BulletinBoards', path:'/process/ShowBulletinBoardsList', method:'ShowBulletinBoardsList', type:'post'}
     ], 
 }
