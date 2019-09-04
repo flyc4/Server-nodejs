@@ -29,8 +29,7 @@ SchemaObj.createSchema = function(mongoose) {
                
             created_at: {type: Date, 'default': Date.now},  //생성 날짜  
             
-            // 하나의 시간표가 복수의 starttime, endtime, day를 지닐 경우 사용.  
-            //starttime, endtime 은 하나의 시간표 안에서 day, starttime 를 기준으로 오름차순 정렬 시 0번 인덱스를 가지는 정보 
+            
 	    }], 
 	});
 module.exports = SchemaObj; 

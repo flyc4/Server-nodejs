@@ -40,16 +40,14 @@ module.exports = {
         
         //timetable(시간표)과 관련된 패스들  
         ,{file:'./timetable', path:'/process/checkdefaulttimetable', method:'checkdefaulttimetable', type:'post'}
-        ,{file:'./timetable', path:'/process/addtimetable', method:'addtimetable', type:'get'}
-        ,{file:'./timetable', path:'/process/showdefaulttimetable', method:'showdefaulttimetable', type:'get'} 
+        ,{file:'./timetable', path:'/process/addtimetable', method:'addtimetable', type:'post'}
         ,{file:'./timetable', path:'/process/showtimetable', method:'showtimetable', type:'post'} 
-        //listtimetable가 파라미터로 받는 id는 user의 id다
-        ,{file:'./timetable', path:'/process/listtimetable/:id', method:'listtimetable', type:'get'}
-        ,{file:'./timetable', path:'/process/listtimetable/:id', method:'listtimetable', type:'post'} 
-        ,{file:'./timetable', path:'/process/setdefaultview', method:'setdefaultview', type:'post'}
-        ,{file:'./timetable', path:'/process/unsetdefaultview', method:'unsetdefaultview', type:'post'}
-        ,{file:'./timetable', path:'/process/deletetimetable/:id', method:'deletetimetable', type:'post'} 
+        ,{file:'./timetable', path:'/process/gettimetablelist', method:'gettimetablelist', type:'post'}
+        ,{file:'./timetable', path:'/process/switchisdefaultview', method:'switchisdefaultview', type:'post'}
+        ,{file:'./timetable', path:'/process/renametimetable', method:'renametimetable', type:'post'} 
+        ,{file:'./timetable', path:'/process/deletetimetable', method:'deletetimetable', type:'post'} 
         ,{file:'./timetable', path:'/process/addcourse', method:'addcourse', type:'post'} 
+        ,{file:'./timetable', path:'/process/editcourse', method:'editcourse', type:'post'} 
         ,{file:'./timetable', path:'/process/deletecourse', method:'deletecourse', type:'post'}
     ], 
 }
