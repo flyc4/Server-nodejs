@@ -225,12 +225,10 @@ var showtimetable = function(req, res) {
                                 + "\n" + day[data[i].courses.day]
             
                     maxendtimehour = maxendtimehour < currentendtimehour? currentendtimehour:maxendtimehour;  
-                    console.log("In for loop")
-                    console.dir(context.courseslist[0]); 
                    
                     if(starttimehour == currentstarttimehour){
                         context.courseslist[j].maxday = data[i].courses.day; 
-                        console.log("data[i].courses.day: ", data[i].courses.day)
+                        
                         context.courseslist[j].courses.push({index: i, value: value, course: data[i].courses})
                     }  
                     
@@ -259,10 +257,6 @@ var showtimetable = function(req, res) {
                     context.courseslist.push({starttimehour: laststarttimehour+(i+1), maxday: -1})  
                     context.courseslist[j].courses = [{index: -1, value: "", course: {} }];  
                 }   
-                console.log("Right before return")
-                console.dir(context.courseslist) 
-                console.dir(context.courseslist[0]) 
-                
                 res.json(context);   
                 return; 
             }//else 닫기  

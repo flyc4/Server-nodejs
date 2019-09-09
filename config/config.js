@@ -1,6 +1,6 @@
 
 /*
- * 설정
+ * 설정. 에러 처리 포함
  */
 
 module.exports = {
@@ -11,7 +11,9 @@ module.exports = {
         ,{file:'./post_schema', collection:'communities', schemaName:'PostSchema', modelName:'PostModel'}  
         ,{file:'./rateclass_schema', collection:'rateclasses', schemaName:'RateClassSchema', modelName:'RateClassModel'} 
         ,{file:'./timetable_schema', collection:'timetables', schemaName:'TimetableSchema', modelName:'TimetableModel'} 
-        ,{file:'./BulletinBoards_schema', collection:'BulletinBoards', schemaName:'BulletinBoardsSchema', modelName:'BulletinBoardsModel'}
+        ,{file:'./BulletinBoards_schema', collection:'BulletinBoards', schemaName:'BulletinBoardsSchema', modelName:'BulletinBoardsModel'} 
+        ,{file:'./BulletinBoardsList_schema', collection:'BulletinBoardsList', schemaName:'BulletinBoardsListSchema', modelName:'BulletinBoardsListModel'} 
+        ,{file:'./Board1_schema', collection:'Board1', schemaName:'Board1', modelName:'Board1'}
 	],
 	route_info: [
         //user 혹은 인증과 관련된 패스들
@@ -51,7 +53,8 @@ module.exports = {
         ,{file:'./timetable', path:'/process/editcourse', method:'editcourse', type:'post'} 
         ,{file:'./timetable', path:'/process/deletecourse', method:'deletecourse', type:'post'}  
         
-        //BulluetinBoards와 관련된 패스들
-        ,{file:'./BulletinBoards', path:'/process/ShowBulletinBoardsList', method:'ShowBulletinBoardsList', type:'post'}
-    ], 
-}
+        //BulluetinBoardsList와 관련된 패스들
+        ,{file:'./BulletinBoardsList', path:'/process/ShowBoardsList', method:'ShowBulletinBoardsList', type:'post'}
+        ,{file:'./BulletinBoardsList', path:'/process/ShowBoard', method:'ShowBulletinBoard', type:'post'} 
+], 
+}; 

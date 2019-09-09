@@ -1,5 +1,5 @@
 /**
- * 하나의 게시판을 위한 데이터베이스 스키마를 정의하는 모듈
+ *  Board1에 대한 스키마
  * 
  */
 
@@ -7,7 +7,7 @@ var SchemaObj = {};
 SchemaObj.createSchema = function(mongoose) {
 	
 	// 게시판 스키마 정의
-	var BulletinBoardsSchema = mongoose.Schema({ 
+	var Board1Schema = mongoose.Schema({ 
     
             userid: {type: mongoose.Schema.ObjectId, ref: 'users'}, 
             profile: {type: String, trim:true, 'default': ' '},// 게시글 옆 사진
@@ -28,7 +28,7 @@ SchemaObj.createSchema = function(mongoose) {
             }]
     });
 	console.log('BulletinBoardsSchema 정의함.');
-	return BulletinBoardsSchema;
+	return Board1Schema;
 };
 
 // module.exports에 PostSchema 객체 직접 할당
