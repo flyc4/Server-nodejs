@@ -3,10 +3,7 @@
  * 
  */ 
 
-var moment = require('moment');
-var timestamp = function(){            
-    return moment().format("YYYY-MM-DD HH:mm:ss");
-  } 
+var utils = require('../config/utils')
 
 var SchemaObj = {};
 SchemaObj.createSchema = function(mongoose) {
@@ -18,7 +15,7 @@ SchemaObj.createSchema = function(mongoose) {
             nickNm: {type: String, 'default': 'noName'},
             profile: {type: String, trim:true, 'default': ' '},// 게시글 옆 사진
             likes: {type: Number, unique: false, 'default': 0},
-            created_at: {type: Date, 'default': timestamp()},
+            created_at: {type: Date, 'default': utils.timestamp()},
             title: {type: String, trim:true, 'default': ' '},
             contents: {type: String, trim:true, 'default': ' '},
             pictures: {type: String, trim:true, 'default': ' '},  //링크
@@ -32,7 +29,7 @@ SchemaObj.createSchema = function(mongoose) {
                 likes: {type: Number, unique: false, 'default': 0},
                 contents: {type: String, trim:true, 'default': ' '},
                 pictures: {type: String, trim:true, 'default': ' '}, 
-                created_at: {type: Date, 'default': timestamp()}, 
+                created_at: {type: Date, 'default': utils.timestamp()}, 
             }]
     });
     console.log('BulletinBoardsSchema 정의함.');

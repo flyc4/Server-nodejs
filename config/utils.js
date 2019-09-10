@@ -45,5 +45,11 @@ try{
 catch(exception){
         logger.error("ERROR=>" +exception);
 }
-}; 
+};  
+
+const timestamp = function(){                
+  return moment().format("YYYY-MM-DD HH:mm:ss");
+}
+
 module.exports.log = log;
+module.exports.timestamp = timestamp;

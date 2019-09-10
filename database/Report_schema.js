@@ -6,10 +6,7 @@
 var mongoose = require('mongoose');
 var ObjectId = mongoose.Types.ObjectId; 
 var zeroId = new ObjectId('000000000000000000000000');  
-var moment = require('moment')  
-var timestamp = function(){            
-    return moment().format("YYYY-MM-DD HH:mm:ss");
-  }
+var utils = require('../config/utils')
 
 var SchemaObj = {};
 SchemaObj.createSchema = function(mongoose) {
@@ -25,7 +22,7 @@ SchemaObj.createSchema = function(mongoose) {
             commentid: {type: mongoose.Schema.ObjectId, default: zeroId},
             title: {type: String, trim:true, 'default': ''},
             contents: {type: String, trim:true, 'default': ''},
-            created_at: {type: Date, default: timestamp()},        
+            created_at: {type: Date, default: utils.timestamp()},        
               
     });
 	console.log('ReportSchema 정의함.');

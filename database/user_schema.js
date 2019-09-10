@@ -6,8 +6,6 @@
  */
 var Schema = {};
 var crypto = require('crypto'); 
-var mongoose = require('mongoose');
-var ObjectId = mongoose.Types.ObjectId;
 
 Schema.createSchema = function(mongoose) {
 	 //mongoose.set('useCreateIndex', true);

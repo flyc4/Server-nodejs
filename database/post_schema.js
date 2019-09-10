@@ -5,8 +5,6 @@
  * @author Mike
  */
 
-var utils = require('../utils/utils');
-
 var SchemaObj = {};
 
 SchemaObj.createSchema = function(mongoose) {
@@ -44,7 +42,8 @@ SchemaObj.createSchema = function(mongoose) {
 				
 				self.save(callback);
 			});
-		},
+		}, 
+		/*
 		removeComment: function(id, callback) {		// 댓글 삭제
 			var index = utils.indexOf(this.comments, {id: id});
 			if (~index) {
@@ -54,7 +53,8 @@ SchemaObj.createSchema = function(mongoose) {
 			}
 			
 			this.save(callback);
-		}
+		} 
+		*/
 	}
 	
 	PostSchema.statics = {

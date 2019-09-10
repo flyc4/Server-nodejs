@@ -5,7 +5,6 @@
  * @author Mike
  */
 
-var utils = require('../utils/utils');
 
 var SchemaObj = {};
 

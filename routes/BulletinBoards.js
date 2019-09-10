@@ -8,12 +8,8 @@
 var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken'); 
 var ObjectId = mongoose.Types.ObjectId;  
-var logger = require('../config/errorhandler');
-var moment = require('moment'); 
-
-var timestamp = function(){                
-  return moment().format("YYYY-MM-DD HH:mm:ss");
-} 
+var utils = require('../config/utils');
+ 
 
 ///////////////////"bulletinboardslist" collection을 사용하는 함수 /////////////////////////////////////
 
@@ -28,7 +24,7 @@ var ShowBulletinBoardsList = function(req, res) {
     // 모든 게시판 조회 
     database.db.collection("bulletinboardslist").find({}).toArray(function(err,data){ 
       if(err){
-        logger.log("ShowBulletinBoardsList에서 collection 조회 중 수행 중 에러 발생"+ err.message)
+        utils.log("ShowBulletinBoardsList에서 collection 조회 중 수행 중 에러 발생"+ err.message)
       }
       data.forEach(function(data2){ 
         
@@ -41,7 +37,7 @@ var ShowBulletinBoardsList = function(req, res) {
     });
   }//if(database.db) 닫기  
   else {  
-    logger.log("ShowBulletinBoardsList 수행 중 데이터베이스 연결 실패")
+    utils.log("ShowBulletinBoardsList 수행 중 데이터베이스 연결 실패")
     res.end(); 
     return;
   }   
@@ -74,12 +70,12 @@ var AddReport =function(req, res) {
     //신고를 한 사용자 조회(populate 불가능해서 이렇게 구현함) 
     database.UserModel.findOne({_id: new ObjectId(paramUserId)}, function(err, user) {
       if (err) {
-        logger.log("AddReport 안에서 사용자 조회 중 에러발생: " + err.message);
+        utils.log("AddReport 안에서 사용자 조회 중 에러발생: " + err.message);
         res.end();
         return;
       } 
       if (user == undefined ) {
-        logger.log('AddReport 안에서 사용자가 조회되지 않았습니다.'); 
+        utils.log('AddReport 안에서 사용자가 조회되지 않았습니다.'); 
         res.end(); 
         return;
       } 
@@ -93,14 +89,14 @@ var AddReport =function(req, res) {
             commentid: paramCommentId,
             title: paramTitle,
             contents: paramContents,
-            created_at: timestamp(), 
+            created_at: utils.timestamp(), 
             });//insertOne 닫기
            return; 
       }//else{ (사용자 조회 성공 시의 else) 닫기 
     })//UserModel.findOne 닫기
   }//if(database.db) 닫기  
   else {  
-    logger.log("AddReport 수행 중 데이터베이스 연결 실패")
+    utils.log("AddReport 수행 중 데이터베이스 연결 실패")
     res.end(); 
     return;
   }   
@@ -131,17 +127,14 @@ var ShowBulletinBoard = function(req, res) {
    date: ' ', ismine: false, title: ' ', contents: ' ', pictures: ' ' }]};
   
   if (database.db){    
-    database.db.collection(paramboardid).find({})  
-    .toArray(function(err,data){ 
+    database.db.collection(paramboardid).aggregate([
+      { $sort: {
+        'created_at': -1
+      }},  
+      ]).toArray(function(err,data){ 
       if(err){
-        logger.log("ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생"+ err.message);
+        utils.log("ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생"+ err.message);
       }  
-      data.sort(function(a, b) {
-        a = new Date(a.created_at);
-        b = new Date(b.created_at);
-        return a>b ? -1 : a<b ? 1 : 0;
-      }); 
-      
       if(parampostEndIndex>=data.length){
         parampostEndIndex = data.length-1;
       } 
@@ -159,7 +152,7 @@ var ShowBulletinBoard = function(req, res) {
   }//if(database.db) 닫기 
 else {
     
-    logger.log(" ShowBulletinBoard 수행 중 데이터베이스 연결 실패")
+    utils.log(" ShowBulletinBoard 수행 중 데이터베이스 연결 실패")
     res.end(); 
     return;
 }
@@ -187,12 +180,12 @@ if (database.db) {
       // 1. 아이디를 이용해 사용자 검색
   database.UserModel.findOne({_id: new ObjectId(paramUserId)}, function(err, user) {
     if (err) {
-      logger.log("AddEditEntry 안에서 사용 자 조회 중 에러발생: " + err.message);
+      utils.log("AddEditEntry 안에서 사용 자 조회 중 에러발생: " + err.message);
       res.end();
       return;
     } 
     if (user == undefined ) {
-      logger.log('AddEditEntry 안에서 사용자가 조회되지 않았습니다.'); 
+      utils.log('AddEditEntry 안에서 사용자가 조회되지 않았습니다.'); 
       res.end(); 
       return;
     } 
@@ -202,7 +195,7 @@ if (database.db) {
       {$set: {title: paramTitle, contents: paramContents}},  
        function(err,data){ 
         if(err){
-          logger.log("AddEditEntry에서 collection 조회 중 수행 중 에러 발생"+ err.message)
+          utils.log("AddEditEntry에서 collection 조회 중 수행 중 에러 발생: "+ err.message)
         }  
          // 조회 된 data가 없다면 새로운 document 삽입
          if (data.value == null) {  
@@ -214,7 +207,7 @@ if (database.db) {
             nickNm : user.nickNm,
             profile : " ",
             likes : 0, 
-            created_at: timestamp(),
+            created_at: utils.timestamp(),
             pictures: " ",
              hits : 0,
             comments : []
@@ -226,7 +219,7 @@ if (database.db) {
     }
   })//UserModel.findOne 닫기
   } else {  
-      logger.log('AddEditEntry 수행 중 데이터베이스 연결 실패');
+      utils.log('AddEditEntry 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
     }	
@@ -250,7 +243,7 @@ if (database.db) {
       database.db.collection(paramBoardId).remove({_id: new ObjectId(paramEntryId)},{justone: true}, 
       function(err){
         if (err) {
-                logger.log("DeleteEntry 안에서 삭제할 게시물 조회 중 에러 발생: "+ err.message)
+                utils.log("DeleteEntry 안에서 삭제할 게시물 조회 중 에러 발생: "+ err.message)
                 res.end(); 
                 return;
           }		 
@@ -258,7 +251,7 @@ if (database.db) {
     return; 
       })
   } else {  
-      logger.log('DeleteEntry 수행 중 데이터베이스 연결 실패');
+      utils.log('DeleteEntry 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
     }	
@@ -284,14 +277,14 @@ var IncreLikeEntry = function(req, res) {
         {$inc: {likes: 1}},
       function(err){
         if (err) {
-                logger.log("IncreLikeEntry 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
+                utils.log("IncreLikeEntry 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
                 res.end(); 
                 return;
           }		  
         return; 
         })
   } else {  
-      logger.log('IncreLikeEntry 수행 중 데이터베이스 연결 실패');
+      utils.log('IncreLikeEntry 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
     }	
@@ -353,7 +346,7 @@ var ShowComments = function(req, res) {
       })//aggregate 닫기 
   }//if(database.db) 닫기 
   else {
-  logger.log("ShowComment 수행 중 데이터베이스 연결 실패")
+  utils.log("ShowComment 수행 중 데이터베이스 연결 실패")
   res.end(); 
   return;
   }  
@@ -384,12 +377,12 @@ if (database.db) {
       // 1. 아이디를 이용해 사용자 검색
   database.UserModel.findOne({_id: new ObjectId(paramUserId)}, function(err, user) {
     if (err) {
-      logger.log("AddComment 안에서 사용 자 조회 중 에러발생: " + err.message);
+      utils.log("AddComment 안에서 사용 자 조회 중 에러발생: " + err.message);
       res.end();
       return;
     } 
     if (user == undefined ) {
-      logger.log('AddComment 안에서 사용자가 조회되지 않았습니다.'); 
+      utils.log('AddComment 안에서 사용자가 조회되지 않았습니다.'); 
       res.end(); 
       return;
     } 
@@ -408,28 +401,52 @@ if (database.db) {
             likes: 0,
             contents: paramContents,
             pictures: paramPictures, 
-            created_at: timestamp(), 
+            created_at: utils.timestamp(), 
         }}});
           console.log("댓글 추가함.");    		   
         }     			 
       return;  
   })//UserModel.findOne 닫기
   } else {  
-      logger.log('AddComment 수행 중 데이터베이스 연결 실패');
+      utils.log('AddComment 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
     }	
 }; //AddComment 닫기
 
+var EditComment = function(req, res) {
+  console.log('BulletinBoards 모듈 안에 있는 EditComment 호출됨.');
+  
+  var paramContents = req.body.contents || req.query.contents; 
+  var paramBoardId = req.body.boardid||req.query.boardid;  
+  var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
+  var paramCommentId = req.body.commentid||req.query.commentid;
 
+  var database = req.app.get('database');
+  
+  console.log(' paramContents: ' + paramContents + ', paramBoardId: ' +  paramBoardId, 
+    'paramEntryId: ' + paramEntryId, 'paramCommentId: ' + paramCommentId);
+
+// 데이터베이스 객체가 초기화된 경우
+if (database.db) {
+         
+      //조회 완료한 Post의 제목 및 내용 덮어쓰기 
+      database.db.collection(paramBoardId).findOneAndUpdate({'comments._id': new ObjectId(paramCommentId)},
+      {$set: {contents: paramContents}},  
+       function(err){ 
+        if(err){
+          utils.log("EditComment에서 collection 조회 중 수행 중 에러 발생: "+ err.message)
+        }     			 
+      return;   
+      })//findOneAndUpdate 닫기 
+  } else {  
+      utils.log('EditComment 수행 중 데이터베이스 연결 실패');
+      res.end(); 
+      return;
+    }	
+}; //EditComment 닫기
 
 //////////////////한 게시판의 댓글(comments)과 관련된 함수들 끝 /////////////////////////////////
-
-
-
-
-
-
 
 module.exports.ShowBulletinBoardsList = ShowBulletinBoardsList; 
 module.exports.AddReport = AddReport;
@@ -438,4 +455,5 @@ module.exports.AddEditEntry = AddEditEntry;
 module.exports.DeleteEntry = DeleteEntry;
 module.exports.IncreLikeEntry = IncreLikeEntry;
 module.exports.ShowComments = ShowComments; 
-module.exports.AddComment = AddComment; 
+module.exports.AddComment = AddComment;
+module.exports.EditComment = EditComment; 
