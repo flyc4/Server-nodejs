@@ -9,9 +9,9 @@ var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken'); 
 var ObjectId = mongoose.Types.ObjectId;  
 var logger = require('../config/errorhandler');
-var moment = require('moment');
+var moment = require('moment'); 
 
-var timestamp = function(){            
+var timestamp = function(){                
   return moment().format("YYYY-MM-DD HH:mm:ss");
 } 
 
@@ -163,7 +163,7 @@ else {
     res.end(); 
     return;
 }
-};//ShowBulletinBoard 닫기  
+};//ShowBulletinBoard 닫기   
 
 //param에 대해 camel 표기법 및  적용. ex. paramTitle 
 //인자로 받은 paramEntryId가 있다면 수정을, 없다면 추가를 각각 실행
@@ -308,7 +308,13 @@ var ShowComments = function(req, res) {
   
   var paramBoardId = req.body.boardid||req.query.boardid || req.param.boardid;   
   var paramEntryId = req.body.entryid||req.query.entryid || req.param.entryid;
-  var paramUserId = req.body.userid||req.query.userid || req.param.userid; 
+  var paramUserId = req.body.userid||req.query.userid || req.param.userid;  
+  var paramCommentStartIndex = req.body.commentstartindex||req.query.commentstartindex || req.param.commentstartindex||0; 
+  var paramCommentEndIndex = req.body.commentendindex||req.query.commentendindex || req.param.commentendindex||19; 
+  
+  console.log("paramCommentStartIndex: ",paramCommentStartIndex)
+  console.log("paramCommentEndIndex: ",paramCommentEndIndex)
+
 
   console.log('paramUserId: ' + paramUserId, ', paramBoardId: ' + paramBoardId, ', paramEntryId: ' + paramEntryId);
 
@@ -326,19 +332,21 @@ var ShowComments = function(req, res) {
       { $sort: {
           'comments.created_at': -1
       }},  
-      ]).toArray(function(err,comments){ 
+      ]).toArray(function(err,result){ 
           if(err){ 
               console.error('ShowComments 안에서 댓글 조회 중 에러 발생 : ' + err.message);
               res.end(); 
               return;  
-          }   
-          comments.forEach( function(document){  
-            var localismine = paramUserId == document.comments.userid;
-            context.commentslist.push({boardid: paramBoardId, entryid: paramEntryId, rootreplyid: document.comments.rootreplyid
-            , parentreplyid: document.comments.parentreplyid, replyid: document.comments._id, userid: document.comments.userid, username: document.comments.nickNm 
-            , profile: document.comments.profile, likes: document.comments.likes, date: document.comments.created_at, ismine: localismine, contents: document.comments.contents
-            , pictures: document.comments.pictures});
-          })  
+          }     
+          paramCommentEndIndex = paramCommentEndIndex < result.length? paramCommentEndIndex: result.length-1;
+          
+          for(var i= paramCommentStartIndex; i<= paramCommentEndIndex; i++){  
+            var localismine = paramUserId == result[i].comments.userid;
+            context.commentslist.push({boardid: paramBoardId, entryid: paramEntryId, rootreplyid: result[i].comments.rootreplyid
+            , parentreplyid: result[i].comments.parentreplyid, replyid: result[i].comments._id, userid: result[i].comments.userid, username: result[i].comments.nickNm 
+            , profile: result[i].comments.profile, likes: result[i].comments.likes, date: result[i].comments.created_at, ismine: localismine, contents: result[i].comments.contents
+            , pictures: result[i].comments.pictures});
+          } 
           context.commentslist.splice(0,1) 
           res.json(context); 
           return;
@@ -351,7 +359,70 @@ var ShowComments = function(req, res) {
   }  
 };//ShowComments 닫기
 
-    
+//현재 게시판에 댓글을 다는 함수 
+var AddComment = function(req, res) {
+  console.log('BulletinBoards 모듈 안에 있는 AddComment 호출됨.');
+  
+  var paramUserId = req.body.userid || req.query.userid; 
+  var paramBoardId = req.body.boardid||req.query.boardid;  
+  var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
+  var paramRootReplyId = req.body.rootreplyid||req.query.rootreplyid||"000000000000000000000000";
+  var paramParentReplyId = req.body.parentreplyid||req.query.parentreplyid||"000000000000000000000000";
+  var paramContents = req.body.contents || req.query.contents|| "no contents"; 
+  var paramPictures = req.body.pictures || req.query.pictures || "no pictures";
+
+  var database = req.app.get('database');
+  
+  console.log('paramContents: ' + paramContents + ', paramBoardId: ' + 
+    paramBoardId, 'paramEntryId: ' + paramEntryId, 'paramParentReplyId: ' + paramParentReplyId, 
+    'paramRootReplyId: ' + paramRootReplyId);
+
+// 데이터베이스 객체가 초기화된 경우
+if (database.db) { 
+  
+      
+      // 1. 아이디를 이용해 사용자 검색
+  database.UserModel.findOne({_id: new ObjectId(paramUserId)}, function(err, user) {
+    if (err) {
+      logger.log("AddComment 안에서 사용 자 조회 중 에러발생: " + err.message);
+      res.end();
+      return;
+    } 
+    if (user == undefined ) {
+      logger.log('AddComment 안에서 사용자가 조회되지 않았습니다.'); 
+      res.end(); 
+      return;
+    } 
+    else{   
+      //조회 완료한 사용자의 이름으로 댓글 추가 
+      var objectid = new mongoose.Types.ObjectId();
+      database.db.collection(paramBoardId).updateOne(
+        {_id: new ObjectId(paramEntryId)}, {"$push": { 
+          comments: {
+            _id: objectid,
+            userid: user._id,  
+            nickNm: user.nickNm,
+            boardid: paramBoardId,   
+            parentreplyid: paramParentReplyId, //부모 댓글의 id
+            rootreplyid: paramRootReplyId, //루트 댓글의 id
+            likes: 0,
+            contents: paramContents,
+            pictures: paramPictures, 
+            created_at: timestamp(), 
+        }}});
+          console.log("댓글 추가함.");    		   
+        }     			 
+      return;  
+  })//UserModel.findOne 닫기
+  } else {  
+      logger.log('AddComment 수행 중 데이터베이스 연결 실패');
+      res.end(); 
+      return;
+    }	
+}; //AddComment 닫기
+
+
+
 //////////////////한 게시판의 댓글(comments)과 관련된 함수들 끝 /////////////////////////////////
 
 
@@ -366,4 +437,5 @@ module.exports.ShowBulletinBoard = ShowBulletinBoard;
 module.exports.AddEditEntry = AddEditEntry; 
 module.exports.DeleteEntry = DeleteEntry;
 module.exports.IncreLikeEntry = IncreLikeEntry;
-module.exports.ShowComments = ShowComments;
+module.exports.ShowComments = ShowComments; 
+module.exports.AddComment = AddComment; 

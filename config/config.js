@@ -27,8 +27,7 @@ module.exports = {
         ,{file:'./post', path:'/process/checkeditablepost', method:'checkeditablepost', type:'post'}
         ,{file:'./post', path:'/process/editpost', method:'editpost', type:'post'} 
         ,{file:'./post', path:'/process/deletepost', method:'deletepost', type:'post'} 
-        ,{file:'./post', path:'/process/addcomment', method:'addcomment', type:'post'} 
-        ,{file:'./post', path:'/process/deletecomment', method:'deletecomment', type:'post'} 
+        
         
         //rateclass(강의평가)와 관련된 패스들 
         ,{file:'./rateclass', path:'/process/addpost_rateclass', method:'addpost_rateclass', type:'post'} 
@@ -61,6 +60,7 @@ module.exports = {
         ,{file:'./BulletinBoards', path:'/process/DeleteEntry', method:'DeleteEntry', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/IncreLikeEntry', method:'IncreLikeEntry', type:'post'} 
         ,{file:'./BulletinBoards', path:'/process/ShowComments', method:'ShowComments', type:'post'}
+        ,{file:'./BulletinBoards', path:'/process/AddComment', method:'AddComment', type:'post'}
 ], 
 };  
 
