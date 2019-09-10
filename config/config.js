@@ -11,9 +11,9 @@ module.exports = {
         ,{file:'./post_schema', collection:'communities', schemaName:'PostSchema', modelName:'PostModel'}  
         ,{file:'./rateclass_schema', collection:'rateclasses', schemaName:'RateClassSchema', modelName:'RateClassModel'} 
         ,{file:'./timetable_schema', collection:'timetables', schemaName:'TimetableSchema', modelName:'TimetableModel'} 
-        ,{file:'./BulletinBoards_schema', collection:'BulletinBoards', schemaName:'BulletinBoardsSchema', modelName:'BulletinBoardsModel'} 
+        ,{file:'./Report_schema', collection:'reports', schemaName:'ReportSchema', modelName:'ReportModel'} 
         ,{file:'./BulletinBoardsList_schema', collection:'BulletinBoardsList', schemaName:'BulletinBoardsListSchema', modelName:'BulletinBoardsListModel'} 
-        ,{file:'./Board1_schema', collection:'Board1', schemaName:'Board1', modelName:'Board1'}
+        ,{file:'./Board1_schema', collection:'Board1', schemaName:'Board1Schema', modelName:'Board1Model'}
 	],
 	route_info: [
         //user 혹은 인증과 관련된 패스들
@@ -54,7 +54,12 @@ module.exports = {
         ,{file:'./timetable', path:'/process/deletecourse', method:'deletecourse', type:'post'}  
         
         //BulluetinBoardsList와 관련된 패스들
-        ,{file:'./BulletinBoardsList', path:'/process/ShowBoardsList', method:'ShowBulletinBoardsList', type:'post'}
-        ,{file:'./BulletinBoardsList', path:'/process/ShowBoard', method:'ShowBulletinBoard', type:'post'} 
+        ,{file:'./BulletinBoards', path:'/process/ShowBulletinBoardsList', method:'ShowBulletinBoardsList', type:'post'}
+        ,{file:'./BulletinBoards', path:'/process/AddReport', method:'AddReport', type:'post'}
+        ,{file:'./BulletinBoards', path:'/process/ShowBulletinBoard', method:'ShowBulletinBoard', type:'post'} 
+        ,{file:'./BulletinBoards', path:'/process/AddEditEntry', method:'AddEditEntry', type:'post'}
+        ,{file:'./BulletinBoards', path:'/process/DeleteEntry', method:'DeleteEntry', type:'post'}
+        ,{file:'./BulletinBoards', path:'/process/IncreLikeEntry', method:'IncreLikeEntry', type:'post'}
 ], 
-}; 
+};  
+

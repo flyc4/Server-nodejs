@@ -3,6 +3,11 @@
  * 
  */
 
+var moment = require('moment')  
+var timestamp = function(){            
+    return moment().format("YYYY-MM-DD HH:mm:ss");
+  }
+
 var SchemaObj = {};
 SchemaObj.createSchema = function(mongoose) {
 	
@@ -11,7 +16,7 @@ SchemaObj.createSchema = function(mongoose) {
         
 	    boardname: {type: String, trim: true, 'default':''}, //게시판 이름. 게시판 전체목록 조회 시 collection(boardname) 이런 식으로
 	    contents: {type: String, trim:true, 'default':''}, // 게시판 설명
-        created_at: {type: Date, 'default': Date.now}
+        created_at: {type: Date, 'default': timestamp()}
         
     });
 	console.log('BoardsListSchema 정의함.');
