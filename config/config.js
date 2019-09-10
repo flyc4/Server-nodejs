@@ -53,13 +53,14 @@ module.exports = {
         ,{file:'./timetable', path:'/process/editcourse', method:'editcourse', type:'post'} 
         ,{file:'./timetable', path:'/process/deletecourse', method:'deletecourse', type:'post'}  
         
-        //BulluetinBoardsList와 관련된 패스들
+        //BulluetinBoards와 관련된 패스들
         ,{file:'./BulletinBoards', path:'/process/ShowBulletinBoardsList', method:'ShowBulletinBoardsList', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/AddReport', method:'AddReport', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/ShowBulletinBoard', method:'ShowBulletinBoard', type:'post'} 
         ,{file:'./BulletinBoards', path:'/process/AddEditEntry', method:'AddEditEntry', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/DeleteEntry', method:'DeleteEntry', type:'post'}
-        ,{file:'./BulletinBoards', path:'/process/IncreLikeEntry', method:'IncreLikeEntry', type:'post'}
+        ,{file:'./BulletinBoards', path:'/process/IncreLikeEntry', method:'IncreLikeEntry', type:'post'} 
+        ,{file:'./BulletinBoards', path:'/process/ShowComments', method:'ShowComments', type:'post'}
 ], 
 };  
 

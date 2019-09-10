@@ -15,7 +15,7 @@ SchemaObj.createSchema = function(mongoose) {
 	var Board1Schema = mongoose.Schema({ 
     
             userid: {type: mongoose.Schema.ObjectId, ref: 'users'}, 
-            nickNm: {type: String, 'default': 'noName', /*unique: true*/},
+            nickNm: {type: String, 'default': 'noName'},
             profile: {type: String, trim:true, 'default': ' '},// 게시글 옆 사진
             likes: {type: Number, unique: false, 'default': 0},
             created_at: {type: Date, 'default': timestamp()},
@@ -24,25 +24,17 @@ SchemaObj.createSchema = function(mongoose) {
             pictures: {type: String, trim:true, 'default': ' '},  //링크
             hits: {type: Number, unique: false, 'default': 0}, // 조회 수    
             comments: [{   // 댓글           
+                userid: {type: mongoose.Schema.ObjectId, ref: 'users'},  
+                nickNm: {type: String, 'default': 'noName'},
+                boardid: {type: String, trim:true, 'default': ' '}, 
                 parentreplyid: {type: mongoose.Schema.ObjectId, 'default': ' ' }, //부모 댓글의 id
                 rootreplyid: {type: mongoose.Schema.ObjectId, 'default': ' ' }, //루트 댓글의 id
-                userid: {type: mongoose.Schema.ObjectId, ref: 'users'},
                 likes: {type: Number, unique: false, 'default': 0},
-                created_at: {type: Date, 'default': timestamp()},
                 contents: {type: String, trim:true, 'default': ' '},
                 pictures: {type: String, trim:true, 'default': ' '}, 
+                created_at: {type: Date, 'default': timestamp()}, 
             }]
     });
-	
-    Board1Schema.methods = {
-        saveEntry: function(callback) {		// 글 저장
-            var self = this;
-            this.validate(function(err) {
-                if (err) return callback(err);
-                self.save(callback);
-            });
-        } 
-    }//Board1Schema.methods닫기 
     console.log('BulletinBoardsSchema 정의함.');
 	return Board1Schema;
 };

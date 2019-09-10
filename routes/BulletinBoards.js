@@ -30,7 +30,8 @@ var ShowBulletinBoardsList = function(req, res) {
       if(err){
         logger.log("ShowBulletinBoardsList에서 collection 조회 중 수행 중 에러 발생"+ err.message)
       }
-      data.forEach(function(data2){
+      data.forEach(function(data2){ 
+        
         context.boardslist.push({boardid: data2.boardname, boardname: data2.boardname, contents: data2.contents}) 
       });   
     context.boardslist.splice(0,1);  
@@ -66,7 +67,7 @@ var AddReport =function(req, res) {
   
   console.log('paramTitle: ' + paramTitle + ', paramContents: ' + paramContents + ', paramUserId: ' + 
   paramUserId, ', paramBoardId: ' + paramBoardId, ', paramEntryId: ' + paramEntryId + 
-  ', paramCommentId: ' + paramCommentId,);
+  ', paramCommentId: ' + paramCommentId);
 
   if (database.db){       
     
@@ -105,7 +106,10 @@ var AddReport =function(req, res) {
   }   
 };//AddReport 닫기
 
-// 한 게시판(Entry 혹은 BulletinBoard 혹은 Post와 관련된 함수 들)
+//////////////////신고와 관련된 함수 끝/////////////////////////////////
+
+
+//////////////////한 게시판(Entry 혹은 BulletinBoard 혹은 Post)과 관련된 함수 들) 시작 /////////////////////////////////
 
 //한 게시판의 모든 게시물 보여주기  
 var ShowBulletinBoard = function(req, res) {
@@ -291,7 +295,70 @@ var IncreLikeEntry = function(req, res) {
       res.end(); 
       return;
     }	
-}; //IncreLikeEntry 닫기
+}; //IncreLikeEntry 닫기 
+
+//////////////////한 게시판(Entry 혹은 BulletinBoard 혹은 Post)과 관련된 함수 들) 끝 /////////////////////////////////  
+
+//////////////////한 게시판의 댓글(comments)과 관련된 함수들 시작 /////////////////////////////////
+
+//해당 게시물의 모든 댓글 보여주기
+var ShowComments = function(req, res) {
+  console.log('BulletinBoards 모듈 안에 있는 ShowComments 호출됨.');
+  var database = req.app.get('database');      
+  
+  var paramBoardId = req.body.boardid||req.query.boardid || req.param.boardid;   
+  var paramEntryId = req.body.entryid||req.query.entryid || req.param.entryid;
+  var paramUserId = req.body.userid||req.query.userid || req.param.userid; 
+
+  console.log('paramUserId: ' + paramUserId, ', paramBoardId: ' + paramBoardId, ', paramEntryId: ' + paramEntryId);
+
+  var context = {commentslist: [{ boardid: " ", entryid: "", rootreplyid: "", parentreplyid: "", replyid: "", 
+    userid: "", username: " ", profile: '', likes: 0, date: ' ', ismine: false, contents: ' ', pictures: ' ' }]};
+
+  if (database.db){    
+    database.db.collection(paramBoardId).aggregate([
+      { $match: { 
+      _id: new ObjectId(paramEntryId)}},   
+
+      //Expand the courses array into a stream of documents
+      { "$unwind": '$comments'},
+      // Sort in ascending order
+      { $sort: {
+          'comments.created_at': -1
+      }},  
+      ]).toArray(function(err,comments){ 
+          if(err){ 
+              console.error('ShowComments 안에서 댓글 조회 중 에러 발생 : ' + err.message);
+              res.end(); 
+              return;  
+          }   
+          comments.forEach( function(document){  
+            var localismine = paramUserId == document.comments.userid;
+            context.commentslist.push({boardid: paramBoardId, entryid: paramEntryId, rootreplyid: document.comments.rootreplyid
+            , parentreplyid: document.comments.parentreplyid, replyid: document.comments._id, userid: document.comments.userid, username: document.comments.nickNm 
+            , profile: document.comments.profile, likes: document.comments.likes, date: document.comments.created_at, ismine: localismine, contents: document.comments.contents
+            , pictures: document.comments.pictures});
+          })  
+          context.commentslist.splice(0,1) 
+          res.json(context); 
+          return;
+      })//aggregate 닫기 
+  }//if(database.db) 닫기 
+  else {
+  logger.log("ShowComment 수행 중 데이터베이스 연결 실패")
+  res.end(); 
+  return;
+  }  
+};//ShowComments 닫기
+
+    
+//////////////////한 게시판의 댓글(comments)과 관련된 함수들 끝 /////////////////////////////////
+
+
+
+
+
+
 
 module.exports.ShowBulletinBoardsList = ShowBulletinBoardsList; 
 module.exports.AddReport = AddReport;
@@ -299,4 +366,4 @@ module.exports.ShowBulletinBoard = ShowBulletinBoard;
 module.exports.AddEditEntry = AddEditEntry; 
 module.exports.DeleteEntry = DeleteEntry;
 module.exports.IncreLikeEntry = IncreLikeEntry;
-
+module.exports.ShowComments = ShowComments;
