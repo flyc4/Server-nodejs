@@ -113,10 +113,12 @@ var ShowBulletinBoard = function(req, res) {
   var database = req.app.get('database');      
   
   var paramboardid = req.body.boardid||req.query.boardid || req.param.boardid;   
-  var paramuserid = req.body.userid||req.query.userid || req.param.userid; 
+  var paramuserid= req.body.userid||req.query.userid || req.param.userid||"5d5373177443381df03f3040";
   var parampostStartIndex = req.body.postStartIndex||req.query.postStartIndex || req.param.postStartIndex||0; 
-  var parampostEndIndex = req.body.postEndIndex||req.query.postEndIndex || req.param.postEndIndex||19; 
-  
+  var parampostEndIndex = req.body.postEndIndex||req.query.postEndIndex || req.param.postEndIndex||19;  
+
+  console.log("paramboardid: ",paramboardid) 
+  console.log("paramuserid: ",paramuserid) 
   console.log("parampostStartIndex: ",parampostStartIndex)
   console.log("parampostEndIndex: ",parampostEndIndex)
 
@@ -144,7 +146,8 @@ var ShowBulletinBoard = function(req, res) {
           username: data[i].userid.nickNm, profile: data[i].profile, likes: data[i].likes, date: data[i].created_at, 
           ismine: localismine, username: data[i].nickNm, title: data[i].title, contents: data[i].title, pictures: data[i].pictures}); 
         } 
-    context.postslist.splice(0,1) 
+    context.postslist.splice(0,1)   
+    console.dir(context.postslist)
     res.json(context);
     return;  
   })
@@ -413,14 +416,16 @@ if (database.db) {
       return;
     }	
 }; //AddComment 닫기
-
+ 
 var EditComment = function(req, res) {
   console.log('BulletinBoards 모듈 안에 있는 EditComment 호출됨.');
   
   var paramContents = req.body.contents || req.query.contents; 
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
-  var paramCommentId = req.body.commentid||req.query.commentid;
+  
+  //나: commentid, 추: replyid
+  var paramCommentId = req.body.replyid||req.query.replyid;
 
   var database = req.app.get('database');
   
@@ -430,21 +435,95 @@ var EditComment = function(req, res) {
 // 데이터베이스 객체가 초기화된 경우
 if (database.db) {
          
-      //조회 완료한 Post의 제목 및 내용 덮어쓰기 
-      database.db.collection(paramBoardId).findOneAndUpdate({'comments._id': new ObjectId(paramCommentId)},
-      {$set: {contents: paramContents}},  
-       function(err){ 
-        if(err){
-          utils.log("EditComment에서 collection 조회 중 수행 중 에러 발생: "+ err.message)
-        }     			 
-      return;   
-      })//findOneAndUpdate 닫기 
+  //조회 완료한 댓글 내용 덮어쓰기 
+  database.db.collection(paramBoardId).updateOne({_id: new ObjectId(paramEntryId), 'comments._id': new ObjectId(paramCommentId)},
+  {$set: {'comments.$.contents': paramContents}},
+  function(err,data){ 
+    if(err){
+      utils.log("EditComment에서 collection 조회 중 수행 중 에러 발생: "+ err.message)
+    }     
+    console.log("댓글 수정 완료") 			 
+    return;   
+  })//findOneAndUpdate 닫기 
+} else {  
+  utils.log('EditComment 수행 중 데이터베이스 연결 실패');
+  res.end(); 
+  return;
+}	
+}; //EditComment 닫기 
+
+//댓글 삭제
+var DeleteComment = function(req, res) {
+  console.log('BulletinBoards 모듈 안에 있는 DeleteComment 호출됨.');
+  
+  var paramContents = req.body.contents || req.query.contents; 
+  var paramBoardId = req.body.boardid||req.query.boardid;  
+  var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
+  
+  //나: commentid, 추: replyid
+  var paramCommentId = req.body.replyid||req.query.replyid;
+
+  var database = req.app.get('database');
+  
+  console.log( 'paramBoardId: ' +  paramBoardId, 'paramEntryId: ' + paramEntryId, 'paramCommentId: ' + paramCommentId);
+
+// 데이터베이스 객체가 초기화된 경우
+if (database.db) {
+         
+  //조회 완료한 Post의 제목 및 내용 덮어쓰기 
+  database.db.collection(paramBoardId).updateOne({_id: new ObjectId(paramEntryId)},
+  {$pull: { 'comments': { '_id': new ObjectId(paramCommentId)}}},
+  function(err,data){ 
+    if(err){
+      utils.log("DeleteComment에서 collection 조회 중 수행 중 에러 발생: "+ err.message) 
+      res.end();
+      return;
+    }       			 
+    res.end();
+    return;   
+  })//findOneAndUpdate 닫기 
+} else {  
+  utils.log('DeleteComment 수행 중 데이터베이스 연결 실패');
+  res.end(); 
+  return;
+}	
+}; //DeleteComment 닫기  
+
+//댓글 좋아요 1 증가
+var IncreLikeComment = function(req, res) {
+  console.log('BulletinBoards 모듈 안에 있는 IncreLikeComment 호출됨.');
+  
+  var paramBoardId = req.body.boardid||req.query.boardid;  
+  var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000";  
+  var paramCommentId = req.body.replyid||req.query.replyid;
+  
+
+  var database = req.app.get('database');
+  
+  console.log('paramBoardId: ' + paramBoardId, ', paramEntryId: ' + paramEntryId, 
+    ', paramCommentId: ' + paramCommentId);
+
+  // 데이터베이스 객체가 초기화된 경우
+  if (database.db) {
+      
+      //좋아요를 증가시킬 게시물을 조회 
+      database.db.collection(paramBoardId).findOneAndUpdate({_id: new ObjectId(paramEntryId), 'comments._id': new ObjectId(paramCommentId)},  
+        {$inc: {'comments.$.likes': 1}},
+      function(err){
+        if (err) {
+                utils.log("IncreLikeComment 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
+                res.end(); 
+                return;
+          }		  
+        return; 
+        })
   } else {  
-      utils.log('EditComment 수행 중 데이터베이스 연결 실패');
+      utils.log('IncreLikeComment 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
     }	
-}; //EditComment 닫기
+}; //IncreLikeComment 닫기
+
 
 //////////////////한 게시판의 댓글(comments)과 관련된 함수들 끝 /////////////////////////////////
 
@@ -456,4 +535,6 @@ module.exports.DeleteEntry = DeleteEntry;
 module.exports.IncreLikeEntry = IncreLikeEntry;
 module.exports.ShowComments = ShowComments; 
 module.exports.AddComment = AddComment;
-module.exports.EditComment = EditComment; 
+module.exports.EditComment = EditComment;  
+module.exports.DeleteComment = DeleteComment; 
+module.exports.IncreLikeComment = IncreLikeComment;
