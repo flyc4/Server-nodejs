@@ -330,7 +330,7 @@ var ShowComments = function(req, res) {
       }},  
       ]).toArray(function(err,result){ 
           if(err){ 
-              console.error('ShowComments 안에서 댓글 조회 중 에러 발생 : ' + err.message);
+              utils.log('ShowComments 안에서 댓글 조회 중 에러 발생 : ' + err.message);
               res.end(); 
               return;  
           }     
