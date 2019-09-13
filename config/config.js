@@ -14,8 +14,10 @@ module.exports = {
         ,{file:'./Report_schema', collection:'reports', schemaName:'ReportSchema', modelName:'ReportModel'} 
         ,{file:'./BulletinBoardsList_schema', collection:'BulletinBoardsList', schemaName:'BulletinBoardsListSchema', modelName:'BulletinBoardsListModel'} 
         ,{file:'./Board1_schema', collection:'Board1', schemaName:'Board1Schema', modelName:'Board1Model'}  
-        ,{file: './Course_schema', collection: 'Course', schemaName: 'CourseSchema', modelName: 'CourseModel'}
-	],
+        ,{file: './CourseEvaluation_schema', collection: 'CourseEvaluation', schemaName: 'CourseEvaluationSchema', modelName: 'CourseEvaluationModel'} 
+        ,{file: './Professor_schema', collection: 'Professor', schemaName: 'ProfessorSchema', modelName: 'ProfessorModel'}        
+        
+        ],
 	route_info: [
         //user 혹은 인증과 관련된 패스들
         {file:'./user', path:'/process/checknickNm', method:'checknickNm', type:'post'} 
@@ -64,11 +66,11 @@ module.exports = {
         ,{file:'./BulletinBoards', path:'/process/AddComment', method:'AddComment', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/EditComment', method:'EditComment', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/DeleteComment', method:'DeleteComment', type:'post'} 
-        ,{file:'./BulletinBoards', path:'/process/IncreLikeComment', method:'IncreLikeComment', type:'post'}
+        ,{file:'./BulletinBoards', path:'/process/IncreLikeComment', method:'IncreLikeComment', type:'post'} 
 
-
-        ,{file:'./Course', path:'/process/showcourselist', method:'showcourselist', type:'post'}
-
+        //CourseEvaluation과 관련된 패스들 
+        ,{file:'./CourseEvaluation', path:'/process/ShowCoursesList', method:'ShowCoursesList', type:'post'}
+        
 ], 
 };  
 
