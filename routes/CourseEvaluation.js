@@ -60,7 +60,7 @@ var ShowCoursesList = function(req, res) {
             console.dir(context.courseslist)
             res.json(context); 
             return;
-        })//find 닫기 
+        }).sort({'created_at': -1});//find 닫기 
     } 
     else{
         utils.log("ShowCoursesList 수행 중 데이터베이스 연결 실패")

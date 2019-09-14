@@ -12,6 +12,7 @@
     "express": "^4.14.0",
     "express-error-handler": "^1.1.0",
     "express-session": "^1.14.2",
+    "forever": "^1.0.0",
     "fs": "0.0.1-security",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.24.0",

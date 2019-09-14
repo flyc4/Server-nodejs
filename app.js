@@ -14,7 +14,8 @@
 var express = require('express')
   , http = require('http')
   , path = require('path')
-  , url = exports.db_url; 
+  , url = exports.db_url;
+//  , forever = require('forever-monitor'); 
 
 // Express의 미들웨어 불러오기
 var bodyParser = require('body-parser')
@@ -105,7 +106,7 @@ var errorHandler = expressErrorHandler({
 app.use( expressErrorHandler.httpError(404) );
 app.use( errorHandler );
 
-//===== 서버 시작 =====//
+//===== 서버 시작 =====// 
 
 //확인되지 않은 예외 처리 - 서버 프로세스 종료하지 않고 유지함
 process.on('uncaughtException', function (err) {
