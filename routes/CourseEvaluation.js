@@ -105,9 +105,13 @@ var ShowCommentsList = function(req, res) {
         //paramcourseid: 09-14 15:33 현재 프런트엔드: 
         // 'Components\Course_Evaluation\screen\EvaluationScreen.js'에서 courseid 값의 default를 NO-ID 로 설정함.
         var paramcourseid = req.body.courseid == 'NO-ID'? '000000000000000000000001': req.body.courseid;
-        var paramcommentsliststartindex = req.body.commentsliststartindex|| 0;
-        var paramcommentslistendindex = req.body.commentslistendindex|| 19;   
+        var paramcommentsliststartindex = req.body.commentsliststartindex;
+        var paramcommentslistendindex = req.body.commentslistendindex ;   
         
+        console.log("paramcommentsliststartindex: ",paramcommentsliststartindex); 
+        console.log("paramcommentslistendindex: ",paramcommentslistendindex);
+
+
         // 만족하는 문서 갯수 확인  
 
         database.CourseEvaluationModel.aggregate([
@@ -129,7 +133,9 @@ var ShowCommentsList = function(req, res) {
                 }   
                 if(paramcommentslistendindex>=cursor.length){
                     paramcommentslistendindex = cursor.length-1;
-                } 
+                }  
+
+
                 for(var i = paramcommentsliststartindex; i<= paramcommentslistendindex; i++)  
                 {   
                     context.commentslist.push({
