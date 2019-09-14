@@ -70,7 +70,8 @@ module.exports = {
 
         //CourseEvaluation과 관련된 패스들 
         ,{file:'./CourseEvaluation', path:'/process/ShowCoursesList', method:'ShowCoursesList', type:'post'}
+        ,{file:'./CourseEvaluation', path:'/process/ShowCommentsList', method:'ShowCommentsList', type:'post'}
         
-], 
+],  
 };  
 
