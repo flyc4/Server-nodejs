@@ -10,6 +10,7 @@ var jwt = require('jsonwebtoken');
 var ObjectId = mongoose.Types.ObjectId;  
 var utils = require('../config/utils');
 
+//DB에 저장된 20개의 과목들을 불러옴.
 var ShowCoursesList = function(req, res) {
     var database = req.app.get('database');
     console.log("CourseEvaluation 모듈 안에 있는 ShowCoursesList 호출")
@@ -28,7 +29,8 @@ var ShowCoursesList = function(req, res) {
             exam : " ",
             assignment : " ",
             difficulty : " ",
-            grade : " "
+            grade : " ", 
+            place: " ",
         }]}
 
         var paramCoursesListStartIndex = req.body.commentsliststartindex|| 0;
@@ -65,10 +67,11 @@ var ShowCoursesList = function(req, res) {
                     assignmentlist = ["dummy"], 
                     difficultylist = ["dummy"],
                     gradelist = ["dummy"], 
-                    exam = "No comment", 
-                    assignment = "No comment", 
-                    difficulty = "No comment", 
-                    grade  = "No comment";
+                    exam = "N/A", 
+                    assignment = "N/A", 
+                    difficulty = "N/A", 
+                    grade  = "N/A";
+                    
 
                 if(cursor[i].comments.length>0){
                     
@@ -124,7 +127,8 @@ var ShowCoursesList = function(req, res) {
                     exam : exam,
                     assignment : assignment,
                     difficulty : difficulty,
-                    grade : grade})
+                    grade : grade, 
+                    place: cursor[i].institution})
 
             } 
             context.courseslist.splice(0,1) 
@@ -140,6 +144,7 @@ var ShowCoursesList = function(req, res) {
     } 
 }; 
 
+// 한 과목의 댓글 20개를 불러옴
 var ShowCommentsList = function(req, res) {
     var database = req.app.get('database');
     console.log("CourseEvaluation 모듈 안에 있는 ShowCommentsList 호출")
@@ -150,6 +155,7 @@ var ShowCommentsList = function(req, res) {
         //09-14 15:33 현재 프런트엔드: 'Components\Course_Evaluation\screen\EvaluationScreen.js'에서 
         //username과 contents만 사용하지만, 추 후 필요할 것을 대비하여 comments의 모든 요소를 삽입함
         var context = {commentslist: [{
+            commentid: " ",
             userid: " ",
             username: " ", 
             contents: " ", 
@@ -157,7 +163,9 @@ var ShowCommentsList = function(req, res) {
             assignment: " ",
             grade: " ",
             difficulty: " ",
-			rating: 0,  
+            rating: 0,   
+            likes: 0, 
+            unlikes: 0,
             created_at: " "
         }]}  
         //paramCourseId: 09-14 15:33 현재 프런트엔드: 
@@ -197,7 +205,8 @@ var ShowCommentsList = function(req, res) {
 
                 for(var i = paramCommentsListStartIndex; i<= paramCommentsListEndIndex; i++)  
                 {   
-                    context.commentslist.push({
+                    context.commentslist.push({ 
+                        commentid: cursor[i].comments._id,
                         userid: cursor[i].comments.userid,
                         username: cursor[i].comments.nickNm, 
                         contents: cursor[i].comments.contents, 
@@ -205,7 +214,9 @@ var ShowCommentsList = function(req, res) {
                         assignment: cursor[i].comments.assignment,
                         grade: cursor[i].comments.grade,
                         difficulty: cursor[i].comments.difficulty,
-                        rating: cursor[i].comments.rating,  
+                        rating: cursor[i].comments.rating,   
+                        likes: cursor[i].comments.likes, 
+                        unlikes: cursor[i].comments.unlikes,
                         created_at: cursor[i].comments.created_at 
                     })
                 } 
@@ -231,42 +242,47 @@ var AddCourseEvaluationComment = function(req, res) {
        
         var paramCourseId = req.body.courseid == 'NO-ID'? '000000000000000000000001': req.body.courseid,
             paramUserId = req.body.userid,
-            paramDifficulty = req.body.difficulty || "N/A",
-            paramAssignment = req.body.assignment || "N/A",  
-            paramExam = req.body.exam || "N/A", 
+            paramContents = req.body.contents == " "? "There is no comment":req.body.contents,
+            paramExam = req.body.exam || "N/A",
+            paramAssignment = req.body.assignment || "N/A",
             paramGrade = req.body.grade || "N/A", 
-            paramRating = req.body.rating || 0, 
-            paramContents = req.body.contents == " "? "There is no comment":req.body.contents;
-
+            paramDifficulty = req.body.difficulty || "N/A",
+            paramRating = req.body.rating || 0,
+            commentid = new mongoose.Types.ObjectId(); 
+            
         console.log('paramCourseId: ' + paramcoourseid + ', paramUserId: ' +  paramUserId, 
         ', paramDifficulty: ' + paramDifficulty, ', paramAssignment: ' + paramAssignment + 
         ', paramExam: ' + paramExam + ', paramGrade: ' + paramGrade + 
-        ', paramRating: ' + paramRating + ', paramContents: ' + paramContents);
+        ', paramRating: ' + paramRating + ', paramContents: ' + paramContents); 
 
         // 사용자 조회  
-        database.UserModel.findOne({_id: new ObjectId(paramuserid)}, function(err,user){            
+        database.UserModel.findOne({_id: new ObjectId(paramUserId)}, function(err,user){            
             if(err){ 
                 utils.log('AddCourseEvaluationComment에서 사용자 조회 중 에러 발생: ' + err.message);
                 res.end();
                 return; 
             }     
-            // 사용자가 존재하지 않을 경우
+            // 사용자가 존재하지 않을 경우 
             if(user == null){
                 utils.log('AddCourseEvaluationComment에서 조회된 사용자가 없음') 
                 res.end(); 
                 return;
             }
-            //댓글 삽입 
+            //댓글 삽입  
+            
             database.CourseEvaluationModel.findByIdAndUpdate(paramCourseId,
-            {'$push': { 'comments': {
+            {'$push': { 'comments': { 
+                            '_id': commentid,
                             'userid': paramUserId, 
                             'nickNm':user.nickNm, 
                             'difficulty': paramDifficulty,
                             'assignment': paramAssignment,  
                             'exam': paramExam, 
                             'grade': paramGrade, 
-                            'rating': paramRating,
-                            'contents':paramContents 
+                            'rating': paramRating, 
+                            'contents':paramContents, 
+                            'likes': 0, 
+                            'unlikes': 0, 
                             }
                         }
             },
@@ -274,7 +290,8 @@ var AddCourseEvaluationComment = function(req, res) {
                 if(err2){
                     utils.log("AddCourseEvaluationComment에서 댓글 추가 중 에러 발생: ", err2.message)
                     return;
-                } 
+                }  
+                console.log("댓글 추가함")
                 return; 
             }) //findByIdAndUpdate닫기 
 
