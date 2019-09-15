@@ -57,16 +57,73 @@ var ShowCoursesList = function(req, res) {
               } 
             for(var i = paramcoursesliststartindex; i<= paramcourseslistendindex; i++)  
             {   
+                //overallrating의 합계를 구하기 위함
+                //comments에 있는 exam& assignment& difficulty& grade의 값들을 담은 array. splice(0,1) 로 제거 예정 
+                //exam, assignment, difficulty, grade의 값: comments 가 없을 때의 값
+                var overallrating = 0;  
+                var examlist = ["dummy"],
+                    assignmentlist = ["dummy"], 
+                    difficultylist = ["dummy"],
+                    gradelist = ["dummy"], 
+                    exam = "no data", 
+                    assignment = "no data", 
+                    difficulty = "no data", 
+                    grade  = "no data";
+
+                if(cursor[i].comments.length>0){
+                    
+                    cursor[i].comments.map( (items)=> {
+                        overallrating = overallrating+items.rating; 
+                        examlist.push(items.exam); 
+                        assignmentlist.push(items.assignment); 
+                        difficultylist.push(items.difficulty); 
+                        gradelist.push(items.grade);
+                   })  
+                   
+                   //overallrating, exam, assignment, difficulty, grade의 값 계산 
+                   overallrating = Math.round(overallrating/cursor[i].comments.length); 
+                   examlist.splice(0,1)
+                   assignmentlist.splice(0,1)
+                   difficultylist.splice(0,1)
+                   gradelist.splice(0,1) 
+
+                   //최빈값 조회 함수
+                   var GetCommonElement = function(array){ 
+                    //maxelement 편집 시 103번 줄 ||maxelement =="empty" 도 편집해야 함
+                    var elements = {}, maxelement = "empty", maxcount=-1; 
+                    elements[maxelement] = maxcount;
+                        array.map( (item) => {                  
+                            if(elements[item] == null){
+                                elements[item] = 1;   
+                            } 
+                            else{
+                                elements[item]++
+                            }   
+                            //items의 출연 횟수 > maxelement의 출연 횟수 && 사전 편찬 순으로 itmes 더 먼저 나올 경울
+                            if(elements[item]>elements[maxelement]&&(item<maxelement||maxelement =="empty")){
+                                maxelement = item; 
+                                maxcount = elements[item]; 
+                            }  
+                        }) 
+                        return maxelement;
+                   } 
+
+                    exam = GetCommonElement(examlist);   
+                    assignment = GetCommonElement(assignmentlist);
+                    difficulty = GetCommonElement(difficultylist);
+                    grade = GetCommonElement(gradelist);  
+                }//if(cursor[i].comments.length>0)닫기
+
                 context.courseslist.push({
                     courseID : cursor[i]._id.toString(),
                     professorID : cursor[i].professorid.toString(),
                     subject: cursor[i].subject,
                     professor: cursor[i].professor,
-                    overallRating : cursor[i].overallrating,      
-                    exam : cursor[i].exam,
-                    assignment : cursor[i].assignment,
-                    difficulty : cursor[i].difficulty,
-                    grade : cursor[i].grade})
+                    overallRating : overallrating,      
+                    exam : exam,
+                    assignment : assignment,
+                    difficulty : difficulty,
+                    grade : grade})
 
             } 
             context.courseslist.splice(0,1) 
@@ -105,6 +162,7 @@ var ShowCommentsList = function(req, res) {
         //paramcourseid: 09-14 15:33 현재 프런트엔드: 
         // 'Components\Course_Evaluation\screen\EvaluationScreen.js'에서 courseid 값의 default를 NO-ID 로 설정함.
         var paramcourseid = req.body.courseid == 'NO-ID'? '000000000000000000000001': req.body.courseid;
+
         var paramcommentsliststartindex = req.body.commentsliststartindex;
         var paramcommentslistendindex = req.body.commentslistendindex ;   
         
