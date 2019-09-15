@@ -31,14 +31,14 @@ var ShowCoursesList = function(req, res) {
             grade : " "
         }]}
 
-        var paramcoursesliststartindex = req.body.commentsliststartindex|| 0;
-        var paramcourseslistendindex = req.body.commentslistendindex|| 19;   
-        var paramsearch = req.body.search|| '';
+        var paramCoursesListStartIndex = req.body.commentsliststartindex|| 0;
+        var paramCoursesListEndIndex = req.body.commentslistendindex|| 19;   
+        var paramSearch = req.body.search|| '';
 
         //교수명 혹은 과목명을 검색 
-        if(paramsearch !=" "){
-            var query = {$or: [{professor: new RegExp(".*"+paramsearch+".*")}, 
-                {subject: new RegExp(".*"+paramsearch+".*")}]}; 
+        if(paramSearch !=" "){
+            var query = {$or: [{professor: new RegExp(".*"+paramSearch+".*")}, 
+                {subject: new RegExp(".*"+paramSearch+".*")}]}; 
         } 
         else{
             var query = {};
@@ -48,14 +48,14 @@ var ShowCoursesList = function(req, res) {
 
         database.CourseEvaluationModel.find(query, function(err, cursor){
             if(err){ 
-                logger.log('강의평가 목록 조회 중 에러 발생 : ' + err.message);
+                utils.log('강의평가 목록 조회 중 에러 발생 : ' + err.message);
 				res.end();
                 return; 
             }   
-            if(paramcourseslistendindex>=cursor.length){
-                paramcourseslistendindex = cursor.length-1;
+            if(paramCoursesListEndIndex>=cursor.length){
+                paramCoursesListEndIndex = cursor.length-1;
               } 
-            for(var i = paramcoursesliststartindex; i<= paramcourseslistendindex; i++)  
+            for(var i = paramCoursesListStartIndex; i<= paramCoursesListEndIndex; i++)  
             {   
                 //overallrating의 합계를 구하기 위함
                 //comments에 있는 exam& assignment& difficulty& grade의 값들을 담은 array. splice(0,1) 로 제거 예정 
@@ -65,10 +65,10 @@ var ShowCoursesList = function(req, res) {
                     assignmentlist = ["dummy"], 
                     difficultylist = ["dummy"],
                     gradelist = ["dummy"], 
-                    exam = "no data", 
-                    assignment = "no data", 
-                    difficulty = "no data", 
-                    grade  = "no data";
+                    exam = "No comment", 
+                    assignment = "No comment", 
+                    difficulty = "No comment", 
+                    grade  = "No comment";
 
                 if(cursor[i].comments.length>0){
                     
@@ -89,7 +89,7 @@ var ShowCoursesList = function(req, res) {
 
                    //최빈값 조회 함수
                    var GetCommonElement = function(array){ 
-                    //maxelement 편집 시 103번 줄 ||maxelement =="empty" 도 편집해야 함
+                    //maxelement 편집 시 104번 줄 ||maxelement =="empty" 도 편집해야 함
                     var elements = {}, maxelement = "empty", maxcount=-1; 
                     elements[maxelement] = maxcount;
                         array.map( (item) => {                  
@@ -99,8 +99,9 @@ var ShowCoursesList = function(req, res) {
                             else{
                                 elements[item]++
                             }   
-                            //items의 출연 횟수 > maxelement의 출연 횟수 && 사전 편찬 순으로 itmes 더 먼저 나올 경울
-                            if(elements[item]>elements[maxelement]&&(item<maxelement||maxelement =="empty")){
+                            //items의 출연 횟수 >= maxelement의 출연 횟수 && 사전 편찬 순으로 itmes 더 먼저 나올 경울
+                            if( (elements[item]==elements[maxelement]&&(item<maxelement)) 
+                                || elements[item]>elements[maxelement] || maxelement =="empty"){
                                 maxelement = item; 
                                 maxcount = elements[item]; 
                             }  
@@ -159,22 +160,22 @@ var ShowCommentsList = function(req, res) {
 			rating: 0,  
             created_at: " "
         }]}  
-        //paramcourseid: 09-14 15:33 현재 프런트엔드: 
+        //paramCourseId: 09-14 15:33 현재 프런트엔드: 
         // 'Components\Course_Evaluation\screen\EvaluationScreen.js'에서 courseid 값의 default를 NO-ID 로 설정함.
-        var paramcourseid = req.body.courseid == 'NO-ID'? '000000000000000000000001': req.body.courseid;
+        var paramCourseId = req.body.courseid == 'NO-ID'? '000000000000000000000001': req.body.courseid;
 
-        var paramcommentsliststartindex = req.body.commentsliststartindex;
-        var paramcommentslistendindex = req.body.commentslistendindex ;   
+        var paramCommentsListStartIndex = req.body.commentsliststartindex;
+        var paramCommentsListEndIndex = req.body.commentslistendindex ;   
         
-        console.log("paramcommentsliststartindex: ",paramcommentsliststartindex); 
-        console.log("paramcommentslistendindex: ",paramcommentslistendindex);
+        console.log("paramCommentsListStartIndex: ",paramCommentsListStartIndex); 
+        console.log("paramCommentsListEndIndex: ",paramCommentsListEndIndex);
 
 
         // 만족하는 문서 갯수 확인  
 
         database.CourseEvaluationModel.aggregate([
             { $match: { 
-            _id: new ObjectId(paramcourseid)}},   
+            _id: new ObjectId(paramCourseId)}},   
             
             //Expand the comments array into a stream of documents
             { "$unwind": '$comments'},
@@ -185,16 +186,16 @@ var ShowCommentsList = function(req, res) {
             ], function(err, cursor){
                 
                 if(err){ 
-                    logger.log('ShowCommentsList에서 댓글 조회 중 에러 발생 : ' + err.message);
+                    utils.log('ShowCommentsList에서 댓글 조회 중 에러 발생 : ' + err.message);
                     res.end();
                     return; 
                 }   
-                if(paramcommentslistendindex>=cursor.length){
-                    paramcommentslistendindex = cursor.length-1;
+                if(paramCommentsListEndIndex>=cursor.length){
+                    paramCommentsListEndIndex = cursor.length-1;
                 }  
 
 
-                for(var i = paramcommentsliststartindex; i<= paramcommentslistendindex; i++)  
+                for(var i = paramCommentsListStartIndex; i<= paramCommentsListEndIndex; i++)  
                 {   
                     context.commentslist.push({
                         userid: cursor[i].comments.userid,
@@ -219,7 +220,73 @@ var ShowCommentsList = function(req, res) {
         res.end(); 
         return;
     } 
+};  
+
+var AddCourseEvaluationComment = function(req, res) {
+    var database = req.app.get('database');
+    console.log("CourseEvaluation 모듈 안에 있는 AddCourseEvaluationComment 호출")
+    
+    // 데이터베이스 객체가 초기화된 경우
+	if (database.db) { 
+       
+        var paramCourseId = req.body.courseid == 'NO-ID'? '000000000000000000000001': req.body.courseid,
+            paramUserId = req.body.userid,
+            paramDifficulty = req.body.difficulty || "N/A",
+            paramAssignment = req.body.assignment || "N/A",  
+            paramExam = req.body.exam || "N/A", 
+            paramGrade = req.body.grade || "N/A", 
+            paramRating = req.body.rating || 0, 
+            paramContents = req.body.contents == " "? "There is no comment":req.body.contents;
+
+        console.log('paramCourseId: ' + paramcoourseid + ', paramUserId: ' +  paramUserId, 
+        ', paramDifficulty: ' + paramDifficulty, ', paramAssignment: ' + paramAssignment + 
+        ', paramExam: ' + paramExam + ', paramGrade: ' + paramGrade + 
+        ', paramRating: ' + paramRating + ', paramContents: ' + paramContents);
+
+        // 사용자 조회  
+        database.UserModel.findOne({_id: new ObjectId(paramuserid)}, function(err,user){            
+            if(err){ 
+                utils.log('AddCourseEvaluationComment에서 사용자 조회 중 에러 발생: ' + err.message);
+                res.end();
+                return; 
+            }     
+            // 사용자가 존재하지 않을 경우
+            if(user == null){
+                utils.log('AddCourseEvaluationComment에서 조회된 사용자가 없음') 
+                res.end(); 
+                return;
+            }
+            //댓글 삽입 
+            database.CourseEvaluationModel.findByIdAndUpdate(paramCourseId,
+            {'$push': { 'comments': {
+                            'userid': paramUserId, 
+                            'nickNm':user.nickNm, 
+                            'difficulty': paramDifficulty,
+                            'assignment': paramAssignment,  
+                            'exam': paramExam, 
+                            'grade': paramGrade, 
+                            'rating': paramRating,
+                            'contents':paramContents 
+                            }
+                        }
+            },
+            {'new':true},function(err2){
+                if(err2){
+                    utils.log("AddCourseEvaluationComment에서 댓글 추가 중 에러 발생: ", err2.message)
+                    return;
+                } 
+                return; 
+            }) //findByIdAndUpdate닫기 
+
+        })//UserModel.findOne 닫기
+    } 
+    else{
+        utils.log("AddCourseEvaluationComment 수행 중 데이터베이스 연결 실패")
+        res.end(); 
+        return;
+    } 
 }; 
 
 module.exports.ShowCoursesList = ShowCoursesList;  
-module.exports.ShowCommentsList = ShowCommentsList; 
+module.exports.ShowCommentsList = ShowCommentsList;  
+module.exports.AddCourseEvaluationComment = AddCourseEvaluationComment;
