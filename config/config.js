@@ -72,7 +72,11 @@ module.exports = {
         ,{file:'./CourseEvaluation', path:'/process/ShowCoursesList', method:'ShowCoursesList', type:'post'}
         ,{file:'./CourseEvaluation', path:'/process/ShowCommentsList', method:'ShowCommentsList', type:'post'}
         ,{file:'./CourseEvaluation', path:'/process/AddCourseEvaluationComment', method:'AddCourseEvaluationComment', type:'post'}
-        
+        ,{file:'./CourseEvaluation', path:'/process/EditCourseEvaluationComment', method:'EditCourseEvaluationComment', type:'post'}
+        ,{file:'./CourseEvaluation', path:'/process/DeleteCourseEvaluationComment', method:'DeleteCourseEvaluationComment', type:'post'}
+        ,{file:'./CourseEvaluation', path:'/process/IncreLikeCourseEvaluation', method:'IncreLikeCourseEvaluation', type:'post'}
+        ,{file:'./CourseEvaluation', path:'/process/IncreUnLikeCourseEvaluation', method:'IncreUnLikeCourseEvaluation', type:'post'}
+        ,{file:'./CourseEvaluation', path:'/process/ShowProfessorProfile', method:'ShowProfessorProfile', type:'post'}
 ],  
 };  
 

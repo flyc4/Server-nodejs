@@ -52,15 +52,15 @@ return;
 var AddReport =function(req, res) {
   console.log('ShowBulletinBoardsList 모듈 안에 있는 AddReport 호출됨.');
   
-  var paramTitle = req.body.title || req.query.title;
-  var paramContents = req.body.contents || req.query.contents;
+  var paramTitle = req.body.title || req.query.title|| "no title";
+  var paramContents = req.body.contents || req.query.contents|| "no contents";
   var paramUserId = req.body.userid || req.query.userid; 
   var paramBoardId = req.body.boardid||req.query.boardid;  
-  var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
-  var paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000000";
+  var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000001"; 
+  var paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000001";
 
   var database = req.app.get('database');      
-  
+  console.log(paramEntryId == 1)
   console.log('paramTitle: ' + paramTitle + ', paramContents: ' + paramContents + ', paramUserId: ' + 
   paramUserId, ', paramBoardId: ' + paramBoardId, ', paramEntryId: ' + paramEntryId + 
   ', paramCommentId: ' + paramCommentId);
@@ -438,7 +438,7 @@ if (database.db) {
   //조회 완료한 댓글 내용 덮어쓰기 
   database.db.collection(paramBoardId).updateOne({_id: new ObjectId(paramEntryId), 'comments._id': new ObjectId(paramCommentId)},
   {$set: {'comments.$.contents': paramContents}},
-  function(err,data){ 
+  function(err){ 
     if(err){
       utils.log("EditComment에서 collection 조회 중 수행 중 에러 발생: "+ err.message)
     }     
