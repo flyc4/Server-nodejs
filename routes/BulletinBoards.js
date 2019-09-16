@@ -20,7 +20,7 @@ var ShowBulletinBoardsList = async function(req, res) {
   console.log('ShowBulletinBoardsList 모듈 안에 있는 ShowBulletinBoardsList 호출됨.');
   var context = {boardslist: [{ boardid: '', boardname: '', contents: ''}]}
   var database = req.app.get('database');      
-
+ /* test용
   _notificationcrawl = async () => {
     var url = server_url + '/process/CrawlNotificationData'; 
         await axios.post(url) 
@@ -30,7 +30,7 @@ var ShowBulletinBoardsList = async function(req, res) {
             });    
   }
   await _notificationcrawl();
-
+  */
   if (database.db){       
 
     // 모든 게시판 조회 
@@ -130,7 +130,7 @@ var ShowBulletinBoard = async function(req, res) {
   var parampostEndIndex = req.body.postEndIndex||req.query.postEndIndex || req.param.postEndIndex||19;  
 
   //사용자가 공지사항에 접속했다면, 크롤링을 먼저 한다.
-  /*
+  
   if(paramboardid == 'notifications')
   _notificationcrawl = async () => {
     var url = server_url + '/process/CrawlNotificationData'; 
@@ -141,8 +141,6 @@ var ShowBulletinBoard = async function(req, res) {
             });    
   }
   await _notificationcrawl();
-*/ 
-
 
 
   console.log("paramboardid: ",paramboardid) 

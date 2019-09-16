@@ -13,6 +13,27 @@ var CrawlNotificationData = async function(req, res) {
 
     // 데이터베이스 객체가 초기화된 경우
 	if (database.db) { 
+        
+        // 해당 일자에 크롤링을 했는 지 여부 확인 
+        database.NotificationModel.findOne({created_at: {$gte: moment().format("YYYY-MM-DD HH:mm:ss")}, 
+            function(err,data){
+                if(err){
+                    
+                }
+            }) 
+                
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         // 파싱할 사이트의 url을 지정
         const getHtml = async () => {
             try { 
@@ -52,7 +73,6 @@ var CrawlNotificationData = async function(req, res) {
                 if(!date_check){ 
                     date = moment().format('YYYY-MM-DD');  
                 }
-                
                     
                 database.NotificationModel.findOne({title: title},
                     function(err2,data){
