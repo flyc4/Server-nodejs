@@ -9,16 +9,28 @@ var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken'); 
 var ObjectId = mongoose.Types.ObjectId;  
 var utils = require('../config/utils');
- 
+const server_url = "http://sususerver.ddns.net:3000"
+const axios = require('axios')
+
 
 ///////////////////"bulletinboardslist" collection을 사용하는 함수 /////////////////////////////////////
 
 //게시판 목록 보여 주기 
-var ShowBulletinBoardsList = function(req, res) {
+var ShowBulletinBoardsList = async function(req, res) {
   console.log('ShowBulletinBoardsList 모듈 안에 있는 ShowBulletinBoardsList 호출됨.');
   var context = {boardslist: [{ boardid: '', boardname: '', contents: ''}]}
   var database = req.app.get('database');      
-  
+
+  _notificationcrawl = async () => {
+    var url = server_url + '/process/CrawlNotificationData'; 
+        await axios.post(url) 
+            .then((response) => {         
+            })
+            .catch(( err ) => {     
+            });    
+  }
+  await _notificationcrawl();
+
   if (database.db){       
 
     // 모든 게시판 조회 
@@ -108,7 +120,7 @@ var AddReport =function(req, res) {
 //////////////////한 게시판(Entry 혹은 BulletinBoard 혹은 Post)과 관련된 함수 들) 시작 /////////////////////////////////
 
 //한 게시판의 모든 게시물 보여주기  
-var ShowBulletinBoard = function(req, res) {
+var ShowBulletinBoard = async function(req, res) {
   console.log('BulletinBoard 모듈 안에 있는 ShowBulletinBoard 호출됨.');
   var database = req.app.get('database');      
   
@@ -116,6 +128,22 @@ var ShowBulletinBoard = function(req, res) {
   var paramuserid= req.body.userid||req.query.userid || req.param.userid||"5d5373177443381df03f3040";
   var parampostStartIndex = req.body.postStartIndex||req.query.postStartIndex || req.param.postStartIndex||0; 
   var parampostEndIndex = req.body.postEndIndex||req.query.postEndIndex || req.param.postEndIndex||19;  
+
+  //사용자가 공지사항에 접속했다면, 크롤링을 먼저 한다.
+  /*
+  if(paramboardid == 'notifications')
+  _notificationcrawl = async () => {
+    var url = server_url + '/process/CrawlNotificationData'; 
+        await axios.post(url) 
+            .then((response) => {         
+            })
+            .catch(( err ) => {     
+            });    
+  }
+  await _notificationcrawl();
+*/ 
+
+
 
   console.log("paramboardid: ",paramboardid) 
   console.log("paramuserid: ",paramuserid) 

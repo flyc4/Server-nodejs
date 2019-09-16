@@ -8,15 +8,18 @@
 var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken'); 
 var ObjectId = mongoose.Types.ObjectId;  
-var utils = require('../config/utils'); 
+var utils = require('../config/utils');  
+const axios = require("axios"); 
+
 
 //////////////////CoursesList의 전체 목록과 관련된 함수 시작 /////////////////////////////////
 
 //DB에 저장된 20개의 과목들을 불러옴.
-var ShowCoursesList = function(req, res) {
+var ShowCoursesList = async function(req, res) {
     var database = req.app.get('database');
     console.log("CourseEvaluation 모듈 안에 있는 ShowCoursesList 호출")
-    
+  
+
     // 데이터베이스 객체가 초기화된 경우
 	if (database.db) { 
        
@@ -133,7 +136,7 @@ var ShowCoursesList = function(req, res) {
                     place: cursor[i].institution})
 
             } 
-            context.courseslist.splice(0,1) 
+            context.courseslist.splice(0,1)  
             console.dir(context.courseslist)
             res.json(context); 
             return;
@@ -250,8 +253,8 @@ var AddCourseEvaluationComment = function(req, res) {
         var paramCourseId = req.body.courseid == 'NO-ID'? '000000000000000000000001': req.body.courseid,
             paramUserId = req.body.userid,
             paramContents = req.body.contents == " "? "There is no comment":req.body.contents,
-            paramExam = req.body.exam || "N/A",
-            paramAssignment = req.body.assignment || "N/A",
+            paramExam = req.body.exam.toString() || "N/A",
+            paramAssignment = req.body.assignment.toString() || "N/A",
             paramGrade = req.body.grade || "N/A", 
             paramDifficulty = req.body.difficulty || "N/A",
             paramRating = req.body.rating || 0,
@@ -261,7 +264,8 @@ var AddCourseEvaluationComment = function(req, res) {
         ', paramDifficulty: ' + paramDifficulty, ', paramAssignment: ' + paramAssignment + 
         ', paramExam: ' + paramExam + ', paramGrade: ' + paramGrade + 
         ', paramRating: ' + paramRating + ', paramContents: ' + paramContents); 
-
+        
+       
         // 사용자 조회  
         database.UserModel.findOne({_id: new ObjectId(paramUserId)}, function(err,user){            
             if(err){ 
@@ -275,25 +279,26 @@ var AddCourseEvaluationComment = function(req, res) {
                 res.end(); 
                 return;
             }
-            //댓글 삽입  
+            //댓글 삽입   
             
-            database.CourseEvaluationModel.findByIdAndUpdate(paramCourseId,
-            {'$push': { 'comments': { 
-                            '_id': commentid,
-                            'userid': paramUserId, 
-                            'nickNm':user.nickNm, 
-                            'difficulty': paramDifficulty,
-                            'assignment': paramAssignment,  
-                            'exam': paramExam, 
-                            'grade': paramGrade, 
-                            'rating': paramRating, 
-                            'contents':paramContents, 
-                            'likes': 0, 
-                            'unlikes': 0, 
+            database.db.collection("courseevaluations").updateOne({_id: new ObjectId(paramCourseId)},
+            {'$push': { comments: { 
+                            _id: commentid,
+                            userid: new ObjectId(paramUserId), 
+                            nickNm:user.nickNm, 
+                            difficulty: paramDifficulty,
+                            assignment: paramAssignment,  
+                            exam: paramExam, 
+                            grade: paramGrade, 
+                            rating: paramRating, 
+                            contents:paramContents, 
+                            likes: 0, 
+                            unlikes: 0,  
+                            created_at: utils.timestamp()
                             }
                         }
             },
-            {'new':true},function(err2){
+            function(err2){
                 if(err2){
                     utils.log("AddCourseEvaluationComment에서 댓글 추가 중 에러 발생: ", err2.message)
                     return;
@@ -322,8 +327,8 @@ var EditCourseEvaluationComment = function(req, res) {
             paramCommentId = req.body.commentid,
             paramContents = req.body.contents == " "? "There is no comment":req.body.contents,
             // 숫자 0을 제대로  인식하지 못해서 이렇게 작성함
-            paramExam = req.body.exam == 0? 0: req.body.exam ==" "? "N/A":req.body.exam, 
-            paramAssignment = req.body.assignment == 0? 0: req.body.assignment ==" "? "N/A":req.body.assignment,
+            paramExam = req.body.exam.toString() || "N/A", 
+            paramAssignment = req.body.assignment.toString()|| "N/A",
             paramGrade = req.body.grade || "N/A", 
             paramDifficulty = req.body.difficulty || "N/A",
             paramRating = req.body.rating || 0; 
@@ -468,33 +473,51 @@ var IncreUnLikeCourseEvaluation = function(req, res) {
     
     console.log('paramProfessor: ' + paramProfessor);
     
-    var context = {subjectslist: [{subject: " "}]};
+    var context = {subjectslist: [{subject: " "}], institution: " "};
 
     // 데이터베이스 객체가 초기화된 경우
     if (database.db) {
         
         //해당 교수의 모든 과목 조회 
-        database.CourseEvaluationModel.find({professor: paramProfessor},  
-            function(err, cursor){
-                if (err) {
-                  utils.log("ShowProfessorProfile 안에서 해당 교수의 과목들 조회 중 에러 발생: "+ err.message)
+        database.ProfessorModel.findOne({professor: paramProfessor},  
+            function(err1, professor){
+                if (err1) {
+                  utils.log("ShowProfessorProfile 안에서 해당 교수 조회 중 에러 발생: "+ err1.message)
                   res.end(); 
                   return;
-                } 
-                cursor.map( (items)=> { 
-                    context.subjectslist.push({subject: items.subject})
-                }) 
-                context.subjectslist.splice(0,1)
-                console.dir(context.subjectslist)
-                res.json(context); 
-                res.end();
-                return; 
-            })
+                }  
+                if(professor == undefined){
+                    utils.log("ShowProfessorProfile 수행 중 데이터베이스에서 교수 정보를 찾을 수 없음") 
+                    res.end(); 
+                    return;
+                }
+                // institution 값을 변수에 할당
+                context.institution =  professor.school  
+
+                //해당 교수의 모든 과목 조회 
+                database.CourseEvaluationModel.find({professor: paramProfessor},  
+                    function(err, cursor){
+                        if (err) {
+                            utils.log("ShowProfessorProfile 안에서 해당 교수의 과목들 조회 중 에러 발생: "+ err.message)
+                            res.end(); 
+                            return;
+                        } 
+                    cursor.map( (items)=> { 
+                        context.subjectslist.push({subject: items.subject})
+                    }) 
+                    context.subjectslist.splice(0,1)
+                    console.dir(context)
+                    res.json(context); 
+                    res.end();
+                    return; 
+                })
+
+            })//ProfessorModel.findOne  닫기  
     } else {  
         utils.log('ShowProfessorProfile 수행 중 데이터베이스 연결 실패');
         res.end(); 
         return;
-      }	
+      }
   }; //ShowProfessorProfile 닫기 
 
 
@@ -508,4 +531,8 @@ module.exports.EditCourseEvaluationComment = EditCourseEvaluationComment;
 module.exports.DeleteCourseEvaluationComment = DeleteCourseEvaluationComment; 
 module.exports.IncreLikeCourseEvaluation = IncreLikeCourseEvaluation;
 module.exports.IncreUnLikeCourseEvaluation = IncreUnLikeCourseEvaluation; 
-module.exports.ShowProfessorProfile = ShowProfessorProfile;
+module.exports.ShowProfessorProfile = ShowProfessorProfile; 
+
+/*test용 
+module.exports.test = test; 
+*/

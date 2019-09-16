@@ -5,6 +5,7 @@
  * @author 김창희
  */
 
+var utils = require('../config/utils')
 var SchemaObj = {};
 SchemaObj.createSchema = function(mongoose) {
 	
@@ -20,7 +21,7 @@ SchemaObj.createSchema = function(mongoose) {
         assignment : {type: String, index: {unique: false}, trim: true, 'default':''}, // comments.assignment 의 최빈 값
         difficulty : {type: String, trim: true, 'default':''}, // comments.difficulty 의 최빈 값
         grade : {type: String, trim: true, 'default':''}, // comments.grades 의 최빈 값
-        created_at: {type: Date, 'default': Date.now},
+        created_at: {type: Date, 'default': utils.timestamp()},
         comments: [{ 
             _id: {type: mongoose.Schema.ObjectId}, //uniqueId. 신고 기능에 사용하기 위함.
             userid: {type: mongoose.Schema.ObjectId, ref: 'users'}, //commenterID
