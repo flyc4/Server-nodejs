@@ -14,7 +14,8 @@
 var express = require('express')
   , http = require('http')
   , path = require('path')
-  , url = exports.db_url;
+  , axios = require('axios') 
+  , server_url = "http://sususerver.ddns.net:3000";
 //  , forever = require('forever-monitor'); 
 
 // Express의 미들웨어 불러오기
@@ -75,7 +76,12 @@ app.use(expressSession({
 	secret:'my key',
 	resave:true,
 	saveUninitialized:true
-}));
+})); 
+
+
+
+
+
 
 //===== Passport 사용 설정 =====//
 // Passport의 세션을 사용할 때는 그 전에 Express의 세션을 사용하는 코드가 있어야 함
