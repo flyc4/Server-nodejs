@@ -13,7 +13,8 @@ module.exports = {
         ,{file:'./timetable_schema', collection:'timetables', schemaName:'TimetableSchema', modelName:'TimetableModel'} 
         ,{file:'./Report_schema', collection:'reports', schemaName:'ReportSchema', modelName:'ReportModel'} 
         ,{file:'./BulletinBoardsList_schema', collection:'BulletinBoardsList', schemaName:'BulletinBoardsListSchema', modelName:'BulletinBoardsListModel'} 
-        ,{file:'./Board1_schema', collection:'Board1', schemaName:'Board1Schema', modelName:'Board1Model'}  
+        ,{file:'./Board1_schema', collection:'Board1', schemaName:'Board1Schema', modelName:'Board1Model'} 
+        ,{file:'./Board2_schema', collection:'Board2', schemaName:'Board2Schema', modelName:'Board2Model'}  
         ,{file: './CourseEvaluation_schema', collection: 'CourseEvaluation', schemaName: 'CourseEvaluationSchema', modelName: 'CourseEvaluationModel'} 
         ,{file: './Professor_schema', collection: 'Professor', schemaName: 'ProfessorSchema', modelName: 'ProfessorModel'}
         ,{file: './Notification_schema', collection: 'Notification', schemaName: 'NotificationSchema', modelName: 'NotificationModel'}        
@@ -76,7 +77,6 @@ module.exports = {
         ,{file:'./CourseEvaluation', path:'/process/EditCourseEvaluationComment', method:'EditCourseEvaluationComment', type:'post'}
         ,{file:'./CourseEvaluation', path:'/process/DeleteCourseEvaluationComment', method:'DeleteCourseEvaluationComment', type:'post'}
         ,{file:'./CourseEvaluation', path:'/process/IncreLikeCourseEvaluation', method:'IncreLikeCourseEvaluation', type:'post'}
-        ,{file:'./CourseEvaluation', path:'/process/IncreUnLikeCourseEvaluation', method:'IncreUnLikeCourseEvaluation', type:'post'}
         ,{file:'./CourseEvaluation', path:'/process/ShowProfessorProfile', method:'ShowProfessorProfile', type:'post'} 
 
         //Notification과 관련된 패스들 

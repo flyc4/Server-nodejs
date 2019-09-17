@@ -129,20 +129,6 @@ var ShowBulletinBoard = async function(req, res) {
   var parampostStartIndex = req.body.postStartIndex||req.query.postStartIndex || req.param.postStartIndex||0; 
   var parampostEndIndex = req.body.postEndIndex||req.query.postEndIndex || req.param.postEndIndex||19;  
 
-  //사용자가 공지사항에 접속했다면, 크롤링을 먼저 한다.
-  
-  if(paramboardid == 'notifications')
-  _notificationcrawl = async () => {
-    var url = server_url + '/process/CrawlNotificationData'; 
-        await axios.post(url) 
-            .then((response) => {         
-            })
-            .catch(( err ) => {     
-            });    
-  }
-  await _notificationcrawl();
-
-
   console.log("paramboardid: ",paramboardid) 
   console.log("paramuserid: ",paramuserid) 
   console.log("parampostStartIndex: ",parampostStartIndex)
@@ -154,10 +140,17 @@ var ShowBulletinBoard = async function(req, res) {
   var context = {postslist: [{ boardid: " ", entryid: "", userid: "", username: '', profile: '', likes: 0,
    date: ' ', ismine: false, title: ' ', contents: ' ', pictures: ' ' }]};
   
-  if (database.db){    
+  if (database.db){        
+    if(paramboardid=="notifications"){
+      context.postslist = notificationlist
+      res.json(context) 
+      res.end() 
+      return;
+    }
+    
     database.db.collection(paramboardid).aggregate([
       { $sort: {
-        'created_at': -1
+        created_at: -1
       }},  
       ]).toArray(function(err,data){ 
       if(err){
@@ -173,18 +166,17 @@ var ShowBulletinBoard = async function(req, res) {
           ismine: localismine, username: data[i].nickNm, title: data[i].title, contents: data[i].title, pictures: data[i].pictures}); 
         } 
     context.postslist.splice(0,1)   
-    console.dir(context.postslist)
+    //console.dir(context.postslist)
     res.json(context);
     return;  
   })
-    
-  }//if(database.db) 닫기 
+  }//if(database.db) 닫기  
 else {
     
     utils.log(" ShowBulletinBoard 수행 중 데이터베이스 연결 실패")
     res.end(); 
     return;
-}
+}   
 };//ShowBulletinBoard 닫기   
 
 //param에 대해 camel 표기법 및  적용. ex. paramTitle 
@@ -205,7 +197,7 @@ var AddEditEntry = function(req, res) {
 
 // 데이터베이스 객체가 초기화된 경우
 if (database.db) {
-      
+
       // 1. 아이디를 이용해 사용자 검색
   database.UserModel.findOne({_id: new ObjectId(paramUserId)}, function(err, user) {
     if (err) {
@@ -251,7 +243,7 @@ if (database.db) {
       utils.log('AddEditEntry 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
-    }	
+    }	 
 }; //AddEditEntry 닫기
 
 //게시글 삭제
@@ -316,7 +308,8 @@ var IncreLikeEntry = function(req, res) {
       utils.log('IncreLikeEntry 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
-    }	
+    }	 
+    
 }; //IncreLikeEntry 닫기 
 
 //////////////////한 게시판(Entry 혹은 BulletinBoard 혹은 Post)과 관련된 함수 들) 끝 /////////////////////////////////  

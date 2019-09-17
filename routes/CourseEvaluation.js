@@ -431,39 +431,6 @@ var IncreLikeCourseEvaluation = function(req, res) {
       }	
   }; //IncreLikeCourseEvaluation 닫기  
 
-  //댓글에 싫어요 1 증가
-var IncreUnLikeCourseEvaluation = function(req, res) {
-    console.log('CourseEvaluation 모듈 안에 있는 IncreUnLikeCourseEvaluation 호출됨.');
-    
-    var paramCourseId = req.body.courseid||req.query.courseid;  
-    var paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000001"; 
-    
-    var database = req.app.get('database');
-    
-    console.log('paramCourseId: ' + paramCourseId, 'paramCommentId: ' + paramCommentId);
-  
-    // 데이터베이스 객체가 초기화된 경우
-    if (database.db) {
-        
-        //싫어요를 증가시킬 게시물을 조회 
-        database.CourseEvaluationModel.findOneAndUpdate({_id: new ObjectId(paramCourseId), 
-            'comments._id': new ObjectId(paramCommentId)},  
-          {$inc: {'comments.$.unlikes': 1}},
-        function(err){
-          if (err) {
-                  utils.log("IncreUnLikeCourseEvaluation 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
-                  res.end(); 
-                  return;
-            } 
-          return; 
-        })
-    } else {  
-        utils.log('IncreUnLikeCourseEvaluation 수행 중 데이터베이스 연결 실패');
-        res.end(); 
-        return;
-      }	
-  }; //IncreUnLikeCourseEvaluation 닫기 
-
   var ShowProfessorProfile = function(req, res) {
     console.log('CourseEvaluation 모듈 안에 있는 ShowProfessorProfile 호출됨.');
     
@@ -529,8 +496,7 @@ module.exports.ShowCommentsList = ShowCommentsList;
 module.exports.AddCourseEvaluationComment = AddCourseEvaluationComment;
 module.exports.EditCourseEvaluationComment = EditCourseEvaluationComment;
 module.exports.DeleteCourseEvaluationComment = DeleteCourseEvaluationComment; 
-module.exports.IncreLikeCourseEvaluation = IncreLikeCourseEvaluation;
-module.exports.IncreUnLikeCourseEvaluation = IncreUnLikeCourseEvaluation; 
+module.exports.IncreLikeCourseEvaluation = IncreLikeCourseEvaluation; 
 module.exports.ShowProfessorProfile = ShowProfessorProfile; 
 
 /*test용 
