@@ -14,7 +14,11 @@ SchemaObj.createSchema = function(mongoose) {
             userid: {type: mongoose.Schema.ObjectId, ref: 'users'}, 
             nickNm: {type: String, 'default': 'noName'},
             profile: {type: String, trim:true, 'default': ' '},// 게시글 옆 사진
-            likes: {type: Number, unique: false, 'default': 0},
+            likes: {type: Number, unique: false, 'default': 0}, 
+            likeslist: [{
+                userid: {type: mongoose.Schema.ObjectId, ref: 'users'},  
+                nickNm: {type: String, 'default': 'noName'}
+            }], //게시물에 좋아요를 누른 사람들의 목록
             created_at: {type: Date, 'default': utils.timestamp()},
             title: {type: String, trim:true, 'default': ' '},
             contents: {type: String, trim:true, 'default': ' '},
@@ -26,7 +30,11 @@ SchemaObj.createSchema = function(mongoose) {
                 boardid: {type: String, trim:true, 'default': ' '}, 
                 parentreplyid: {type: mongoose.Schema.ObjectId, 'default': ' ' }, //부모 댓글의 id
                 rootreplyid: {type: mongoose.Schema.ObjectId, 'default': ' ' }, //루트 댓글의 id
-                likes: {type: Number, unique: false, 'default': 0},
+                likes: {type: Number, unique: false, 'default': 0}, 
+                likeslist: [{
+                    userid: {type: mongoose.Schema.ObjectId, ref: 'users'},  
+                    nickNm: {type: String, 'default': 'noName'}
+                }], //게시물에 좋아요를 누른 사람들의 목록
                 contents: {type: String, trim:true, 'default': ' '},
                 pictures: {type: String, trim:true, 'default': ' '}, 
                 created_at: {type: Date, 'default': utils.timestamp()}, 
