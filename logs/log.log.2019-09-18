@@ -6,3 +6,7 @@
 {"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 10:47:44"}
 {"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 10:51:43"}
 {"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 10:52:11"}
+{"message":"ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생$meta is the only expression supported by $sort right now","level":"info","timestamp":"2019-09-18 11:17:28"}
+{"message":"ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생$meta is the only expression supported by $sort right now","level":"info","timestamp":"2019-09-18 11:18:46"}
+{"message":"ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생$sort key ordering must be specified using a number or {$meta: 'textScore'}","level":"info","timestamp":"2019-09-18 11:20:09"}
+{"message":"ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생$meta is the only expression supported by $sort right now","level":"info","timestamp":"2019-09-18 11:23:04"}
