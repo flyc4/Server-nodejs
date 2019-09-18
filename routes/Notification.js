@@ -20,8 +20,8 @@ _notificationcrawl = async () => {
                 return;
             });    
   }  
-//하루에 1번 크롤링
-let crawlupdate = schedule.scheduleJob('0 0 ***', async function(){
+//매일 오전 9시 마다 크롤링
+let crawlupdate = schedule.scheduleJob({hour: 9, minute: 0}, async function(){
  await _notificationcrawl();    
 })
 
@@ -83,6 +83,7 @@ var CrawlNotificationData = async function(req, res) {
                         //cursor(크롤링 반영 전 notifications)에 원소가 하나라도 있고 
                         //notificatinos collection 안에 이미 크롤링해온 data가 있으면 크롤링 중지
                         if(cursor != undefined && cursor.title == data[i].title){ 
+                            console.log("더 이상 클롤링할 목록이 없음")
                             break;
                         } 
                         

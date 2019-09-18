@@ -1,5 +1,5 @@
 var winston = require('winston'); 
-var moment = require('moment-timezone');   //한국시간을 나타내기 위한 모듈 추가
+var moment = require('moment');   //한국시간을 나타내기 위한 모듈 추가
 var fs = require('fs'); 
 var logDir ='./logs'; 
 const {format} = require('winston'); 
@@ -18,7 +18,7 @@ const log = function (info){
 
     var logger = winston.createLogger({
             format: format.combine(
-            format.timestamp({format: moment().utc(Date.now(), "YYYY-MM-DDTHH:mm:ssZ")}),
+            format.timestamp({format: moment().format("YYYY-MM-DD HH:mm:ss")}),
             format.json()
     ),
     transports: [
@@ -26,7 +26,7 @@ const log = function (info){
         colorize: true,
         level: 'info',
         timestamp: function(){             //한국 시간 나타내는법
-                return moment().utc(Date.now(), "YYYY-MM-DDTHH:mm:ssZ");
+                return moment().format("YYYY-MM-DD HH:mm:ss");
         }           
         }),
         new (require('winston-daily-rotate-file'))({
@@ -34,7 +34,7 @@ const log = function (info){
         filename: `${logDir}/log.log`,
         prepend: true,
         timestamp: function(){             //한국 시간 나타내는법
-          return moment().utc(Date.now(), "YYYY-MM-DDTHH:mm:ssZ");
+          return moment().format("YYYY-MM-DD HH:mm:ss");;
         }
         })
    ]
@@ -48,7 +48,7 @@ catch(exception){
 };  
 
 const timestamp = function(){                
-  return moment().tz("Asia/Seoul").format("YYYY-MM-DD HH:mm:ss");
+  return moment().format("YYYY-MM-DD HH:mm:ss");
 }
 
 module.exports.log = log;
