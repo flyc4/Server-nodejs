@@ -21,7 +21,8 @@ SchemaObj.createSchema = function(mongoose) {
             pictures: {type: String, trim:true, 'default': ' '},  //링크
             hits: {type: Number, unique: false, 'default': 0}, // 조회 수     
             url: {type: String, trim:true, 'default': ' '}, 
-            date: {type: Date, 'default': utils.timestamp()}, //게시글 작성일. '4시간 전' 이런 식으로 작성되어있으면 현재 날짜로 
+            date: {type: Date, 'default': utils.timestamp()}, //게시글 작성일. '4시간 전' 이런 식으로 작성되어있으면 현재 날짜로
+            isnotice: {type: Number, unique: false, 'default': 0}, 
             comments: [{   // 댓글           
                 userid: {type: mongoose.Schema.ObjectId, ref: 'users'},  
                 nickNm: {type: String, 'default': 'noName'},

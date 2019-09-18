@@ -34,7 +34,7 @@ var CrawlNotificationData = async function(req, res) {
         // 해당 일자에 크롤링을 했는 지 여부 확인 
         database.NotificationModel.findOne({}, 
                 function(err,cursor){
-                 if(err){
+                 if(err) {
                     utils.log("CrawlNotificationData에서 크롤링 여부를 결정하는 중 에러 발생: ", err.message)
                     res.end(); 
                     return; 
@@ -61,7 +61,8 @@ var CrawlNotificationData = async function(req, res) {
                             ulList[i] = {
                                 title: $(this).find('span.subject').text().trim().replace('수정됨', '').replace('새 글', '').replace(/\t/g,''),
                                 date: $(this).find('div.last span.datetime').text(),
-                                url: $(this).find('a').attr('href')               
+                                url: $(this).find('a').attr('href'),
+                                isnotice: $(this).find('a div.first span').text().replace(/\t/g,'').replace(/\n/g,'').replace('공지공지','').trim()
                             }
                         })
                         const data = ulList.filter(n => n.title); 
@@ -72,7 +73,8 @@ var CrawlNotificationData = async function(req, res) {
                         // db에 저장하기 위해 파싱 결과를 각각의 변수에 저장
                         let title = data[i].title;
                         let url = "https://www.dic.hanyang.ac.kr" + data[i].url;
-                        let date = moment(data[i].date).format('YYYY-MM-DD');  
+                        let date = moment(data[i].date).format('YYYY-MM-DD'); 
+                        let isnotice = (data[i].isNotice == "공지") ? 1 : 0; 
                         // 파싱을 통해 얻은 날짜의 포맷이 올바른지 여부 확인
                         var date_check = moment(date).isValid(); 
                         
@@ -141,7 +143,8 @@ var CrawlNotificationData = async function(req, res) {
                                         url: url, 
                                         date: date,
                                         hits: 0, // 조회 수    
-                                        comments: []
+                                        comments: [],
+                                        isnotice: isnotice
                                     }); 
                                     elements.saveNotification(function(err3){
                                         if(err3){
