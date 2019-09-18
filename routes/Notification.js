@@ -40,7 +40,6 @@ var CrawlNotificationData = async function(req, res) {
 
                 // 크롤링 시작
                 //파싱할 사이트의 url을 지정 
-                console.dir(cursor)
                 const getHtml = async () => {
                     try { 
                         return await axios.get("https://www.dic.hanyang.ac.kr/front/student/notice?page=1&per-page=6")

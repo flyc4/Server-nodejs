@@ -21,7 +21,7 @@ var ShowBulletinBoardsList = async function(req, res) {
   var context = {boardslist: [{ boardid: '', boardname: '', contents: ''}]}
   var database = req.app.get('database');      
  
-  //crawling test용
+  /*crawling test용
   _notificationcrawl = async () => {
     var url = server_url + '/process/CrawlNotificationData'; 
         await axios.post(url) 
@@ -31,7 +31,7 @@ var ShowBulletinBoardsList = async function(req, res) {
             });    
   }
   await _notificationcrawl(); 
-  
+  */
   if (database.db){       
 
     // 모든 게시판 조회 
