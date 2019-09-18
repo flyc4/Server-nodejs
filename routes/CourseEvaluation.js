@@ -259,7 +259,9 @@ var AddCourseEvaluationComment = function(req, res) {
             paramDifficulty = req.body.difficulty || "N/A",
             paramRating = req.body.rating || 0,
             commentid = new mongoose.Types.ObjectId(); 
-            
+        
+        let context = {msg: ""}     
+
         console.log('paramCourseId: ' + paramCourseId + ', paramUserId: ' +  paramUserId, 
         ', paramDifficulty: ' + paramDifficulty, ', paramAssignment: ' + paramAssignment + 
         ', paramExam: ' + paramExam + ', paramGrade: ' + paramGrade + 
@@ -302,8 +304,11 @@ var AddCourseEvaluationComment = function(req, res) {
                 if(err2){
                     utils.log("AddCourseEvaluationComment에서 댓글 추가 중 에러 발생: ", err2.message)
                     return;
-                }  
+                }    
                 console.log("댓글 추가함")
+                context.msg = "suceess"; 
+                res.json(context) 
+                res.end()
                 return; 
             }) //findByIdAndUpdate닫기 
 
@@ -332,6 +337,7 @@ var EditCourseEvaluationComment = function(req, res) {
             paramGrade = req.body.grade || "N/A", 
             paramDifficulty = req.body.difficulty || "N/A",
             paramRating = req.body.rating || 0; 
+        let context = {msg: ""}
             
         console.log('paramCourseId: ' + paramCourseId + ', paramContents: ' + paramContents + 
             ', paramExam: ' + paramExam + ', paramAssignment: ' + paramAssignment + 
@@ -355,7 +361,10 @@ var EditCourseEvaluationComment = function(req, res) {
                         utils.log("EditCourseEvaluationComment에서 댓글 수정 중 에러 발생: ", err.message)
                         return;
                     }  
-                    console.log("댓글 수정함")
+                    console.log("댓글 수정함")  
+                    context.msg = "success"
+                    res.json(context) 
+                    res.end()
                     return; 
                 }) //updateOne 닫기 
 
@@ -376,6 +385,8 @@ var DeleteCourseEvaluationComment = function(req, res) {
        
         var paramCourseId = req.body.courseid == 'NO-ID'? '000000000000000000000001': req.body.courseid,
             paramCommentId = req.body.commentid; 
+        
+        let context = {msg: ""}
 
         console.log('paramCourseId: ' + paramCourseId + ', paramCommentId: ' + paramCommentId);  
             
@@ -387,7 +398,9 @@ var DeleteCourseEvaluationComment = function(req, res) {
                         utils.log("EditCourseEvaluationComment에서 댓글 삭제 중 에러 발생: ", err.message)
                         return;
                     }  
-                    
+                    context.msg = "success" 
+                    res.json(context) 
+                    res.end()
                     return; 
                 }) //updateOne 닫기 
     } 
@@ -406,7 +419,7 @@ var IncreLikeCourseEvaluation = function(req, res) {
     var paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000001"; 
     
     var database = req.app.get('database');
-    
+    let context = {msg: ""}
     console.log('paramCourseId: ' + paramCourseId, 'paramCommentId: ' + paramCommentId);
   
     // 데이터베이스 객체가 초기화된 경우
@@ -421,7 +434,10 @@ var IncreLikeCourseEvaluation = function(req, res) {
                   utils.log("IncreLikeCourseEvaluation 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
                   res.end(); 
                   return;
-            } 
+            }  
+          context.msg = "success" 
+          res.json(context) 
+          res.end()
           return; 
         })
     } else {  
@@ -487,8 +503,6 @@ var IncreLikeCourseEvaluation = function(req, res) {
       }
   }; //ShowProfessorProfile 닫기 
 
-
-
 //////////////////Commentes와 관련된 함수 끝 /////////////////////////////////
 
 module.exports.ShowCoursesList = ShowCoursesList;  
@@ -498,7 +512,3 @@ module.exports.EditCourseEvaluationComment = EditCourseEvaluationComment;
 module.exports.DeleteCourseEvaluationComment = DeleteCourseEvaluationComment; 
 module.exports.IncreLikeCourseEvaluation = IncreLikeCourseEvaluation; 
 module.exports.ShowProfessorProfile = ShowProfessorProfile; 
-
-/*test용 
-module.exports.test = test; 
-*/

@@ -64,6 +64,7 @@ module.exports = {
         ,{file:'./BulletinBoards', path:'/process/AddEditEntry', method:'AddEditEntry', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/DeleteEntry', method:'DeleteEntry', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/IncreLikeEntry', method:'IncreLikeEntry', type:'post'} 
+        ,{file:'./BulletinBoards', path:'/process/DecreLikeEntry', method:'DecreLikeEntry', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/ShowComments', method:'ShowComments', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/AddComment', method:'AddComment', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/EditComment', method:'EditComment', type:'post'}
