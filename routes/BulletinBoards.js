@@ -21,7 +21,7 @@ var ShowBulletinBoardsList = async function(req, res) {
   var context = {boardslist: [{ boardid: '', boardname: '', contents: ''}]}
   var database = req.app.get('database');      
  
-  /* crawling test용
+  // crawling test용
   _notificationcrawl = async () => {
     var url = server_url + '/process/CrawlNotificationData'; 
         await axios.post(url) 
@@ -31,7 +31,7 @@ var ShowBulletinBoardsList = async function(req, res) {
             });    
   }
   await _notificationcrawl(); 
-  */
+  
   if (database.db){       
 
     // 모든 게시판 조회 
@@ -148,16 +148,20 @@ var ShowBulletinBoard = async function(req, res) {
    date: ' ', ismine: false, title: ' ', contents: ' ', pictures: ' ' }]};
   
   if (database.db){        
-   
-    let sortvalue = "created_at";
+    
+    //paramboardid == notifications 일 떄, 정렬 기준을 달리하기 위함.
+    let sortvalue1 = "created_at";
+    let sortvalue2 = "created_at";
 
     //notifications 컬렉션만 date의 역순으로 정렬 
     if(paramboardid == "notifications"){
-      sortvalue = "date";
+      sortvalue1 = "isnotice"
+      sortvalue2 = "date";
     }
     database.db.collection(paramboardid).aggregate([
       { $sort: {
-        [sortvalue]: -1, 
+        [sortvalue1]: -1,
+        [sortvalue2]: -1, 
         created_at: -1
       }},  
       ]).toArray(function(err,data){ 
@@ -732,7 +736,6 @@ var IncreLikeComment = function(req, res) {
       return;
     }	
 }; //IncreLikeComment 닫기
-
 
 //////////////////한 게시판의 댓글(comments)과 관련된 함수들 끝 /////////////////////////////////
 

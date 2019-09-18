@@ -8,8 +8,6 @@ const utils = require('../config/utils');
 const server_url = "http://sususerver.ddns.net:3000" 
 const schedule = require('node-schedule');
 
-
-
 _notificationcrawl = async () => {
     let url = server_url + '/process/CrawlNotificationData'; 
         await axios.post(url,{postStartIndex: 0, postEndIndex: 2})
@@ -65,16 +63,18 @@ var CrawlNotificationData = async function(req, res) {
                                 isnotice: $(this).find('a div.first span').text().replace(/\t/g,'').replace(/\n/g,'').replace('공지공지','').trim()
                             }
                         })
-                        const data = ulList.filter(n => n.title); 
-
+                        
+                        const data = ulList.filter(n => n.title);
+                        
                         //클롤링한 데이터들을 비교하던 중, cursor[0].title == data[i].title이면 break 하려고 for 문 사용
                         for(let i = 0; i < data.length; i++) {
                         
                         // db에 저장하기 위해 파싱 결과를 각각의 변수에 저장
                         let title = data[i].title;
                         let url = "https://www.dic.hanyang.ac.kr" + data[i].url;
-                        let date = moment(data[i].date).format('YYYY-MM-DD'); 
-                        let isnotice = (data[i].isNotice == "공지") ? 1 : 0; 
+                        let date = moment(data[i].date).format('YYYY-MM-DD');
+                        
+                        let isnotice = (data[i].isnotice == "공지") ? 1 : 0; 
                         // 파싱을 통해 얻은 날짜의 포맷이 올바른지 여부 확인
                         var date_check = moment(date).isValid(); 
                         
