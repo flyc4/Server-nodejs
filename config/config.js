@@ -69,7 +69,8 @@ module.exports = {
         ,{file:'./BulletinBoards', path:'/process/AddComment', method:'AddComment', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/EditComment', method:'EditComment', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/DeleteComment', method:'DeleteComment', type:'post'} 
-        ,{file:'./BulletinBoards', path:'/process/IncreLikeComment', method:'IncreLikeComment', type:'post'} 
+        ,{file:'./BulletinBoards', path:'/process/IncreLikeComment', method:'IncreLikeComment', type:'post'}
+        ,{file:'./BulletinBoards', path:'/process/DecreLikeComment', method:'DecreLikeComment', type:'post'} 
 
         //CourseEvaluation과 관련된 패스들 
         ,{file:'./CourseEvaluation', path:'/process/ShowCoursesList', method:'ShowCoursesList', type:'post'}
