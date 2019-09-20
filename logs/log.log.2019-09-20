@@ -5,3 +5,4 @@
 {"message":"SendDM에서 송신자 조회 중 에러발생: ","level":"info","timestamp":"2019-09-20 09:28:15"}
 {"message":"SendDM에서 송신자 조회 중 에러발생: ","level":"info","timestamp":"2019-09-20 09:29:58"}
 {"message":"SendDM에서 송신자 조회 중 에러발생: ","level":"info","timestamp":"2019-09-20 09:31:54"}
+{"message":"클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-20 18:53:00"}
