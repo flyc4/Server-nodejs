@@ -16,6 +16,7 @@
     "express-session": "^1.14.2",
     "forever": "^1.0.0",
     "fs": "0.0.1-security",
+    "google-translate": "^2.3.0",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.26",

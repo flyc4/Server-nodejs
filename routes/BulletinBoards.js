@@ -571,8 +571,8 @@ var ShowComments = function(req, res) {
             var localismine = paramUserId == result[i].comments.userid; 
             var locallikespressed = false; 
 
-            for(let j=0;j<result[i].comments.likesinfo.length;j++){
-              if(result[i].comments.likesinfo.userid.toString() == paramUserId){
+            for(let j=0;j<result[i].comments.likeslist.length;j++){
+              if(result[i].comments.likeslist.userid.toString() == paramUserId){
                 locallikespressed = true
             }
 

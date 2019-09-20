@@ -21,9 +21,9 @@ _notificationcrawl = async () => {
             });    
   }  
 //매일 오전 9시 마다 크롤링
-let crawlupdate = schedule.scheduleJob({hour: 9, minute: 0}, async function(){
+let updatecrawl = schedule.scheduleJob({hour: 9, minute: 0}, async function(){
  await _notificationcrawl();    
-})
+}) 
 
 var CrawlNotificationData = async function(req, res) {
     var database = req.app.get('database');
@@ -172,14 +172,12 @@ var CrawlNotificationData = async function(req, res) {
     }                
 };//CrawlNotificationData 닫기
 
-module.exports.CrawlNotificationData = CrawlNotificationData; 
-
-var Translator = async function(req, res) {
+var TranslateNotification = async function(req, res) {
     var database = req.app.get('database');
     console.log('Notification 모듈 안에 있는 Translator 호출됨.');
 
     if(database.db) {
-        database.NotificationModel.findOne({},
+        database.NotificationModel.find({},
             function(err, cursor) {
                 if(err) {
                     utils.log("CrawlNotificationData에서 크롤링 여부를 결정하는 중 에러 발생: ", err.message)
@@ -188,24 +186,25 @@ var Translator = async function(req, res) {
                 }
                 if(cursor != undefined){ 
                     console.log("NotificationModel에서 가져올 DB 정보 없음")
-                    break;
+                    //break;
                 }
-                let ulList = Object;
+                let ulList = [{title: " ", contents: " "}];
                 for(let j = 0; j < cursor.length; j++) {
                     if(err) return log(err);
-                    else ulList[j] = {
+                    else ulList.push({
                         title: cursor[j].title,
                         contents: cursor[j].contents
-                    }
-                    log(ulList[j].contents)
-                    /* log(ulList[j].title)
-                    log(ulList[j].contents)
+                    })
+                    console.log("NotificationModel의 Contents 불러옴 : " ,ulList[j].contents)
                     translate
                         .translate([ulList[j].title, ulList[j].contents], 'en', function(err, translations) {
                             if(err) console.error(error);
-                            else log("Title :> ", translations[1].translatedText);
-                        }) */
+                            else console.log("Contents :> ", translations[1].translatedText);
+                        }) 
                 }                 
             })
     }
-}
+} 
+
+module.exports.CrawlNotificationData = CrawlNotificationData; 
+module.exports.TranslateNotification = TranslateNotification;
