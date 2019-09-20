@@ -4,8 +4,8 @@ var text = "한ab";
 console.log(text[0]);
 console.log(text[text.length-1]);
 
-// 요청이 영어나 중국어면, DetermineTranslation 돌렸을 때 리턴값이 false임.
-// 즉, DetermineTranslation 값이 false 면 번역 메소드 실행 X
+// 첫 글자와 마지막 글자의 언어가 다르면, DetermineTranslation 돌렸을 때 리턴값이 false임.
+// 즉, request가 영어나 중국어일 때 DetermineTranslation 값이 false 면 번역 메소드 실행 X
 const DetermineTranslation = function(text) {
     if (text == undefined) console.log("DetermineTranslation 함수 실행 중 오류 발생(input parameter 없음");
     var detect = "";
