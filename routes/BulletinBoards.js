@@ -9,9 +9,6 @@ var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken'); 
 var ObjectId = mongoose.Types.ObjectId;  
 var utils = require('../config/utils');
-const server_url = "http://sususerver.ddns.net:3000"
-const axios = require('axios')
-
 
 ///////////////////"bulletinboardslist" collection을 사용하는 함수 /////////////////////////////////////
 
@@ -20,17 +17,7 @@ var ShowBulletinBoardsList = async function(req, res) {
   console.log('ShowBulletinBoardsList 모듈 안에 있는 ShowBulletinBoardsList 호출됨.');
   var context = {boardslist: [{ boardid: '', boardname: '', contents: ''}]}
   var database = req.app.get('database');      
- /* test용
-  _notificationcrawl = async () => {
-    var url = server_url + '/process/CrawlNotificationData'; 
-        await axios.post(url) 
-            .then((response) => {         
-            })
-            .catch(( err ) => {     
-            });    
-  }
-  await _notificationcrawl();
-  */
+
   if (database.db){       
 
     // 모든 게시판 조회 
@@ -69,7 +56,9 @@ var AddReport =function(req, res) {
   var paramUserId = req.body.userid || req.query.userid; 
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000001"; 
-  var paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000001";
+  var paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000001"; 
+
+  let context = {msg: " "}
 
   var database = req.app.get('database');      
   console.log(paramEntryId == 1)
@@ -103,7 +92,10 @@ var AddReport =function(req, res) {
             contents: paramContents,
             created_at: utils.timestamp(), 
             });//insertOne 닫기
-           return; 
+            context.msg = "success"; 
+            res.json(context) 
+            res.end() 
+            return; 
       }//else{ (사용자 조회 성공 시의 else) 닫기 
     })//UserModel.findOne 닫기
   }//if(database.db) 닫기  
@@ -122,37 +114,67 @@ var AddReport =function(req, res) {
 //한 게시판의 모든 게시물 보여주기  
 var ShowBulletinBoard = async function(req, res) {
   console.log('BulletinBoard 모듈 안에 있는 ShowBulletinBoard 호출됨.');
-  var database = req.app.get('database');      
+  var database = req.app.get('database');       
   
   var paramboardid = req.body.boardid||req.query.boardid || req.param.boardid;   
   var paramuserid= req.body.userid||req.query.userid || req.param.userid||"5d5373177443381df03f3040";
   var parampostStartIndex = req.body.postStartIndex||req.query.postStartIndex || req.param.postStartIndex||0; 
   var parampostEndIndex = req.body.postEndIndex||req.query.postEndIndex || req.param.postEndIndex||19;  
+  var paramSearch = req.body.search||" ";
 
   console.log("paramboardid: ",paramboardid) 
   console.log("paramuserid: ",paramuserid) 
   console.log("parampostStartIndex: ",parampostStartIndex)
   console.log("parampostEndIndex: ",parampostEndIndex)
+  console.log("paramSearch: ",paramSearch)
 
   parampostStartIndex = parampostStartIndex*1;
   parampostEndIndex = parampostEndIndex*1;
 
-  var context = {postslist: [{ boardid: " ", entryid: "", userid: "", username: '', profile: '', likes: 0,
-   date: ' ', ismine: false, title: ' ', contents: ' ', pictures: ' ' }]};
+  var context = {
+    postslist: [{ 
+      boardid: " ", 
+      entryid: "", 
+      userid: "", 
+      username: '', 
+      profile: '', 
+      likes: 0,
+      likespressed: false,
+      date: ' ', 
+      ismine: false, 
+      title: ' ', 
+      contents: ' ', 
+      pictures: ' ', 
+       }]};
   
   if (database.db){        
-    if(paramboardid=="notifications"){
-      context.postslist = notificationlist
-      res.json(context) 
-      res.end() 
-      return;
-    }
     
-    database.db.collection(paramboardid).aggregate([
-      { $sort: {
-        created_at: -1
-      }},  
-      ]).toArray(function(err,data){ 
+    if(paramSearch !=" "){
+      var query = {$or: 
+        [{contents: new RegExp(".*"+paramSearch+".*","gi")}, 
+          {title: new RegExp(".*"+paramSearch+".*","gi")}, 
+          {nickNm: new RegExp(".*"+paramSearch+".*","gi")}
+        ], 
+        }; 
+    } 
+    else{
+      var query = {};
+    }
+
+    //paramboardid == notifications 일 떄, 정렬 기준을 달리하기 위함.
+    let sortvalue1 = "created_at";
+    let sortvalue2 = "created_at"; 
+
+    //notifications 컬렉션만 date의 역순으로 정렬 
+    if(paramboardid == "notifications"){
+      sortvalue1 = "isnotice"
+      sortvalue2 = "date"; 
+    } 
+    database.db.collection(paramboardid).find(query).sort({
+      [sortvalue1]: -1,
+      [sortvalue2]: -1, 
+      created_at: -1  
+  }).toArray(function(err,data){ 
       if(err){
         utils.log("ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생"+ err.message);
       }  
@@ -161,12 +183,39 @@ var ShowBulletinBoard = async function(req, res) {
       } 
       if(parampostStartIndex>=data.length){
         parampostStartIndex = data.length-1;
-      } 
+      }  
+      if(parampostStartIndex<0){
+        parampostStartIndex = 0;
+      }
       for(var i=parampostStartIndex;i<=parampostEndIndex;i++){  
-        var localismine = data[i].userid == paramuserid
-        context.postslist.push({boardid: paramboardid, entryid: data[i]._id, userid: data[i].userid, 
-          username: data[i].userid.nickNm, profile: data[i].profile, likes: data[i].likes, date: data[i].created_at, 
-          ismine: localismine, username: data[i].nickNm, title: data[i].title, contents: data[i].title, pictures: data[i].pictures}); 
+        var localismine = data[i].userid == paramuserid 
+        let locallikespressed = false;
+        //해당 게시물에 좋아요를 눌렀는지의 여부 확인
+        for(let j=0;j<data[i].likeslist.length;j++){
+            if(data[i].likeslist[j].userid == paramuserid){
+              locallikespressed=true; 
+              break;
+            }
+        }
+        
+        //notifications일 경우 created_at 대신 date 반환
+        let localdate = paramboardid=='notifications'? data[i].date : data[i].created_at;
+        
+        context.postslist.push(
+          {
+            boardid: paramboardid, 
+            entryid: data[i]._id, 
+            userid: data[i].userid, 
+            username: data[i].nickNm, 
+            profile: data[i].profile, 
+            likes: data[i].likes,  
+            likespressed: locallikespressed,
+            date: localdate, 
+            ismine: localismine, 
+            title: data[i].title, 
+            contents: data[i].contents, 
+            pictures: data[i].pictures,
+          }); 
         } 
     context.postslist.splice(0,1)   
     //console.dir(context.postslist)
@@ -193,7 +242,8 @@ var AddEditEntry = function(req, res) {
   var paramUserId = req.body.userid || req.query.userid; 
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000";
-  var database = req.app.get('database');
+  var database = req.app.get('database'); 
+  var context = {msg: " "}
   
   console.log('paramTitle: ' + paramTitle + ', paramContents: ' + paramContents + ', paramBoardId: ' + 
   paramBoardId, 'paramEntryId: ' + paramEntryId);
@@ -230,15 +280,23 @@ if (database.db) {
             userid : user._id,
             nickNm : user.nickNm,
             profile : " ",
-            likes : 0, 
+            likes : 0,  
+            likeslist: [],
             created_at: utils.timestamp(),
             pictures: " ",
              hits : 0,
             comments : []
             });
-          console.log("글 데이터 추가함.");    		   
-        }     			 
-      return;   
+          context.msg = "success"; 
+          console.log("글 데이터 추가함.");
+          res.json(context) 
+          res.end()
+          return;
+        }  
+        context.msg = "success";  
+        res.json(context)    			  
+        res.end()
+        return;   
       })//findOneAndUpdate 닫기 
     }
   })//UserModel.findOne 닫기
@@ -257,7 +315,9 @@ var DeleteEntry = function(req, res) {
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000";
 
   var database = req.app.get('database');
-  
+  let context = {msg: " "}
+
+
   console.log('paramBoardId: ' + paramBoardId, 'paramEntryId: ' + paramEntryId);
 
 // 데이터베이스 객체가 초기화된 경우
@@ -270,9 +330,11 @@ if (database.db) {
                 utils.log("DeleteEntry 안에서 삭제할 게시물 조회 중 에러 발생: "+ err.message)
                 res.end(); 
                 return;
-          }		 
-    console.log("게시물 삭제 완료"); 
-    return; 
+          }		  
+        console.log("게시물 삭제 완료"); 
+        context.msg = "success";  
+        res.json(context)    			  
+        res.end() 
       })
   } else {  
       utils.log('DeleteEntry 수행 중 데이터베이스 연결 실패');
@@ -297,18 +359,25 @@ var IncreLikeEntry = function(req, res) {
     likesinfo: [{ 
       likes: 0, 
       likespressed: false  
-    }]
-  };
+    }], 
+    msg: " "}
 
   // 데이터베이스 객체가 초기화된 경우
   if (database.db) {
       
       database.UserModel.findOne({_id: new ObjectId(paramUserId)},function(err,user){
         if(err){
-          utils.log("좋아요를 누른 사용자 조회 중 에러 발생: ",err.message)
-        } 
+          utils.log("IncreLikeEntry에서 좋아요를 누른 사용자 조회 중 에러 발생: ",err.message)
+        }  
+        if(!user){
+          utils.log("IncreLikeEntry에서 사용자를 조회할 수 없음") 
+          context.msg = "missing"
+          res.json(context) 
+          res.end() 
+          return;
+        }
         //이미 좋아요를 눌렀으나 좋아요 요청을 또 다시 해온 경우, 좋아요를 반영하지 않고 반환한다. 
-        database.db.collection(paramBoardId).findOne({_id: new ObjectId(paramEntryId), 'likeslist.userid': paramUserId },  
+        database.db.collection(paramBoardId).findOne({_id: new ObjectId(paramEntryId), 'likeslist.userid': new ObjectId(paramUserId) },  
           function(err,alreadypressed){
             if (err) {
               utils.log("IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.message)
@@ -331,7 +400,7 @@ var IncreLikeEntry = function(req, res) {
                 $inc: {likes: 1}, 
                 $push: { 
                   likeslist: {
-                    userid: paramUserId,  
+                    userid: new ObjectId(paramUserId),  
                     nickNm: user.nickNm 
                 }}  
               },
@@ -342,7 +411,8 @@ var IncreLikeEntry = function(req, res) {
                       return;
               }		  
               context.likesinfo.push({likes: data.value.likes+1, likespressed: true}) 
-              context.likesinfo.splice(0,1) 
+              context.likesinfo.splice(0,1)  
+              context.msg = "success";
               console.dir(context)
               res.json(context)
               res.end(); 
@@ -354,9 +424,96 @@ var IncreLikeEntry = function(req, res) {
       utils.log('IncreLikeEntry 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
-    }	 
-    
+    }	    
 }; //IncreLikeEntry 닫기 
+
+//게시글에 좋아요 1 감소
+var DecreLikeEntry = function(req, res) {
+  console.log('BulletinBoards 모듈 안에 있는 DecreLikeEntry 호출됨.');
+  
+  var paramBoardId = req.body.boardid||req.query.boardid;  
+  var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000001"; 
+  var paramUserId = req.body.userid||"000000000000000000000001";
+
+  var database = req.app.get('database');
+  
+  console.log('paramBoardId: ' + paramBoardId, 'paramEntryId: ' + paramEntryId, 'paramUserId: ' + paramUserId);
+
+  var context = {
+    likesinfo: [{ 
+      likes: 0, 
+      likespressed: false  
+    }], 
+    msg: " "}
+
+  // 데이터베이스 객체가 초기화된 경우
+  if (database.db) {
+      
+      database.UserModel.findOne({_id: new ObjectId(paramUserId)},function(err,user){
+        if(err){
+          utils.log("DecreLikeEntry에서 좋아요를 취소한 사용자 조회 중 에러 발생: ",err.message) 
+          res.end() 
+          return;
+        }   
+        if(!user){
+          utils.log("DecreLikeEntry에서 사용자를 조회할 수 없음") 
+          context.msg = "missing"
+          res.json(context) 
+          res.end() 
+          return;
+        }
+        
+        //좋아요를 누르지 않았으나 좋아요 취소 요청을 해온 경우, 좋아요 취소를 반영하지 않고 반환한다. 
+        database.db.collection(paramBoardId).findOne({_id: new ObjectId(paramEntryId), 'likeslist.userid': new ObjectId(paramUserId)},  
+          function(err,duplicatedata){
+            if (err) {
+              utils.log("DecreLikeEntry 안에서 요청한 사용자가 이미 해당 게시물에 좋아요 버튼을 취소했는 지의 여부를 조회하는 중 에러 발생: "+ err.message)
+              res.end(); 
+              return;
+            }   
+            if(!duplicatedata)
+            {  
+              utils.log("DecreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 취소했음") 
+              context.msg = "duplicate"
+              
+              console.dir(context)
+              res.json(context)
+              res.end(); 
+              return 
+            }   
+            //클라이언트에 보낼 좋아요 값 저장 
+            console.dir(duplicatedata)
+            let locallikes = duplicatedata.likes-1;
+            //좋아요를 취소시킬 게시물을 조회 
+            database.db.collection(paramBoardId).updateOne({_id: new ObjectId(paramEntryId)},  
+              { 
+                $pull: {'likeslist': { 'userid': new ObjectId(paramUserId)}},
+                $inc: {likes: -1}, 
+                
+              },
+            function(err,data){
+              if (err) {
+                      utils.log("DecreLikeEntry 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.message)
+                      res.end(); 
+                      return;
+              }		   
+              console.dir(data)
+              context.likesinfo.push({likes: locallikes, likespressed: false}) 
+              context.likesinfo.splice(0,1)  
+              context.msg = "success";
+              console.dir(context)
+              res.json(context)
+              res.end(); 
+              return 
+              })//updateone 닫기 
+          })//findOne({_id: new ObjectId(paramEntryId), 'likeslist.userid': new ObjectId(paramUserId)} 닫기
+      })//UserModel.findOne 닫기 
+  } else {  
+      utils.log('IncreLikeEntry 수행 중 데이터베이스 연결 실패');
+      res.end(); 
+      return;
+    }	    
+}; //DecreLikeEntry 닫기
 
 //////////////////한 게시판(Entry 혹은 BulletinBoard 혹은 Post)과 관련된 함수 들) 끝 /////////////////////////////////  
 
@@ -375,7 +532,6 @@ var ShowComments = function(req, res) {
   
   console.log("paramCommentStartIndex: ",paramCommentStartIndex)
   console.log("paramCommentEndIndex: ",paramCommentEndIndex)
-
 
   console.log('paramUserId: ' + paramUserId, ', paramBoardId: ' + paramBoardId, ', paramEntryId: ' + paramEntryId);
 
@@ -398,25 +554,52 @@ var ShowComments = function(req, res) {
               utils.log('ShowComments 안에서 댓글 조회 중 에러 발생 : ' + err.message);
               res.end(); 
               return;  
-          }     
+          }  
+          if(!result){
+            res.end(); 
+            return;
+          }    
           paramCommentEndIndex = paramCommentEndIndex < result.length? paramCommentEndIndex: result.length-1;
           
-          if(paramCommentStartIndex>=data.length){
-            paramCommentStartIndex = data.length-1;
+          if(paramCommentStartIndex>=result.length){
+            paramCommentStartIndex = result.length-1;
+          }
+          if(paramCommentStartIndex<0){
+            paramCommentStartIndex = 0;
           }
 
           for(var i= paramCommentStartIndex; i<= paramCommentEndIndex; i++){  
-            var localismine = paramUserId == result[i].comments.userid;
-            context.commentslist.push({boardid: paramBoardId, entryid: paramEntryId, rootreplyid: result[i].comments.rootreplyid
-            , parentreplyid: result[i].comments.parentreplyid, replyid: result[i].comments._id, userid: result[i].comments.userid, username: result[i].comments.nickNm 
-            , profile: result[i].comments.profile, likes: result[i].comments.likes, date: result[i].comments.created_at, ismine: localismine, contents: result[i].comments.contents
-            , pictures: result[i].comments.pictures});
+            var localismine = paramUserId == result[i].comments.userid; 
+            var locallikespressed = false; 
+
+            for(let j=0;j<result[i].comments.likesinfo.length;j++){
+              if(result[i].comments.likesinfo.userid.toString() == paramUserId){
+                locallikespressed = true
+            }
+
+            context.commentslist.push({
+              boardid: paramBoardId, 
+              entryid: paramEntryId, 
+              rootreplyid: result[i].comments.rootreplyid,
+              parentreplyid: result[i].comments.parentreplyid, 
+              replyid: result[i].comments._id, 
+              userid: result[i].comments.userid, 
+              username: result[i].comments.nickNm, 
+              profile: result[i].comments.profile, 
+              likes: result[i].comments.likes, 
+              likespressed: locallikespressed,
+              date: result[i].comments.created_at, 
+              ismine: localismine, 
+              contents: result[i].comments.contents,
+              pictures: result[i].comments.pictures
+            });
           } 
           context.commentslist.splice(0,1)  
           console.dir(context)
           res.json(context); 
           return;
-      })//aggregate 닫기 
+      }//for 닫기  
+    })//aggregate 닫기
   }//if(database.db) 닫기 
   else {
   utils.log("ShowComment 수행 중 데이터베이스 연결 실패")
@@ -436,7 +619,7 @@ var AddComment = function(req, res) {
   var paramParentReplyId = req.body.parentreplyid||req.query.parentreplyid||"000000000000000000000000";
   var paramContents = req.body.contents || req.query.contents|| "no contents"; 
   var paramPictures = req.body.pictures || req.query.pictures || "no pictures";
-
+  let context = {msg: " "}
   var database = req.app.get('database');
   
   console.log('paramContents: ' + paramContents + ', paramBoardId: ' + 
@@ -471,13 +654,18 @@ if (database.db) {
             boardid: paramBoardId,   
             parentreplyid: paramParentReplyId, //부모 댓글의 id
             rootreplyid: paramRootReplyId, //루트 댓글의 id
-            likes: 0,
+            likes: 0, 
+            likeslist: [],
             contents: paramContents,
             pictures: paramPictures, 
             created_at: utils.timestamp(), 
-        }}});
+        }}}); 
+
           console.log("댓글 추가함.");    		   
-        }     			 
+        }     	
+      context.msg = "success"; 
+      res.json(context) 
+      res.end() 		 
       return;  
   })//UserModel.findOne 닫기
   } else {  
@@ -496,7 +684,7 @@ var EditComment = function(req, res) {
   
   //나: commentid, 추: replyid
   var paramCommentId = req.body.replyid||req.query.replyid;
-
+  let context = {msg: " "}
   var database = req.app.get('database');
   
   console.log(' paramContents: ' + paramContents + ', paramBoardId: ' +  paramBoardId, 
@@ -511,8 +699,11 @@ if (database.db) {
   function(err){ 
     if(err){
       utils.log("EditComment에서 collection 조회 중 수행 중 에러 발생: "+ err.message)
-    }     
-    console.log("댓글 수정 완료") 			 
+    }      
+    console.log("댓글 수정 완료")
+    context.msg = "success" 
+    res.json(context) 
+    res.end()  			 
     return;   
   })//findOneAndUpdate 닫기 
 } else {  
@@ -534,7 +725,7 @@ var DeleteComment = function(req, res) {
   var paramCommentId = req.body.replyid||req.query.replyid;
 
   var database = req.app.get('database');
-  
+  let context = {msg: ""}
   console.log( 'paramBoardId: ' +  paramBoardId, 'paramEntryId: ' + paramEntryId, 'paramCommentId: ' + paramCommentId);
 
 // 데이터베이스 객체가 초기화된 경우
@@ -549,6 +740,8 @@ if (database.db) {
       res.end();
       return;
     }       			 
+    context.msg = "success"; 
+    res.json(context) 
     res.end();
     return;   
   })//findOneAndUpdate 닫기 
@@ -559,41 +752,249 @@ if (database.db) {
 }	
 }; //DeleteComment 닫기  
 
-//댓글 좋아요 1 증가
+//게시글에 좋아요 1 증가
 var IncreLikeComment = function(req, res) {
   console.log('BulletinBoards 모듈 안에 있는 IncreLikeComment 호출됨.');
   
   var paramBoardId = req.body.boardid||req.query.boardid;  
-  var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000";  
+  var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000001"; 
+  var paramUserId = req.body.userid||"000000000000000000000001";
   var paramCommentId = req.body.replyid||req.query.replyid;
-  
 
   var database = req.app.get('database');
   
-  console.log('paramBoardId: ' + paramBoardId, ', paramEntryId: ' + paramEntryId, 
-    ', paramCommentId: ' + paramCommentId);
+  console.log('paramBoardId: ' + paramBoardId, 'paramEntryId: ' + paramEntryId, 
+    'paramUserId: ' + paramUserId, 'paramCommentId: ' + paramCommentId);
+
+  var context = {
+    likesinfo: [{ 
+      likes: 0, 
+      likespressed: false  
+    }], 
+    msg: " "}
 
   // 데이터베이스 객체가 초기화된 경우
   if (database.db) {
       
-      //좋아요를 증가시킬 게시물을 조회 
-      database.db.collection(paramBoardId).findOneAndUpdate({_id: new ObjectId(paramEntryId), 'comments._id': new ObjectId(paramCommentId)},  
-        {$inc: {'comments.$.likes': 1}},
-      function(err){
-        if (err) {
-                utils.log("IncreLikeComment 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
-                res.end(); 
+      database.UserModel.findOne({_id: new ObjectId(paramUserId)},function(err,user){
+        if(err){
+          utils.log("IncreLikeComment에서 좋아요를 누른 사용자 조회 중 에러 발생: ",err.message)
+        }  
+        if(!user){
+          utils.log("IncreLikeComment에서 사용자를 조회할 수 없음") 
+          context.msg = "missing"
+          res.json(context) 
+          res.end() 
+          return;
+        }
+        //이미 좋아요를 눌렀으나 좋아요 요청을 또 다시 해온 경우, 좋아요를 반영하지 않고 반환한다. 
+        database.db.collection(paramBoardId).findOne({
+            _id: new ObjectId(paramEntryId),  
+          },  
+          function(err,post){
+            if (err) {
+              utils.log("IncreLikeComment 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.message)
+              res.end(); 
+              return;
+            }   
+            if(!post){
+              utils.log("IncreLikeComment 안에서 게시글 조회 실패") 
+              context.msg = "empty"  
+              res.json(context) 
+              res.end() 
+              return;
+            }
+            
+            let commentindex = -1;
+            let locallikes = -1;    
+              
+            //댓글에 해당하는 인덱스 값(i) 찾기
+            for(let i=0;i<post.comments.length;i++){  
+              if(post.comments[i]._id.toString() == paramCommentId){
+                commentindex = i;
+                locallikes = post.comments[i].likes 
+                break;
+                }
+            }  
+            if(commentindex == -1){
+              utils.log("IncreLikeComment 안에서 요청 받은 댓글 조회 실패") 
+              context.msg = "empty" 
+              res.json(context) 
+              res.end() 
+              return
+            }
+            
+            //이미 좋아요를 눌렀던 상태일 경우 반환
+            for(let j=0;j<post.comments[commentindex].likeslist.length;j++){ 
+              if(post.comments[commentindex].likeslist[j].userid.toString() == paramUserId){
+                utils.log("IncreLikeComment에서 이미 좋아요를 누른 댓글에 다시 좋아요 요청함")
+                context.msg = "duplicate" 
+                context.likesinfo.push({likes: locallikes, likespressed: true}) 
+                context.likesinfo.splice(0,1)  
+                res.json(context)
+                res.end()   
                 return;
-          }		  
-        return; 
-        })
+              }
+            }
+
+            //좋아요를 증가시킬 댓글을 조회 
+            database.db.collection(paramBoardId).findOneAndUpdate({_id: new ObjectId(paramEntryId), 'comments._id': new ObjectId(paramCommentId)},  
+              { 
+                $inc: {'comments.$.likes': 1}, 
+                $push: { 
+                  'comments.$.likeslist': {
+                    userid: new ObjectId(paramUserId),  
+                    nickNm: user.nickNm 
+                }}  
+              },
+            function(err){
+              if (err) {
+                      utils.log("IncreLikeComment 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
+                      res.end(); 
+                      return;
+              }		 
+              context.likesinfo.push({likes: locallikes+1, likespressed: true}) 
+              context.likesinfo.splice(0,1)  
+              context.msg = "success";
+              console.dir(context)
+              res.json(context)
+              res.end(); 
+              return 
+              })//findOneAndUpdate 닫기 
+          })//findOne 닫기
+      })//UserModel.findOne 닫기 
   } else {  
       utils.log('IncreLikeComment 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
-    }	
-}; //IncreLikeComment 닫기
+    }	    
+}; //IncreLikeComment 닫기 
 
+//댓글에 좋아요 1 감소
+var DecreLikeComment = function(req, res) {
+  console.log('BulletinBoards 모듈 안에 있는 DecreLikeComment 호출됨.');
+  
+  var paramBoardId = req.body.boardid||req.query.boardid;  
+  var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000001"; 
+  var paramUserId = req.body.userid||"000000000000000000000001";
+  var paramCommentId = req.body.replyid||req.query.replyid;
+
+  var database = req.app.get('database');
+  
+  console.log('paramBoardId: ' + paramBoardId, 'paramEntryId: ' + paramEntryId, 
+    'paramUserId: ' + paramUserId, 'paramCommentId: ' + paramCommentId);
+
+  var context = {
+    likesinfo: [{ 
+      likes: 0, 
+      likespressed: true  
+    }], 
+    msg: " "}
+
+  // 데이터베이스 객체가 초기화된 경우
+  if (database.db) {
+      
+      database.UserModel.findOne({_id: new ObjectId(paramUserId)},function(err,user){
+        if(err){
+          utils.log("DecreLikeComment에서 좋아요를 취소한 사용자 조회 중 에러 발생: ",err.message)
+        }  
+        if(!user){
+          utils.log("DecreLikeComment에서 사용자를 조회할 수 없음") 
+          context.msg = "missing"
+          res.json(context) 
+          res.end() 
+          return;
+        }
+        
+        database.db.collection(paramBoardId).findOne({
+            _id: new ObjectId(paramEntryId),  
+          },  
+          function(err,post){
+            if (err) {
+              utils.log("DecreLikeComment 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.message)
+              res.end(); 
+              return;
+            }   
+            if(!post){
+              utils.log("DecreLikeComment 안에서 게시글 조회 실패") 
+              context.msg = "empty"  
+              res.json(context) 
+              res.end() 
+              return;
+            }
+            
+            let commentindex = -1;
+            let locallikes = -1;     
+            let isinlikeslist = false;
+              
+            //업데이트 할 댓글의 인덱스(i) 조회 및 업데이트 전 좋아요 갯수(locallikes) 설정
+            for(let i=0;i<post.comments.length;i++){  
+              if(post.comments[i]._id.toString() == paramCommentId){
+                commentindex = i;
+                locallikes = post.comments[i].likes 
+                break;
+                }
+            } 
+            if(commentindex == -1){
+              utils.log("DecreLikeComment 안에서 요청 받은 댓글 조회 실패") 
+              context.msg = "empty" 
+              res.json(context) 
+              res.end() 
+              return
+            }   
+
+            //좋아요를 누른 사람의 목록에 없으나 좋아요 취소 요청을 해온 경우, 좋아요 취소를 반영하지 않고 반환한다. 
+            for(let j=0;j<post.comments[commentindex].likeslist.length;j++){
+              if(post.comments[commentindex].likeslist[j].userid.toString() == paramUserId){
+                isinlikeslist = true 
+                break
+              }
+            }
+
+            if(!isinlikeslist){
+              utils.log("DecreLikeComment안에서 likeslist 안에서 요청한 사용자를 찾을 수 없음") 
+              context.msg = "empty" 
+              res.json(context) 
+              res.end() 
+              return
+            }
+            
+            //좋아요를 감소시킬 댓글을 조회 및 업데이트 실행
+            database.db.collection(paramBoardId).findOneAndUpdate(
+              {
+                 _id: new ObjectId(paramEntryId), 
+                'comments._id': new ObjectId(paramCommentId),
+                'comments.likeslist.userid': new ObjectId(paramUserId),
+              },  
+              { 
+                $inc: {'comments.$.likes': -1}, 
+                
+                $pull: 
+                  {'comments.$.likeslist' :{'userid': new ObjectId(paramUserId)}}    
+                
+              },{upsert: true,new: true},
+            function(err,data){
+              if (err) {
+                      utils.log("DecreLikeComment 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.message)
+                      res.end(); 
+                      return;
+              }		   
+              context.likesinfo.push({likes: locallikes-1, likespressed: false}) 
+              context.likesinfo.splice(0,1)  
+              context.msg = "success";
+              console.dir(context)
+              res.json(context)
+              res.end(); 
+              return 
+              })//findOneAndUpdate 닫기 
+          })//findOne 닫기
+      })//UserModel.findOne 닫기 
+  } else {  
+      utils.log('IncreLikeComment 수행 중 데이터베이스 연결 실패');
+      res.end(); 
+      return;
+    }	    
+}; //DecreLikeComment 닫기 
 
 //////////////////한 게시판의 댓글(comments)과 관련된 함수들 끝 /////////////////////////////////
 
@@ -602,9 +1003,11 @@ module.exports.AddReport = AddReport;
 module.exports.ShowBulletinBoard = ShowBulletinBoard;  
 module.exports.AddEditEntry = AddEditEntry; 
 module.exports.DeleteEntry = DeleteEntry;
-module.exports.IncreLikeEntry = IncreLikeEntry;
+module.exports.IncreLikeEntry = IncreLikeEntry; 
+module.exports.DecreLikeEntry = DecreLikeEntry;
 module.exports.ShowComments = ShowComments; 
 module.exports.AddComment = AddComment;
 module.exports.EditComment = EditComment;  
 module.exports.DeleteComment = DeleteComment; 
 module.exports.IncreLikeComment = IncreLikeComment;
+module.exports.DecreLikeComment = DecreLikeComment;

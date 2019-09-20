@@ -5,7 +5,8 @@
  * @author Mike
  */
 var Schema = {};
-var crypto = require('crypto'); 
+var crypto = require('crypto');  
+
 
 Schema.createSchema = function(mongoose) {
 	 //mongoose.set('useCreateIndex', true);
@@ -16,10 +17,17 @@ Schema.createSchema = function(mongoose) {
       userNm: {type: String, 'default': 'dummy', required: true}, //실명
       gaeinNo: {type: Number, 'default': '20170812', /*unique: true*/ required: true}, //학번 
       sosokEnm: {type: String, 'default': 'NaN' , required: true}, // Department Of Information Systems
-      nickNm: {type: String, 'default': 'noName', /*unique: true*/},// 앱 내에서 표시될 이름 
+      nickNm: {type: String, 'default': 'no name', /*unique: true*/},// 앱 내에서 표시될 이름 
       salt: {type: String}, //임시 비밀 번호 암호화를 위해 필요
       hashed_password: {type: String, 'default':''},// 임시 비밀 번호   
-      isadmin: {type: Boolean, default: false} 
+	  isadmin: {type: Boolean, default: false}, 
+	  DM: [{
+		sendername: {type: String, 'default': 'no name'},
+		senderid: {type: mongoose.Schema.ObjectId, ref: 'users'},
+		title: {type: String, trim:true, 'default': ' '},
+		contents: {type: String, trim:true, 'default': ' '}, 
+		created_at: {type: Date, 'default': Date.now},
+	  }] 
     });
     
 	// password를 virtual 메소드로 정의 : MongoDB에 저장되지 않는 가상 속성임. 

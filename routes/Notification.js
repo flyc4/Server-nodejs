@@ -10,8 +10,6 @@ const schedule = require('node-schedule');
 const api = "AIzaSyATLbXuBnhHhb1Meyv2WFa6Lpw5FCupc8I";
 const translate = require('google-translate')(api);
 
-
-
 _notificationcrawl = async () => {
     let url = server_url + '/process/CrawlNotificationData'; 
         await axios.post(url,{postStartIndex: 0, postEndIndex: 2})
@@ -43,7 +41,7 @@ var CrawlNotificationData = async function(req, res) {
                 }    
 
                 // 크롤링 시작
-                //파싱할 사이트의 url을 지정
+                //파싱할 사이트의 url을 지정 
                 const getHtml = async () => {
                     try { 
                         return await axios.get("https://www.dic.hanyang.ac.kr/front/student/notice?page=1&per-page=6")
@@ -67,16 +65,18 @@ var CrawlNotificationData = async function(req, res) {
                                 isnotice: $(this).find('a div.first span').text().replace(/\t/g,'').replace(/\n/g,'').replace('공지공지','').trim()
                             }
                         })
-                        const data = ulList.filter(n => n.title); 
-
+                        
+                        const data = ulList.filter(n => n.title);
+                        
                         //클롤링한 데이터들을 비교하던 중, cursor[0].title == data[i].title이면 break 하려고 for 문 사용
                         for(let i = 0; i < data.length; i++) {
                         
                         // db에 저장하기 위해 파싱 결과를 각각의 변수에 저장
                         let title = data[i].title;
                         let url = "https://www.dic.hanyang.ac.kr" + data[i].url;
-                        let date = moment(data[i].date).format('YYYY-MM-DD'); 
-                        let isnotice = (data[i].isNotice == "공지") ? 1 : 0; 
+                        let date = moment(data[i].date).format('YYYY-MM-DD');
+                        
+                        let isnotice = (data[i].isnotice == "공지") ? 1 : 0; 
                         // 파싱을 통해 얻은 날짜의 포맷이 올바른지 여부 확인
                         var date_check = moment(date).isValid(); 
                         
@@ -137,7 +137,8 @@ var CrawlNotificationData = async function(req, res) {
                                         userid: new ObjectId("5d5373177443381df03f3040"), // 관리자 계정의 ID 부여 
                                         nickNm: "admin", //관리자 계정의 닉네임
                                         profile: " ",// 게시글 옆 사진
-                                        likes:  0,
+                                        likes:  0, 
+                                        likeslist: [], //게시물에 좋아요를 누른 사람들의 목록
                                         created_at: moment().utc(Date.now(), "YYYY-MM-DD HH:mm:ss"), //bulletinboard의 created_at과 다르다
                                         title: title,
                                         contents: contents,
@@ -162,7 +163,7 @@ var CrawlNotificationData = async function(req, res) {
                         res.end(); 
                         return;      
                     })//.then 닫기   
-                }).sort({date: -1}) //database.NotificationModel.find (첫 크롤링 시)    
+                }).sort({isnotice: -1, date: -1, created_at: 1}) //database.NotificationModel.find (첫 크롤링 시)    
     } 
     else{
         utils.log("CrawlNotificationData 수행 중 데이터베이스 연결 실패")

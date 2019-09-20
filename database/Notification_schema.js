@@ -14,7 +14,11 @@ SchemaObj.createSchema = function(mongoose) {
             userid: {type: mongoose.Schema.ObjectId, ref: 'users'}, 
             nickNm: {type: String, 'default': 'noName'},
             profile: {type: String, trim:true, 'default': ' '},// 게시글 옆 사진
-            likes: {type: Number, unique: false, 'default': 0},
+            likes: {type: Number, unique: false, 'default': 0}, 
+            likeslist: [{
+                userid: {type: mongoose.Schema.ObjectId, ref: 'users'},  
+                nickNm: {type: String, 'default': 'noName'}
+            }], 
             created_at: {type: Date, 'default': utils.timestamp(), index: {unique: false}}, //크롤링한 날짜
             title: {type: String, trim:true, 'default': ' '},
             contents: {type: String, trim:true, 'default': ' '},

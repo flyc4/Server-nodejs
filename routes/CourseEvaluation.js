@@ -259,7 +259,9 @@ var AddCourseEvaluationComment = function(req, res) {
             paramDifficulty = req.body.difficulty || "N/A",
             paramRating = req.body.rating || 0,
             commentid = new mongoose.Types.ObjectId(); 
-            
+        
+        let context = {msg: ""}     
+
         console.log('paramCourseId: ' + paramCourseId + ', paramUserId: ' +  paramUserId, 
         ', paramDifficulty: ' + paramDifficulty, ', paramAssignment: ' + paramAssignment + 
         ', paramExam: ' + paramExam + ', paramGrade: ' + paramGrade + 
@@ -302,8 +304,11 @@ var AddCourseEvaluationComment = function(req, res) {
                 if(err2){
                     utils.log("AddCourseEvaluationComment에서 댓글 추가 중 에러 발생: ", err2.message)
                     return;
-                }  
+                }    
                 console.log("댓글 추가함")
+                context.msg = "suceess"; 
+                res.json(context) 
+                res.end()
                 return; 
             }) //findByIdAndUpdate닫기 
 
@@ -332,6 +337,7 @@ var EditCourseEvaluationComment = function(req, res) {
             paramGrade = req.body.grade || "N/A", 
             paramDifficulty = req.body.difficulty || "N/A",
             paramRating = req.body.rating || 0; 
+        let context = {msg: ""}
             
         console.log('paramCourseId: ' + paramCourseId + ', paramContents: ' + paramContents + 
             ', paramExam: ' + paramExam + ', paramAssignment: ' + paramAssignment + 
@@ -355,7 +361,10 @@ var EditCourseEvaluationComment = function(req, res) {
                         utils.log("EditCourseEvaluationComment에서 댓글 수정 중 에러 발생: ", err.message)
                         return;
                     }  
-                    console.log("댓글 수정함")
+                    console.log("댓글 수정함")  
+                    context.msg = "success"
+                    res.json(context) 
+                    res.end()
                     return; 
                 }) //updateOne 닫기 
 
@@ -376,6 +385,8 @@ var DeleteCourseEvaluationComment = function(req, res) {
        
         var paramCourseId = req.body.courseid == 'NO-ID'? '000000000000000000000001': req.body.courseid,
             paramCommentId = req.body.commentid; 
+        
+        let context = {msg: ""}
 
         console.log('paramCourseId: ' + paramCourseId + ', paramCommentId: ' + paramCommentId);  
             
@@ -387,7 +398,9 @@ var DeleteCourseEvaluationComment = function(req, res) {
                         utils.log("EditCourseEvaluationComment에서 댓글 삭제 중 에러 발생: ", err.message)
                         return;
                     }  
-                    
+                    context.msg = "success" 
+                    res.json(context) 
+                    res.end()
                     return; 
                 }) //updateOne 닫기 
     } 
@@ -399,37 +412,245 @@ var DeleteCourseEvaluationComment = function(req, res) {
 }; 
 
 //댓글에 좋아요 1 증가
-var IncreLikeCourseEvaluation = function(req, res) {
-    console.log('CourseEvaluation 모듈 안에 있는 IncreLikeCourseEvaluation 호출됨.');
+var IncreLikeCourseEvaluationComment = function(req, res) {
+    console.log('CourseEvaluation 모듈 안에 있는 IncreLikeCourseEvaluationComment 호출됨.');
     
     var paramCourseId = req.body.courseid||req.query.courseid;  
-    var paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000001"; 
+    var paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000001";  
+    var paramUserId = req.body.userid||"000000000000000000000001"; 
     
     var database = req.app.get('database');
+    console.log(
+        'paramCourseId: ' + paramCourseId, 
+        'paramCommentId: ' + paramCommentId,
+        'paramUSerId: ' + paramUserId
+        );
+    let context = {
+        likesinfo: [{ 
+        likes: 0, 
+        likespressed: false  
+        }], 
+        msg: " "}
     
-    console.log('paramCourseId: ' + paramCourseId, 'paramCommentId: ' + paramCommentId);
+    // 데이터베이스 객체가 초기화된 경우
+    if (database.db) {
+        database.UserModel.findOne({_id: new ObjectId(paramUserId)},function(err,user){
+            if(err){
+            utils.log("IncreLikeCourseEvaluationComment에서 좋아요를 누른 사용자 조회 중 에러 발생: ",err.message)
+            }  
+            if(!user){
+            utils.log("IncreLikeCourseEvaluationComment에서 사용자를 조회할 수 없음") 
+            context.msg = "missing"
+            res.json(context) 
+            res.end() 
+            return;
+            }
+            //이미 좋아요를 눌렀으나 좋아요 요청을 또 다시 해온 경우, 좋아요를 반영하지 않고 반환한다. 
+            database.CourseEvaluationModel.findOne({
+                _id: new ObjectId(paramCourseId),  
+            },  
+            function(err,post){
+                if (err) {
+                utils.log("IncreLikeCourseEvaluationComment 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.message)
+                res.end(); 
+                return;
+                }   
+                if(!post){
+                utils.log("IncreLikeCourseEvaluationComment 안에서 게시글 조회 실패") 
+                context.msg = "empty"  
+                res.json(context) 
+                res.end() 
+                return;
+                }
+                
+                let commentindex = -1;
+                let locallikes = -1;    
+                
+                //댓글에 해당하는 인덱스 값(i) 찾기
+                for(let i=0;i<post.comments.length;i++){  
+                if(post.comments[i]._id.toString() == paramCommentId){
+                    commentindex = i;
+                    locallikes = post.comments[i].likes 
+                    break;
+                    }
+                }  
+                if(commentindex == -1){
+                utils.log("IncreLikeCourseEvaluationComment 안에서 요청 받은 댓글 조회 실패") 
+                context.msg = "empty" 
+                res.json(context) 
+                res.end() 
+                return
+                }
+                
+                //이미 좋아요를 눌렀던 상태일 경우 반환
+                for(let j=0;j<post.comments[commentindex].likeslist.length;j++){ 
+                if(post.comments[commentindex].likeslist[j].userid.toString() == paramUserId){
+                    utils.log("IncreLikeCourseEvaluationComment에서 이미 좋아요를 누른 댓글에 다시 좋아요 요청함")
+                    context.msg = "duplicate" 
+                    context.likesinfo.push({likes: locallikes, likespressed: true}) 
+                    context.likesinfo.splice(0,1)  
+                    res.json(context)
+                    res.end()   
+                    return;
+                }
+                }
+    
+                //좋아요를 증가시킬 댓글을 조회 
+                database.CourseEvaluationModel.findOneAndUpdate({_id: new ObjectId(paramCourseId), 'comments._id': new ObjectId(paramCommentId)},  
+                { 
+                    $inc: {'comments.$.likes': 1}, 
+                    $push: { 
+                    'comments.$.likeslist': {
+                        userid: new ObjectId(paramUserId),  
+                        nickNm: user.nickNm 
+                    }}  
+                },
+                function(err){
+                if (err) {
+                        utils.log("IncreLikeCourseEvaluationComment 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
+                        res.end(); 
+                        return;
+                }		 
+                context.likesinfo.push({likes: locallikes+1, likespressed: true}) 
+                context.likesinfo.splice(0,1)  
+                context.msg = "success";
+                console.dir(context)
+                res.json(context)
+                res.end(); 
+                return 
+                })//findOneAndUpdate 닫기 
+            })//findOne 닫기
+        })//UserModel.findOne 닫기 
+    } else {  
+        utils.log('IncreLikeCourseEvaluationComment 수행 중 데이터베이스 연결 실패');
+        res.end(); 
+        return;
+        }	     
+  }; //IncreLikeCourseEvaluationComment 닫기   
+
+  //댓글에 좋아요 1 감소
+var DecreLikeCourseEvaluationComment = function(req, res) {
+    console.log('CourseEvaluations 모듈 안에 있는 DecreLikeCourseEvaluationComment 호출됨.');
+    
+    var paramCourseId = req.body.courseid||req.query.courseid;  
+    var paramUserId = req.body.userid||"000000000000000000000001";
+    var paramCommentId = req.body.commentid||req.query.commentid;
+  
+    var database = req.app.get('database');
+    
+    console.log('paramCourseId: ' + paramCourseId,  
+      'paramUserId: ' + paramUserId, 'paramCommentId: ' + paramCommentId);
+  
+    var context = {
+      likesinfo: [{ 
+        likes: 0, 
+        likespressed: true  
+      }], 
+      msg: " "}
   
     // 데이터베이스 객체가 초기화된 경우
     if (database.db) {
-        
-        //좋아요를 증가시킬 게시물을 조회 
-        database.CourseEvaluationModel.findOneAndUpdate({_id: new ObjectId(paramCourseId), 
-            'comments._id': new ObjectId(paramCommentId)},  
-          {$inc: {'comments.$.likes': 1}},
-        function(err){
-          if (err) {
-                  utils.log("IncreLikeCourseEvaluation 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
-                  res.end(); 
-                  return;
-            } 
-          return; 
-        })
+        database.UserModel.findOne({_id: new ObjectId(paramUserId)},function(err,user){
+          if(err){
+            utils.log("DecreLikeCourseEvaluationComment에서 좋아요를 취소한 사용자 조회 중 에러 발생: ",err.message)
+          }  
+          if(!user){
+            utils.log("DecreLikeCourseEvaluationComment에서 사용자를 조회할 수 없음") 
+            context.msg = "missing"
+            res.json(context) 
+            res.end() 
+            return;
+          }
+          
+          database.CourseEvaluationModel.findOne({
+              _id: new ObjectId(paramCourseId),  
+            },  
+            function(err,post){
+              if (err) {
+                utils.log("DecreLikeCourseEvaluationComment 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.message)
+                res.end(); 
+                return;
+              }   
+              if(!post){
+                utils.log("DecreLikeCourseEvaluationComment 안에서 게시글 조회 실패") 
+                context.msg = "empty"  
+                res.json(context) 
+                res.end() 
+                return;
+              }
+              
+              let commentindex = -1;
+              let locallikes = -1;     
+              let isinlikeslist = false;
+                
+              //업데이트 할 댓글의 인덱스(i) 조회 및 업데이트 전 좋아요 갯수(locallikes) 설정
+              for(let i=0;i<post.comments.length;i++){  
+                if(post.comments[i]._id.toString() == paramCommentId){
+                  commentindex = i;
+                  locallikes = post.comments[i].likes 
+                  break;
+                  }
+              } 
+              if(commentindex == -1){
+                utils.log("DecreLikeCourseEvaluationComment 안에서 요청 받은 댓글 조회 실패") 
+                context.msg = "empty" 
+                res.json(context) 
+                res.end() 
+                return
+              }   
+  
+              //좋아요를 누른 사람의 목록에 없으나 좋아요 취소 요청을 해온 경우, 좋아요 취소를 반영하지 않고 반환한다. 
+              for(let j=0;j<post.comments[commentindex].likeslist.length;j++){
+                if(post.comments[commentindex].likeslist[j].userid.toString() == paramUserId){
+                  isinlikeslist = true 
+                  break
+                }
+              }
+  
+              if(!isinlikeslist){
+                utils.log("DecreLikeCourseEvaluationComment안에서 likeslist 안에서 요청한 사용자를 찾을 수 없음") 
+                context.msg = "empty" 
+                res.json(context) 
+                res.end() 
+                return
+              }
+              
+              //좋아요를 감소시킬 댓글을 조회 및 업데이트 실행
+              database.CourseEvaluationModel.findOneAndUpdate(
+                {
+                   _id: new ObjectId(paramCourseId), 
+                  'comments._id': new ObjectId(paramCommentId),
+                  'comments.likeslist.userid': new ObjectId(paramUserId),
+                },  
+                { 
+                  $inc: {'comments.$.likes': -1}, 
+                  
+                  $pull: 
+                    {'comments.$.likeslist' :{'userid': new ObjectId(paramUserId)}}    
+                  
+                },{upsert: true,new: true},
+              function(err){
+                if (err) {
+                        utils.log("DecreLikeCourseEvaluationComment 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.message)
+                        res.end(); 
+                        return;
+                }		   
+                context.likesinfo.push({likes: locallikes-1, likespressed: false}) 
+                context.likesinfo.splice(0,1)  
+                context.msg = "success";
+                console.dir(context)
+                res.json(context)
+                res.end(); 
+                return 
+                })//findOneAndUpdate 닫기 
+            })//findOne 닫기
+        })//UserModel.findOne 닫기 
     } else {  
-        utils.log('IncreLikeCourseEvaluation 수행 중 데이터베이스 연결 실패');
+        utils.log('DecreLikeCourseEvaluationComment 수행 중 데이터베이스 연결 실패');
         res.end(); 
         return;
-      }	
-  }; //IncreLikeCourseEvaluation 닫기  
+      }	    
+  }; //DecreLikeCourseEvaluationComment 닫기 
 
   var ShowProfessorProfile = function(req, res) {
     console.log('CourseEvaluation 모듈 안에 있는 ShowProfessorProfile 호출됨.');
@@ -487,8 +708,6 @@ var IncreLikeCourseEvaluation = function(req, res) {
       }
   }; //ShowProfessorProfile 닫기 
 
-
-
 //////////////////Commentes와 관련된 함수 끝 /////////////////////////////////
 
 module.exports.ShowCoursesList = ShowCoursesList;  
@@ -496,9 +715,7 @@ module.exports.ShowCommentsList = ShowCommentsList;
 module.exports.AddCourseEvaluationComment = AddCourseEvaluationComment;
 module.exports.EditCourseEvaluationComment = EditCourseEvaluationComment;
 module.exports.DeleteCourseEvaluationComment = DeleteCourseEvaluationComment; 
-module.exports.IncreLikeCourseEvaluation = IncreLikeCourseEvaluation; 
-module.exports.ShowProfessorProfile = ShowProfessorProfile; 
+module.exports.IncreLikeCourseEvaluationComment = IncreLikeCourseEvaluationComment; 
+module.exports.DecreLikeCourseEvaluationComment = DecreLikeCourseEvaluationComment;
+module.exports.ShowProfessorProfile = ShowProfessorProfile;  
 
-/*test용 
-module.exports.test = test; 
-*/

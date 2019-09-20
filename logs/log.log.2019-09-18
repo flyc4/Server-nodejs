@@ -6,3 +6,35 @@
 {"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 10:47:44"}
 {"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 10:51:43"}
 {"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 10:52:11"}
+{"message":"ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생$meta is the only expression supported by $sort right now","level":"info","timestamp":"2019-09-18 11:17:28"}
+{"message":"ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생$meta is the only expression supported by $sort right now","level":"info","timestamp":"2019-09-18 11:18:46"}
+{"message":"ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생$sort key ordering must be specified using a number or {$meta: 'textScore'}","level":"info","timestamp":"2019-09-18 11:20:09"}
+{"message":"ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생$meta is the only expression supported by $sort right now","level":"info","timestamp":"2019-09-18 11:23:04"}
+{"message":"IncreLikeEntry에서 사용자를 조회할 수 없음","level":"info","timestamp":"2019-09-18 22:23:14"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 22:26:39"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 22:29:18"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 22:30:30"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 22:32:35"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 22:35:34"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 22:36:31"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 22:40:04"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 22:40:52"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 22:45:32"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 22:46:58"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 22:48:09"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 22:50:11"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 22:51:04"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 22:52:40"}
+{"message":"IncreLikeEntry에서 사용자를 조회할 수 없음","level":"info","timestamp":"2019-09-18 23:10:21"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 23:12:28"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 23:14:44"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 23:15:45"}
+{"message":"IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음","level":"info","timestamp":"2019-09-18 23:17:20"}
+{"message":"DecreLikeEntry에서 사용자를 조회할 수 없음","level":"info","timestamp":"2019-09-18 23:22:06"}
+{"message":"DecreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 취소했음","level":"info","timestamp":"2019-09-18 23:31:20"}
+{"message":"DecreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 취소했음","level":"info","timestamp":"2019-09-18 23:33:33"}
+{"message":"DecreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 취소했음","level":"info","timestamp":"2019-09-18 23:37:35"}
+{"message":"DecreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 취소했음","level":"info","timestamp":"2019-09-18 23:40:51"}
+{"message":"DecreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 취소했음","level":"info","timestamp":"2019-09-18 23:47:09"}
+{"message":"DecreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 취소했음","level":"info","timestamp":"2019-09-18 23:50:35"}
+{"message":"DecreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 취소했음","level":"info","timestamp":"2019-09-18 23:55:43"}

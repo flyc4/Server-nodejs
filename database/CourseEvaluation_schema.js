@@ -33,7 +33,10 @@ SchemaObj.createSchema = function(mongoose) {
             difficulty: {type: String, trim: true},//commenterDifficulty : commenter가 입력한 수준. String
 			rating: {type: Number, 'default': 0}, //rating : commenter가 입력한 rating. number (0-5) 
             likes: {type: Number, 'default': 0}, 
-            unlikes: {type: Number, 'default': 0}, //싫어요  
+            likeslist: [{
+                userid: {type: mongoose.Schema.ObjectId, ref: 'users'},  
+                nickNm: {type: String, 'default': 'noName'}
+            }], //게시물에 좋아요를 누른 사람들의 목록  
             created_at: {type: Date, 'default': Date.now},
         }]
 	});    
