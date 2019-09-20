@@ -7,6 +7,8 @@ const ObjectId = mongoose.Types.ObjectId;
 const utils = require('../config/utils'); 
 const server_url = "http://sususerver.ddns.net:3000" 
 const schedule = require('node-schedule');
+const api = "AIzaSyATLbXuBnhHhb1Meyv2WFa6Lpw5FCupc8I";
+const translate = require('google-translate')(api);
 
 
 
@@ -170,3 +172,39 @@ var CrawlNotificationData = async function(req, res) {
 };//CrawlNotificationData 닫기
 
 module.exports.CrawlNotificationData = CrawlNotificationData; 
+
+var Translator = async function(req, res) {
+    var database = req.app.get('database');
+    console.log('Notification 모듈 안에 있는 Translator 호출됨.');
+
+    if(database.db) {
+        database.NotificationModel.findOne({},
+            function(err, cursor) {
+                if(err) {
+                    utils.log("CrawlNotificationData에서 크롤링 여부를 결정하는 중 에러 발생: ", err.message)
+                    res.end(); 
+                    return;    
+                }
+                if(cursor != undefined){ 
+                    console.log("NotificationModel에서 가져올 DB 정보 없음")
+                    break;
+                }
+                let ulList = Object;
+                for(let j = 0; j < cursor.length; j++) {
+                    if(err) return log(err);
+                    else ulList[j] = {
+                        title: cursor[j].title,
+                        contents: cursor[j].contents
+                    }
+                    log(ulList[j].contents)
+                    /* log(ulList[j].title)
+                    log(ulList[j].contents)
+                    translate
+                        .translate([ulList[j].title, ulList[j].contents], 'en', function(err, translations) {
+                            if(err) console.error(error);
+                            else log("Title :> ", translations[1].translatedText);
+                        }) */
+                }                 
+            })
+    }
+}
