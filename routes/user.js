@@ -171,7 +171,7 @@ var SendDM = function(req, res) {
         }   
 };//sendDM 닫기 
 
-var ShowDMList = function(req, res) {
+var DeleteDM = function(req, res) {
     console.log('user 모듈 안에 있는 DeleteDM 호출됨.');
   
     var database = req.app.get('database'); 
@@ -210,16 +210,13 @@ var ShowDMList = function(req, res) {
 };//DeleteDM 닫기 
 
 var ShowDMList = function(req, res) {
-    console.log('user 모듈 안에 있는 DeleteDM 호출됨.');
+    console.log('user 모듈 안에 있는 ShowDMList 호출됨.');
   
-    var database = req.app.get('database'); 
- 
-    var paramDMId = req.body.dmid|| "000000000000000000000001"
+    var database = req.app.get('database');  
     var paramUserId = req.body.userid || "000000000000000000000001"
 
     var context = {msg: " "}
-
-    console.log("paramDMId: ", paramDMId)  
+ 
     console.log("paramUserId: ",paramUserId)
     
     // 데이터베이스 객체가 초기화된 경우 
@@ -299,6 +296,7 @@ var ShowUserNameList = function(req, res) {
 module.exports.checknickNm = checknickNm;
 module.exports.getuserid = getuserid;
 module.exports.SendDM = SendDM;
-module.exports.DeleteDM = DeleteDM; 
+module.exports.DeleteDM = DeleteDM;  
+module.exports.ShowDMList = ShowDMList;
 module.exports.ShowUserNameList = ShowUserNameList; 
 module.exports.ShowDMList = ShowDMList;
