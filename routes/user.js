@@ -171,7 +171,7 @@ var SendDM = function(req, res) {
         }   
 };//sendDM 닫기 
 
-var DeleteDM = function(req, res) {
+var ShowDMList = function(req, res) {
     console.log('user 모듈 안에 있는 DeleteDM 호출됨.');
   
     var database = req.app.get('database'); 
@@ -184,10 +184,11 @@ var DeleteDM = function(req, res) {
     console.log("paramDMId: ", paramDMId)  
     console.log("paramUserId: ",paramUserId)
     
-    // 데이터베이스 객체가 초기화된 경우
-	if (database.db) {
-        database.db.collection("users").updateOne({_id: new ObjcetId(paramUserId)}, 
-            {$pull: { 'DM': {'_id': new ObjcetId(paramDMId)}}},   
+    // 데이터베이스 객체가 초기화된 경우 
+	if (database.db) { 
+        
+        database.db.collection('users').updateOne({'_id': new ObjectId(paramUserId)}, 
+            {$pull: { 'DM': {'_id': new ObjectId(paramDMId)}}},   
             function(err) {		
             if (err) {
                 utils.log("DeleteDM에서 DM 삭제 중 에러발생: ",err.message)
@@ -195,8 +196,8 @@ var DeleteDM = function(req, res) {
                 res.json(context)     
                 res.end();
                 return;
-            }
-            context.msg = "success" 
+            }  
+            context.msg = "success"   
             res.json(context) 
             res.end() 
             return;  
@@ -206,7 +207,47 @@ var DeleteDM = function(req, res) {
         res.end(); 
         return;
         }   
-};//DeleteDM 닫기
+};//DeleteDM 닫기 
+
+var ShowDMList = function(req, res) {
+    console.log('user 모듈 안에 있는 DeleteDM 호출됨.');
+  
+    var database = req.app.get('database'); 
+ 
+    var paramDMId = req.body.dmid|| "000000000000000000000001"
+    var paramUserId = req.body.userid || "000000000000000000000001"
+
+    var context = {msg: " "}
+
+    console.log("paramDMId: ", paramDMId)  
+    console.log("paramUserId: ",paramUserId)
+    
+    // 데이터베이스 객체가 초기화된 경우 
+	if (database.db) { 
+        
+        database.db.collection('users').updateOne({'_id': new ObjectId(paramUserId)}, 
+            {$pull: { 'DM': {'_id': new ObjectId(paramDMId)}}},   
+            function(err) {		
+            if (err) {
+                utils.log("DeleteDM에서 DM 삭제 중 에러발생: ",err.message)
+                context.msg = "missing" 
+                res.json(context)     
+                res.end();
+                return;
+            }  
+            context.msg = "success"   
+            res.json(context) 
+            res.end() 
+            return;  
+        })//findOne 조회 닫기   
+    } else {
+        utils.log('ShowDMList 수행 중 데이터베이스 연결 실패');
+        res.end(); 
+        return;
+        }   
+};//ShowDMList 닫기
+
+
 
 var ShowUserNameList = function(req, res) {
     console.log('user 모듈 안에 있는 ShowUserNameList 호출됨.');
@@ -259,4 +300,5 @@ module.exports.checknickNm = checknickNm;
 module.exports.getuserid = getuserid;
 module.exports.SendDM = SendDM;
 module.exports.DeleteDM = DeleteDM; 
-module.exports.ShowUserNameList = ShowUserNameList;
+module.exports.ShowUserNameList = ShowUserNameList; 
+module.exports.ShowDMList = ShowDMList;
