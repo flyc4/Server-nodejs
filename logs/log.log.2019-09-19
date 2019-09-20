@@ -28,3 +28,6 @@
 {"message":"DecreLikeComment 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: The positional operator did not find the match needed from the query.","level":"info","timestamp":"2019-09-19 18:11:22"}
 {"message":"DecreLikeComment 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: The positional operator did not find the match needed from the query.","level":"info","timestamp":"2019-09-19 18:20:48"}
 {"message":"DecreLikeComment안에서 likeslist 안에서 요청한 사용자를 찾을 수 없음","level":"info","timestamp":"2019-09-19 18:27:02"}
+{"message":"ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생unknown operator: $or","level":"info","timestamp":"2019-09-19 21:50:32"}
+{"message":"ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생unknown operator: $or","level":"info","timestamp":"2019-09-19 21:50:36"}
+{"message":"ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생unknown operator: $or","level":"info","timestamp":"2019-09-19 21:52:32"}

@@ -120,11 +120,13 @@ var ShowBulletinBoard = async function(req, res) {
   var paramuserid= req.body.userid||req.query.userid || req.param.userid||"5d5373177443381df03f3040";
   var parampostStartIndex = req.body.postStartIndex||req.query.postStartIndex || req.param.postStartIndex||0; 
   var parampostEndIndex = req.body.postEndIndex||req.query.postEndIndex || req.param.postEndIndex||19;  
+  var paramSearch = req.body.search||" ";
 
   console.log("paramboardid: ",paramboardid) 
   console.log("paramuserid: ",paramuserid) 
   console.log("parampostStartIndex: ",parampostStartIndex)
   console.log("parampostEndIndex: ",parampostEndIndex)
+  console.log("paramSearch: ",paramSearch)
 
   parampostStartIndex = parampostStartIndex*1;
   parampostEndIndex = parampostEndIndex*1;
@@ -147,22 +149,32 @@ var ShowBulletinBoard = async function(req, res) {
   
   if (database.db){        
     
+    if(paramSearch !=" "){
+      var query = {$or: 
+        [{contents: new RegExp(".*"+paramSearch+".*","gi")}, 
+          {title: new RegExp(".*"+paramSearch+".*","gi")}, 
+          {nickNm: new RegExp(".*"+paramSearch+".*","gi")}
+        ], 
+        }; 
+    } 
+    else{
+      var query = {};
+    }
+
     //paramboardid == notifications 일 떄, 정렬 기준을 달리하기 위함.
     let sortvalue1 = "created_at";
-    let sortvalue2 = "created_at";
+    let sortvalue2 = "created_at"; 
 
     //notifications 컬렉션만 date의 역순으로 정렬 
     if(paramboardid == "notifications"){
       sortvalue1 = "isnotice"
-      sortvalue2 = "date";
-    }
-    database.db.collection(paramboardid).aggregate([
-      { $sort: {
-        [sortvalue1]: -1,
-        [sortvalue2]: -1, 
-        created_at: -1
-      }},  
-      ]).toArray(function(err,data){ 
+      sortvalue2 = "date"; 
+    } 
+    database.db.collection(paramboardid).find(query).sort({
+      [sortvalue1]: -1,
+      [sortvalue2]: -1, 
+      created_at: -1  
+  }).toArray(function(err,data){ 
       if(err){
         utils.log("ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생"+ err.message);
       }  
@@ -557,17 +569,37 @@ var ShowComments = function(req, res) {
           }
 
           for(var i= paramCommentStartIndex; i<= paramCommentEndIndex; i++){  
-            var localismine = paramUserId == result[i].comments.userid;
-            context.commentslist.push({boardid: paramBoardId, entryid: paramEntryId, rootreplyid: result[i].comments.rootreplyid
-            , parentreplyid: result[i].comments.parentreplyid, replyid: result[i].comments._id, userid: result[i].comments.userid, username: result[i].comments.nickNm 
-            , profile: result[i].comments.profile, likes: result[i].comments.likes, date: result[i].comments.created_at, ismine: localismine, contents: result[i].comments.contents
-            , pictures: result[i].comments.pictures});
+            var localismine = paramUserId == result[i].comments.userid; 
+            var locallikespressed = false; 
+
+            for(let j=0;j<result[i].comments.likesinfo.length;j++){
+              if(result[i].comments.likesinfo.userid.toString() == paramUserId){
+                locallikespressed = true
+            }
+
+            context.commentslist.push({
+              boardid: paramBoardId, 
+              entryid: paramEntryId, 
+              rootreplyid: result[i].comments.rootreplyid,
+              parentreplyid: result[i].comments.parentreplyid, 
+              replyid: result[i].comments._id, 
+              userid: result[i].comments.userid, 
+              username: result[i].comments.nickNm, 
+              profile: result[i].comments.profile, 
+              likes: result[i].comments.likes, 
+              likespressed: locallikespressed,
+              date: result[i].comments.created_at, 
+              ismine: localismine, 
+              contents: result[i].comments.contents,
+              pictures: result[i].comments.pictures
+            });
           } 
           context.commentslist.splice(0,1)  
           console.dir(context)
           res.json(context); 
           return;
-      })//aggregate 닫기 
+      }//for 닫기  
+    })//aggregate 닫기
   }//if(database.db) 닫기 
   else {
   utils.log("ShowComment 수행 중 데이터베이스 연결 실패")
@@ -838,7 +870,7 @@ var IncreLikeComment = function(req, res) {
     }	    
 }; //IncreLikeComment 닫기 
 
-//게시글에 좋아요 1 증가
+//댓글에 좋아요 1 감소
 var DecreLikeComment = function(req, res) {
   console.log('BulletinBoards 모듈 안에 있는 DecreLikeComment 호출됨.');
   

@@ -22,8 +22,10 @@ module.exports = {
         ],
 	route_info: [
         //user 혹은 인증과 관련된 패스들
-        {file:'./user', path:'/process/checknickNm', method:'checknickNm', type:'post'} 
+         {file:'./user', path:'/process/checknickNm', method:'checknickNm', type:'post'} 
         ,{file:'./user', path:'/process/getuserid', method:'getuserid', type:'post'}
+        ,{file:'./user', path:'/process/SendDM', method:'SendDM', type:'post'} 
+        ,{file:'./user', path:'/process/ShowUserNameList', method:'ShowUserNameList', type:'post'}       
         
         //community(게시판)와 관련된 패스 들 
         ,{file:'./post', path:'/process/addpost', method:'addpost', type:'post'} 
@@ -78,9 +80,10 @@ module.exports = {
         ,{file:'./CourseEvaluation', path:'/process/AddCourseEvaluationComment', method:'AddCourseEvaluationComment', type:'post'}
         ,{file:'./CourseEvaluation', path:'/process/EditCourseEvaluationComment', method:'EditCourseEvaluationComment', type:'post'}
         ,{file:'./CourseEvaluation', path:'/process/DeleteCourseEvaluationComment', method:'DeleteCourseEvaluationComment', type:'post'}
-        ,{file:'./CourseEvaluation', path:'/process/IncreLikeCourseEvaluation', method:'IncreLikeCourseEvaluation', type:'post'}
+        ,{file:'./CourseEvaluation', path:'/process/IncreLikeCourseEvaluationComment', method:'IncreLikeCourseEvaluationComment', type:'post'}
+        ,{file:'./CourseEvaluation', path:'/process/DecreLikeCourseEvaluationComment', method:'DecreLikeCourseEvaluationComment', type: 'post'}
         ,{file:'./CourseEvaluation', path:'/process/ShowProfessorProfile', method:'ShowProfessorProfile', type:'post'} 
-
+        
         //Notification과 관련된 패스들 
         ,{file:'./Notification', path:'/process/CrawlNotificationData', method:'CrawlNotificationData', type:'post'}
 ],      
