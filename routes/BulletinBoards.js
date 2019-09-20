@@ -218,7 +218,6 @@ var ShowBulletinBoard = async function(req, res) {
           }); 
         } 
     context.postslist.splice(0,1)   
-    //console.dir(context.postslist)
     res.json(context);
     return;  
   })

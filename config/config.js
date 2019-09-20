@@ -25,7 +25,8 @@ module.exports = {
          {file:'./user', path:'/process/checknickNm', method:'checknickNm', type:'post'} 
         ,{file:'./user', path:'/process/getuserid', method:'getuserid', type:'post'}
         ,{file:'./user', path:'/process/SendDM', method:'SendDM', type:'post'} 
-        ,{file:'./user', path:'/process/ShowUserNameList', method:'ShowUserNameList', type:'post'}       
+        ,{file:'./user', path:'/process/ShowUserNameList', method:'ShowUserNameList', type:'post'} 
+        ,{file:'./user', path:'/process/DeleteDM', method:'DeleteDM', type:'post'}
         
         //community(게시판)와 관련된 패스 들 
         ,{file:'./post', path:'/process/addpost', method:'addpost', type:'post'} 
