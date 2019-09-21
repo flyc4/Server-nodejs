@@ -21,7 +21,15 @@ SchemaObj.createSchema = function(mongoose) {
             }], 
             created_at: {type: Date, 'default': utils.timestamp(), index: {unique: false}}, //크롤링한 날짜
             title: {type: String, trim:true, 'default': ' '},
-            contents: {type: String, trim:true, 'default': ' '},
+            contents: {type: String, trim:true, 'default': ' '}, 
+            // 다른 언어로 번역된 title, contents_ 뒤에 붙는 언어 명: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+            title_en: {type: String, trim:true, 'default': ' '},
+            contents_en: {type: String, trim:true, 'default': ' '}, 
+            title_en: {type: String, trim:true, 'default': ' '},
+            contents_en: {type: String, trim:true, 'default': ' '}, 
+            title_zh: {type: String, trim:true, 'default': ' '},
+            contents_zh: {type: String, trim:true, 'default': ' '}, 
+            // 다른 언어로 번역된 title, contents_ 끝
             pictures: {type: String, trim:true, 'default': ' '},  //링크
             hits: {type: Number, unique: false, 'default': 0}, // 조회 수     
             url: {type: String, trim:true, 'default': ' '}, 

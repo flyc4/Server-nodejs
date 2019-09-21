@@ -271,8 +271,15 @@ var ShowDMList = function(req, res) {
                 res.json(context)     
                 res.end();
                 return;
-            }     
-            
+            }      
+            //검색과 일치하는 DM이 없을 시
+            if(cursor.length == 0){
+                context.msg = "success"   
+                context.DMList.splice(0,1)
+                res.json(context)     
+                res.end();
+                return;
+            }
             if(paramDMStartIndex<0){
                 paramDMStartIndex = 0; 
             } 
@@ -309,8 +316,6 @@ var ShowDMList = function(req, res) {
         }   
 };//ShowDMList 닫기
 
-
-
 var ShowUserNameList = function(req, res) {
     console.log('user 모듈 안에 있는 ShowUserNameList 호출됨.');
   
@@ -337,7 +342,7 @@ var ShowUserNameList = function(req, res) {
                 res.json(context)     
                 res.end();
                 return;
-            } 
+            }  
             else{  
                 context.msg = "succeess"; 
                 users.map((items)=>{

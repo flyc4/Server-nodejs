@@ -1,3 +1,61 @@
 {"message":"ShowDMList에서 DM 조회 중 에러발생: ","level":"info","timestamp":"2019-09-21 09:34:27"}
 {"message":"ShowDMList에서 DM 조회 중 에러발생: ","level":"info","timestamp":"2019-09-21 09:34:38"}
 {"message":"ShowDMList에서 DM 조회 중 에러발생: ","level":"info","timestamp":"2019-09-21 10:08:56"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:21:44"}
+{"message":"TranslateNotification에서 첫 번째 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:23:52"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:23:52"}
+{"message":"TranslateNotification에서 첫 번째 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:23:52"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:23:52"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:23:52"}
+{"message":"TranslateNotification에서 첫 번째 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:23:52"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:23:52"}
+{"message":"TranslateNotification에서 첫 번째 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:23:53"}
+{"message":"TranslateNotification에서 첫 번째 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:23:52"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:23:53"}
+{"message":"TranslateNotification에서 첫 번째 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:23:53"}
+{"message":"TranslateNotification에서 첫 번째 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:23:53"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:23:53"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:23:53"}
+{"message":"TranslateNotification에서 첫 번째 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:25:11"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:25:11"}
+{"message":"TranslateNotification에서 첫 번째 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:25:11"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:25:11"}
+{"message":"TranslateNotification에서 첫 번째 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:25:11"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:25:11"}
+{"message":"TranslateNotification에서 첫 번째 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:25:11"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:25:11"}
+{"message":"TranslateNotification에서 첫 번째 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:25:12"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:25:12"}
+{"message":"TranslateNotification에서 첫 번째 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:25:12"}
+{"message":"TranslateNotification에서 첫 번째 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:25:12"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:25:12"}
+{"message":"TranslateNotification에서 마지막 글자의 언어 식별하는 중 에러 발생: ","level":"info","timestamp":"2019-09-21 14:25:12"}
+{"message":"공지사항 영어 번역 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-21 19:53:01"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:02:32"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:02:32"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:02:33"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:02:33"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:02:33"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:02:33"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:02:33"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:02:33"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:02:33"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:02:33"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:02:33"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:02:33"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:02:33"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:02:33"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:05:42"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:05:42"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:05:43"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:05:43"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:05:43"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:05:43"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:05:43"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:05:43"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:05:43"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:05:43"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:05:43"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:05:43"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:05:43"}
+{"message":"TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ","level":"info","timestamp":"2019-09-21 20:05:43"}

@@ -88,8 +88,8 @@ module.exports = {
         
         //Notification과 관련된 패스들 
         ,{file:'./Notification', path:'/process/CrawlNotificationData', method:'CrawlNotificationData', type:'post'}
-        ,{file:'./Notification', path:'/process/TranslateNotification', method:'TranslateNotification', type:'post'}
-
+        ,{file:'./Notification', path:'/process/TranslateNotification_en', method:'TranslateNotification_en', type:'post'}
+        ,{file:'./Notification', path:'/process/TranslateNotification_zh', method:'TranslateNotification_zh', type:'post'}
         
 ],      
 };  

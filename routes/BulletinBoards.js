@@ -120,13 +120,17 @@ var ShowBulletinBoard = async function(req, res) {
   var paramuserid= req.body.userid||req.query.userid || req.param.userid||"5d5373177443381df03f3040";
   var parampostStartIndex = req.body.postStartIndex||req.query.postStartIndex || req.param.postStartIndex||0; 
   var parampostEndIndex = req.body.postEndIndex||req.query.postEndIndex || req.param.postEndIndex||19;  
-  var paramSearch = req.body.search||" ";
+  var paramSearch = req.body.search||" "; 
+
+  //Notifications 에서 사용자가 다른 언어(영어, 중국어 등)을 요청했을 시 사용
+  var paramLanguage = req.body.language||" ";
 
   console.log("paramboardid: ",paramboardid) 
   console.log("paramuserid: ",paramuserid) 
   console.log("parampostStartIndex: ",parampostStartIndex)
   console.log("parampostEndIndex: ",parampostEndIndex)
   console.log("paramSearch: ",paramSearch)
+  console.log("paramLanguage: ",paramLanguage)
 
   parampostStartIndex = parampostStartIndex*1;
   parampostEndIndex = parampostEndIndex*1;
@@ -147,20 +151,30 @@ var ShowBulletinBoard = async function(req, res) {
       pictures: ' ', 
        }]};
   
-  if (database.db){        
-    
-    if(paramSearch !=" "){
+  if (database.db){         
+
+    if(paramSearch !=" "&& paramLanguage == " "){
       var query = {$or: 
         [{contents: new RegExp(".*"+paramSearch+".*","gi")}, 
           {title: new RegExp(".*"+paramSearch+".*","gi")}, 
           {nickNm: new RegExp(".*"+paramSearch+".*","gi")}
         ], 
         }; 
-    } 
+      }  
     else{
-      var query = {};
+        var query = {};
+      } 
+    //사용자가 Notifications 에서 다른 언어 요구 시 
+    if(paramLanguage != " "&& paramboardid=="notifications"){
+      var query = {$or: 
+        [{contents: new RegExp(".*"+paramSearch+".*","gi")}, 
+          {title: new RegExp(".*"+paramSearch+".*","gi")}, 
+          {contents_en: new RegExp(".*"+paramSearch+".*","gi")}, 
+          {title_en: new RegExp(".*"+paramSearch+".*","gi")}, 
+          {nickNm: new RegExp(".*"+paramSearch+".*","gi")}
+        ], 
+        };
     }
-
     //paramboardid == notifications 일 떄, 정렬 기준을 달리하기 위함.
     let sortvalue1 = "created_at";
     let sortvalue2 = "created_at"; 
@@ -177,7 +191,16 @@ var ShowBulletinBoard = async function(req, res) {
   }).toArray(function(err,data){ 
       if(err){
         utils.log("ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생"+ err.message);
-      }  
+      }   
+
+       //조회된 게시물이 없을 시
+       if(data.length<1){
+          context.postslist.splice(0,1) 
+          res.json(context) 
+          res.end() 
+          return
+      }
+
       if(parampostEndIndex>=data.length){
         parampostEndIndex = data.length-1;
       } 
@@ -186,7 +209,10 @@ var ShowBulletinBoard = async function(req, res) {
       }  
       if(parampostStartIndex<0){
         parampostStartIndex = 0;
-      }
+      } 
+      if(parampostEndIndex<0){
+        parampostEndIndex = 0;
+      } 
       for(var i=parampostStartIndex;i<=parampostEndIndex;i++){  
         var localismine = data[i].userid == paramuserid 
         let locallikespressed = false;
@@ -199,7 +225,21 @@ var ShowBulletinBoard = async function(req, res) {
         }
         
         //notifications일 경우 created_at 대신 date 반환
-        let localdate = paramboardid=='notifications'? data[i].date : data[i].created_at;
+        let localdate = paramboardid=='notifications'? data[i].date : data[i].created_at; 
+        let localtitle = data[i].title
+        let localcontents = data[i].contents 
+
+        //notifications이고, 사용자가 영어를 요청할 경우 
+        if(paramLanguage == "en"&& paramboardid=="notifications"){ 
+          localtitle = data[i].title_en
+          localcontents = data[i].contents_en 
+        }  
+        
+        //notifications이고, 사용자가 중국어를 요청할 경우
+        if(paramLanguage == "zh"  && paramboardid=="notifications" ){ 
+          localtitle = data[i].title_zh
+          localcontents = data[i].contents_zh
+        }
         
         context.postslist.push(
           {
@@ -212,8 +252,8 @@ var ShowBulletinBoard = async function(req, res) {
             likespressed: locallikespressed,
             date: localdate, 
             ismine: localismine, 
-            title: data[i].title, 
-            contents: data[i].contents, 
+            title: localtitle, 
+            contents: localcontents, 
             pictures: data[i].pictures,
           }); 
         } 

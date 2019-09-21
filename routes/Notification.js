@@ -8,22 +8,60 @@ const utils = require('../config/utils');
 const server_url = "http://sususerver.ddns.net:3000" 
 const schedule = require('node-schedule');
 const api = "AIzaSyATLbXuBnhHhb1Meyv2WFa6Lpw5FCupc8I";
-const translate = require('google-translate')(api);
+const translate = require('google-translate')(api); 
+
 
 _notificationcrawl = async () => {
     let url = server_url + '/process/CrawlNotificationData'; 
-        await axios.post(url,{postStartIndex: 0, postEndIndex: 2})
-            .then((response) => {    
+        await axios.post(url)
+            .then((response) => {     
+                
             })
             .catch(( err ) => {      
                 utils.log("클롤링 요청 중 에러 발생: ", err.message)  
                 return;
             });    
+  }   
+
+  _translate_en = async () => {
+    let url = server_url + '/process/TranslateNotification_en'; 
+        await axios.post(url)
+            .then((response) => {    
+                
+            })
+            .catch(( err ) => {      
+                utils.log("공지사항 영어 번역 요청 중 에러 발생: ", err.message)  
+                return;
+            });    
+  }   
+
+  _translate_zh = async () => {
+    let url = server_url + '/process/TranslateNotification_zh'; 
+        await axios.post(url)
+            .then((response) => {    
+                
+            })
+            .catch(( err ) => {      
+                utils.log("공지사항 중국어 번역 요청 중 에러 발생: ", err.message)  
+                return;
+            });    
   }  
+
+
 //매일 오전 9시 마다 크롤링
 let updatecrawl = schedule.scheduleJob({hour: 9, minute: 0}, async function(){
- await _notificationcrawl();    
-}) 
+ await _notificationcrawl(); 
+ 
+})  
+//매일 오전 9시 20분 마다 크롤링한 것들 영어 번역 
+let updatetranslate_en =  schedule.scheduleJob({hour: 9, minute: 20}, async function(){
+    await _translate_en();
+   })  
+
+//매일 오전 9시 40분 마다 크롤링한 것들 중국어 번역 
+let updatetranslate_zh =  schedule.scheduleJob({hour: 9, minute: 40}, async function(){
+    await _translate_zh();
+   }) 
 
 var CrawlNotificationData = async function(req, res) {
     var database = req.app.get('database');
@@ -132,7 +170,7 @@ var CrawlNotificationData = async function(req, res) {
                                     }
                                     contents = ulList2[i].contents;
                                     pictures = ulList2[i].pictures;             
-                                                         
+                                    
                                     var elements = new database.NotificationModel({
                                         userid: new ObjectId("5d5373177443381df03f3040"), // 관리자 계정의 ID 부여 
                                         nickNm: "admin", //관리자 계정의 닉네임
@@ -172,39 +210,241 @@ var CrawlNotificationData = async function(req, res) {
     }                
 };//CrawlNotificationData 닫기
 
-var TranslateNotification = async function(req, res) {
-    var database = req.app.get('database');
-    console.log('Notification 모듈 안에 있는 Translator 호출됨.');
+//크롤링한 게시판의 내용을 영어로 번역 (notifications collection의 title_en, contents_en에 저장)
+var TranslateNotification_en = async function(req, res) {
+    console.log('Notification 모듈 안에 있는 TranslateNotification_en 호출됨.'); 
+    var database = req.app.get('database'); 
 
-    if(database.db) {
-        database.NotificationModel.find({},
+    if(database.db) { 
+        database.NotificationModel.find({title_en: " "},
             function(err, cursor) {
                 if(err) {
-                    utils.log("CrawlNotificationData에서 크롤링 여부를 결정하는 중 에러 발생: ", err.message)
+                    utils.log("TranslateNotification_en에서 번역할 게시물 조회 중 에러 발생: ", err.message)
                     res.end(); 
                     return;    
-                }
-                if(cursor != undefined){ 
-                    console.log("NotificationModel에서 가져올 DB 정보 없음")
-                    //break;
-                }
-                let ulList = [{title: " ", contents: " "}];
-                for(let j = 0; j < cursor.length; j++) {
-                    if(err) return log(err);
-                    else ulList.push({
-                        title: cursor[j].title,
-                        contents: cursor[j].contents
-                    })
-                    console.log("NotificationModel의 Contents 불러옴 : " ,ulList[j].contents)
-                    translate
-                        .translate([ulList[j].title, ulList[j].contents], 'en', function(err, translations) {
-                            if(err) console.error(error);
-                            else console.log("Contents :> ", translations[1].translatedText);
-                        }) 
-                }                 
-            })
-    }
-} 
+                }   
+                cursor.map( (items) =>  {   
+                    var startLanguage = "und"; //첫 글자 언어
+                    var endLanguage = "und"; // 마지막 글자 언어  
+                    var i =0;  
+                    var j = 0;
+                    var regex_kor = new RegExp("^[\uac00-\ud7a3]*$"); //한국어 정규표현식
+                    var regex_eng = new RegExp("^[A-Za-z]*$"); //영어 정규표현식
+                    var regex_chn = new RegExp("^[\u4e00-\u9fff]*$","u") //중국어 정규표현식
+                    
+                    // 유효한 첫 글자의 언어를 파악하기 위함.
+                    if(items.contents.length>0){
+                        do { 
+                            if(regex_kor.test(items.contents.charAt(i))){
+                                startLanguage = "ko"   
+                                break;
+                            } 
+                            if(regex_eng.test(items.contents.charAt(i))){
+                                startLanguage = "en" 
+                                break;
+                            }                         
+                            if(regex_chn.test(items.contents.charAt(i))){
+                                break;
+                            }    
+                            i++;
+                        } while (true);  
+
+                        //유효한 마지막 글자의 언어를 파악하기 위함.    
+                        do { 
+                            if(regex_kor.test(items.contents.charAt(items.contents.length-j-1))){
+                                endLanguage = "ko"    
+                                break;
+                            } 
+                            if(regex_eng.test(items.contents.charAt(items.contents.length-j-1))){
+                                endLanguage = "en" 
+                                break;
+                            }                         
+                            if(regex_chn.test(items.contents.charAt(items.contents.length-j-1))){
+                                endLanguage = "zh"  
+                                break;
+                            }    
+                            j++;
+                        }while (true); 
+                    }//if 문 닫기 
+                    
+                    
+                    // 공지사항에 다국어를 쓰면 보통 한국어, 영어, 중국어 순으로 쓴다. 
+                    // 또한 한국어로만 된 게시물의 가장 끝 자리가 이메일 주소라서, 마지막 언어가 영어로 인식되는 것을 방지하기 위함
+                    var toTranslate = !((startLanguage != "zh_CN")&&(endLanguage == "zh_CN")) && startLanguage != "en"
+ 
+                        var localcontents = items.contents  
+                        var localtitle = items.title // 제목은 조건 상관없이 번역한다. 
+                        //title 번역 
+                        translate
+                            .translate(items.title, "en", function(err, translated_title) {
+                                if(err){
+                                    utils.log("TranslateNotification_en 중 if(toTranslate) 내에서 title 번역 중 에러 발생: ", err.message)
+                                    res.end(); 
+                                    return; 
+                                } 
+                            localtitle = translated_title;
+                        
+                        //contents 번역시
+                        if(toTranslate){ 
+                            
+                            translate
+                                .translate(localcontents, "en", function(err, translated_contents) {
+                                    if(err){
+                                        utils.log("TranslateNotification_en 중 if(toTranslate) 내에서 contents 번역 중 에러 발생: ", err.message)
+                                        res.end(); 
+                                        return; 
+                                    }
+                                    localcontents = translated_contents;  
+                                    database.NotificationModel.findByIdAndUpdate(new ObjectId(items._id), 
+                                        {title_en: localtitle.translatedText, contents_en: localcontents.translatedText},
+                                        function(err){
+                                            if(err){
+                                                utils.log("TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ", err.message)
+                                                res.end(); 
+                                                return; 
+                                            }
+                                        }) 
+                                })//translate - contents 닫기 
+                        }//if(toTranslate) 닫기   
+                        else{ 
+                            database.NotificationModel.findByIdAndUpdate(new ObjectId(items._id), 
+                            {title_en: localtitle.translatedText},
+                            function(err){
+                                if(err){
+                                    utils.log("TranslateNotification_en 중 title_en, contents_en 삽입 중 에러 발생: ", err.message)
+                                    res.end(); 
+                                    return; 
+                                }
+                            }) 
+                        }
+                    })//translate - title 닫기 
+                })//cursor.map 닫기           
+        })//NotificationModel.find 닫기         
+    }//if(database) 닫기 
+    else{
+        utils.log("TranslateNotification_en 수행 중 데이터베이스 연결 실패")
+        res.end(); 
+        return;
+    }   
+};  
+
+//크롤링한 게시판의 내용을 중국어로 번역 (notifications collection의 title_zh, contents_zh에 저장)
+var TranslateNotification_zh = async function(req, res) {
+    console.log('Notification 모듈 안에 있는 TranslateNotification_zh 호출됨.'); 
+    var database = req.app.get('database'); 
+
+    if(database.db) { 
+        database.NotificationModel.find({title_zh: " "},
+            function(err, cursor) {
+                if(err) {
+                    utils.log("TranslateNotification_zh에서 번역할 게시물 조회 중 에러 발생: ", err.message)
+                    res.end(); 
+                    return;    
+                }   
+                cursor.map( (items) =>  {   
+                    var startLanguage = "und"; //첫 글자 언어
+                    var endLanguage = "und"; // 마지막 글자 언어  
+                    var i =0;  
+                    var j = 0;
+                    var regex_kor = new RegExp("^[\uac00-\ud7a3]*$"); //한국어 정규표현식
+                    var regex_eng = new RegExp("^[A-Za-z]*$"); //영어 정규표현식
+                    var regex_chn = new RegExp("^[\u4e00-\u9fff]*$","u") //중국어 정규표현식
+                    
+                    // 유효한 첫 글자의 언어를 파악하기 위함.
+                    if(items.contents.length>0){
+                        do { 
+                            if(regex_kor.test(items.contents.charAt(i))){
+                                startLanguage = "ko"  
+                                break;
+                            } 
+                            if(regex_eng.test(items.contents.charAt(i))){
+                                startLanguage = "en" 
+                                break;
+                            }                         
+                            if(regex_chn.test(items.contents.charAt(i))){
+                                startLanguage = "zh"  
+                                break;
+                            }    
+                            i++;
+                        } while (true);  
+
+                        //유효한 마지막 글자의 언어를 파악하기 위함.    
+                        do { 
+                            if(regex_kor.test(items.contents.charAt(items.contents.length-j-1))){
+                                endLanguage = "ko"   
+                                break;
+                            } 
+                            if(regex_eng.test(items.contents.charAt(items.contents.length-j-1))){
+                                endLanguage = "en" 
+                                break;
+                            }                         
+                            if(regex_chn.test(items.contents.charAt(items.contents.length-j-1))){
+                                break;
+                            }    
+                            j++;
+                        }while (true); 
+                    }//if 문 닫기 
+                    
+                    // 공지사항에 다국어를 쓰면 보통 한국어, 영어, 중국어 순으로 쓴다. 
+                    // 또한 한국어로만 된 게시물의 가장 끝 자리가 이메일 주소라서, 마지막 언어가 영어로 인식되는 것을 방지하기 위함
+                    var toTranslate = !((startLanguage != "zh_CN")&&(endLanguage == "zh_CN")) && startLanguage != "zh_CN"
+ 
+                        var localcontents = items.contents  
+                        var localtitle = items.title // 제목은 조건 상관없이 번역한다. 
+                        //title 번역 
+                        translate
+                            .translate(items.title, "zh", function(err, translated_title) {
+                                if(err){
+                                    utils.log("TranslateNotification_zh_CN 중 if(toTranslate) 내에서 title 번역 중 에러 발생: ", err.message)
+                                    res.end(); 
+                                    return; 
+                                } 
+                            localtitle = translated_title;
+                        
+                        //contents 번역시
+                        if(toTranslate){ 
+                            
+                            translate
+                                .translate(localcontents, "zh", function(err, translated_contents) {
+                                    if(err){
+                                        utils.log("TranslateNotification_zh 중 if(toTranslate) 내에서 contents 번역 중 에러 발생: ", err.message)
+                                        res.end(); 
+                                        return; 
+                                    }
+                                    localcontents = translated_contents;  
+                                    database.NotificationModel.findByIdAndUpdate(new ObjectId(items._id), 
+                                        {title_zh: localtitle.translatedText, contents_zh: localcontents.translatedText},
+                                        function(err){
+                                            if(err){
+                                                utils.log("TranslateNotification_zh 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ", err.message)
+                                                res.end(); 
+                                                return; 
+                                            }
+                                        }) 
+                                })//translate - contents 닫기 
+                        }//if(toTranslate) 닫기   
+                        else{ 
+                            database.NotificationModel.findByIdAndUpdate(new ObjectId(items._id), 
+                            {title_en: localtitle.translatedText},
+                            function(err){
+                                if(err){
+                                    utils.log("TranslateNotification_zh 중 title_zh, contents_zh 삽입 중 에러 발생: ", err.message)
+                                    res.end(); 
+                                    return; 
+                                }
+                            }) 
+                        }
+                    })//translate - title 닫기 
+                })//cursor.map 닫기           
+        })//NotificationModel.find 닫기         
+    }//if(database) 닫기 
+    else{
+        utils.log("TranslateNotification_en 수행 중 데이터베이스 연결 실패")
+        res.end(); 
+        return;
+    }   
+};
 
 module.exports.CrawlNotificationData = CrawlNotificationData; 
-module.exports.TranslateNotification = TranslateNotification;
+module.exports.TranslateNotification_en = TranslateNotification_en; 
+module.exports.TranslateNotification_zh = TranslateNotification_zh;
