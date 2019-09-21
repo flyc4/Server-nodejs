@@ -39,7 +39,7 @@ SchemaObj.createSchema = function(mongoose) {
                 created_at: {type: Date, 'default': utils.timestamp()}, 
             }]
     });  
-    NotificationSchema.index({created_at: -1}, { autoIndex: false}, {unique: false})
+    NotificationSchema.index({created_at: -1},{ autoIndex: false}, {unique: false})
 
     NotificationSchema.methods = {
 		saveNotification: function(callback) {		// 글 저장

@@ -332,8 +332,10 @@ if (database.db) {
           }		  
         console.log("게시물 삭제 완료"); 
         context.msg = "success";  
+        console.log(context.msg)
         res.json(context)    			  
         res.end() 
+        return;
       })
   } else {  
       utils.log('DeleteEntry 수행 중 데이터베이스 연결 실패');
@@ -529,6 +531,10 @@ var ShowComments = function(req, res) {
   var paramCommentStartIndex = req.body.commentstartindex||req.query.commentstartindex || req.param.commentstartindex||0; 
   var paramCommentEndIndex = req.body.commentendindex||req.query.commentendindex || req.param.commentendindex||19; 
   
+  paramCommentStartIndex = paramCommentStartIndex*1; 
+  paramCommentEndIndex = paramCommentEndIndex*1;
+
+
   console.log("paramCommentStartIndex: ",paramCommentStartIndex)
   console.log("paramCommentEndIndex: ",paramCommentEndIndex)
 
@@ -560,22 +566,18 @@ var ShowComments = function(req, res) {
           }    
           paramCommentEndIndex = paramCommentEndIndex < result.length? paramCommentEndIndex: result.length-1;
           
-          if(paramCommentStartIndex>=result.length){
-            paramCommentStartIndex = result.length-1;
+          if(paramCommentEndIndex>=result.length){
+            paramCommentEndIndex = result.length-1;
           }
           if(paramCommentStartIndex<0){
             paramCommentStartIndex = 0;
-          }
-
-          for(var i= paramCommentStartIndex; i<= paramCommentEndIndex; i++){  
+          } 
+          
+          for(var i = paramCommentStartIndex; i<=paramCommentEndIndex; i++){   
+            
             var localismine = paramUserId == result[i].comments.userid; 
-            var locallikespressed = false; 
-
-            for(let j=0;j<result[i].comments.likeslist.length;j++){
-              if(result[i].comments.likeslist.userid.toString() == paramUserId){
-                locallikespressed = true
-            }
-
+            var locallikespressed = false;  
+            
             context.commentslist.push({
               boardid: paramBoardId, 
               entryid: paramEntryId, 
@@ -592,12 +594,11 @@ var ShowComments = function(req, res) {
               contents: result[i].comments.contents,
               pictures: result[i].comments.pictures
             });
-          } 
-          context.commentslist.splice(0,1)  
+          }//for 닫기   
           console.dir(context)
+          context.commentslist.splice(0,1)    
           res.json(context); 
           return;
-      }//for 닫기  
     })//aggregate 닫기
   }//if(database.db) 닫기 
   else {
@@ -733,7 +734,7 @@ if (database.db) {
   //조회 완료한 Post의 제목 및 내용 덮어쓰기 
   database.db.collection(paramBoardId).updateOne({_id: new ObjectId(paramEntryId)},
   {$pull: { 'comments': { '_id': new ObjectId(paramCommentId)}}},
-  function(err,data){ 
+  function(err){ 
     if(err){
       utils.log("DeleteComment에서 collection 조회 중 수행 중 에러 발생: "+ err.message) 
       res.end();

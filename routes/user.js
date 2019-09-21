@@ -213,30 +213,95 @@ var ShowDMList = function(req, res) {
     console.log('user 모듈 안에 있는 ShowDMList 호출됨.');
   
     var database = req.app.get('database');  
-    var paramUserId = req.body.userid || "000000000000000000000001"
+    var paramUserId = req.body.userid || "000000000000000000000001" 
+    var paramDMStartIndex = req.body.DMStartIndex||0; 
+    var paramDMEndIndex = req.body.DMEndIndex||19;  
+    var paramSearch = req.body.search||" "; 
 
-    var context = {msg: " "}
+    if(paramSearch !=" "){
+        var query = {
+            '_id': new ObjectId(paramUserId), 
+            $or: 
+                [   {'DM.contents': new RegExp(".*"+paramSearch+".*","gi")}, 
+                    {'DM.title': new RegExp(".*"+paramSearch+".*","gi")}, 
+                    {'DM.sendername': new RegExp(".*"+paramSearch+".*","gi")}
+                ], 
+          }; 
+      } 
+      else{
+        var query = {'_id': new ObjectId(paramUserId)};
+      } 
+
+
+    var context = {msg: " ", 
+        DMList: [{
+            sendername: " ",
+		    senderid: " ",
+		    title: " ",
+		    contents: " ", 
+		    date: " "
+        }]
+    } 
  
     console.log("paramUserId: ",paramUserId)
+    console.log("paramDMStartIndex: ",paramDMStartIndex)
+    console.log("paramDMEndIndex: ",paramDMEndIndex) 
+    console.log("paramSearch: ",paramSearch) 
+    console.log("query: ",query)
     
     // 데이터베이스 객체가 초기화된 경우 
 	if (database.db) { 
         
-        database.db.collection('users').updateOne({'_id': new ObjectId(paramUserId)}, 
-            {$pull: { 'DM': {'_id': new ObjectId(paramDMId)}}},   
-            function(err) {		
+        database.db.collection('users').aggregate([
+            { $match:  
+                {_id: new ObjectId(paramUserId)}
+            },   
+            { "$unwind": '$DM'},
+            // Sort in ascending order
+            { $sort: {
+                'DM.created_at': -1
+            }}, 
+            { $match: query
+            },
+            ]).toArray(
+            function(err,cursor) {		
             if (err) {
-                utils.log("DeleteDM에서 DM 삭제 중 에러발생: ",err.message)
+                utils.log("ShowDMList에서 DM 조회 중 에러발생: ",err.message)
                 context.msg = "missing" 
                 res.json(context)     
                 res.end();
                 return;
+            }     
+            
+            if(paramDMStartIndex<0){
+                paramDMStartIndex = 0; 
+            } 
+            if(paramDMEndIndex<0){
+                paramDMEndIndex = 0; 
             }  
-            context.msg = "success"   
+            if(paramDMStartIndex>=cursor.length){
+                paramDMStartIndex = cursor.length-1; 
+            } 
+            if(paramDMEndIndex>=cursor.length){
+                paramDMEndIndex = cursor.length-1; 
+            } 
+            
+            for(var i = paramDMStartIndex; i<= paramDMEndIndex; i++){ 
+                context.DMList.push({
+                    sendername: cursor[i].DM.sendername,
+		            senderid: cursor[i].DM.sendername,
+		            title: cursor[i].DM.title,
+		            contents: cursor[i].DM.contents, 
+		            date: cursor[i].DM.created_at
+                })
+            }//for 닫기
+            context.DMList.splice(0,1) 
+            context.msg = "success" 
+            console.dir(context.DMList)
             res.json(context) 
             res.end() 
             return;  
-        })//findOne 조회 닫기   
+        })//find 닫기   
     } else {
         utils.log('ShowDMList 수행 중 데이터베이스 연결 실패');
         res.end(); 

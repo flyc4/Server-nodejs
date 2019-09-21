@@ -6,3 +6,4 @@
 {"message":"SendDM에서 송신자 조회 중 에러발생: ","level":"info","timestamp":"2019-09-20 09:29:58"}
 {"message":"SendDM에서 송신자 조회 중 에러발생: ","level":"info","timestamp":"2019-09-20 09:31:54"}
 {"message":"클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-20 18:53:00"}
+{"message":"ShowBulletinBoardsList에서 collection 조회 중 수행 중 에러 발생interrupted at shutdown","level":"info","timestamp":"2019-09-20 22:09:49"}

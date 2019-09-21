@@ -27,6 +27,7 @@ module.exports = {
         ,{file:'./user', path:'/process/SendDM', method:'SendDM', type:'post'} 
         ,{file:'./user', path:'/process/ShowUserNameList', method:'ShowUserNameList', type:'post'} 
         ,{file:'./user', path:'/process/DeleteDM', method:'DeleteDM', type:'post'}
+        ,{file:'./user', path:'/process/ShowDMList', method:'ShowDMList', type:'post'}
         
         //community(게시판)와 관련된 패스 들 
         ,{file:'./post', path:'/process/addpost', method:'addpost', type:'post'} 
