@@ -225,52 +225,50 @@ var TranslateNotification_en = async function(req, res) {
                 }   
                 cursor.map( (items) =>  {   
                     var startLanguage = "und"; //첫 글자 언어
-                    var endLanguage = "und"; // 마지막 글자 언어  
+                    var middleLanguage = "und"; // 중간 글자 언어  
                     var i =0;  
                     var j = 0;
                     var regex_kor = new RegExp("^[\uac00-\ud7a3]*$"); //한국어 정규표현식
                     var regex_eng = new RegExp("^[A-Za-z]*$"); //영어 정규표현식
-                    var regex_chn = new RegExp("^[\u4e00-\u9fff]*$","u") //중국어 정규표현식
+                    var regex_zh = new RegExp("^[\u4e00-\u9fff]*$","u") //중국어 정규표현식
                     
                     // 유효한 첫 글자의 언어를 파악하기 위함.
                     if(items.contents.length>0){
                         do { 
                             if(regex_kor.test(items.contents.charAt(i))){
-                                startLanguage = "ko"   
+                                startLanguage = "ko" 
                                 break;
                             } 
                             if(regex_eng.test(items.contents.charAt(i))){
-                                startLanguage = "en" 
+                                startLanguage = "en"  
                                 break;
                             }                         
-                            if(regex_chn.test(items.contents.charAt(i))){
+                            if(regex_zh.test(items.contents.charAt(i))){  
+                                startLanguage = "zh"
                                 break;
                             }    
                             i++;
                         } while (true);  
 
-                        //유효한 마지막 글자의 언어를 파악하기 위함.    
+                        //유효한 중간 글자의 언어를 파악하기 위함.    
                         do { 
-                            if(regex_kor.test(items.contents.charAt(items.contents.length-j-1))){
-                                endLanguage = "ko"    
+                            if(regex_kor.test(items.contents.charAt(Math.floor(items.contents.length/2)-j))){
+                                middleLanguage = "ko"     
                                 break;
                             } 
-                            if(regex_eng.test(items.contents.charAt(items.contents.length-j-1))){
-                                endLanguage = "en" 
+                            if(regex_eng.test(items.contents.charAt(Math.floor(items.contents.length/2)-j))){
+                                middleLanguage = "en" 
                                 break;
                             }                         
-                            if(regex_chn.test(items.contents.charAt(items.contents.length-j-1))){
-                                endLanguage = "zh"  
+                            if(regex_zh.test(items.contents.charAt(Math.floor(items.contents.length/2)-j))){
+                                middleLanguage = "zh"   
                                 break;
                             }    
                             j++;
                         }while (true); 
                     }//if 문 닫기 
-                    
-                    
-                    // 공지사항에 다국어를 쓰면 보통 한국어, 영어, 중국어 순으로 쓴다. 
-                    // 또한 한국어로만 된 게시물의 가장 끝 자리가 이메일 주소라서, 마지막 언어가 영어로 인식되는 것을 방지하기 위함
-                    var toTranslate = !((startLanguage != "zh_CN")&&(endLanguage == "zh_CN")) && startLanguage != "en"
+                
+                    var toTranslate = (startLanguage == middleLanguage) && startLanguage != "en"
  
                         var localcontents = items.contents  
                         var localtitle = items.title // 제목은 조건 상관없이 번역한다. 
@@ -343,12 +341,12 @@ var TranslateNotification_zh = async function(req, res) {
                 }   
                 cursor.map( (items) =>  {   
                     var startLanguage = "und"; //첫 글자 언어
-                    var endLanguage = "und"; // 마지막 글자 언어  
+                    var middleLanguage = "und"; // 중간 글자 언어  
                     var i =0;  
                     var j = 0;
                     var regex_kor = new RegExp("^[\uac00-\ud7a3]*$"); //한국어 정규표현식
                     var regex_eng = new RegExp("^[A-Za-z]*$"); //영어 정규표현식
-                    var regex_chn = new RegExp("^[\u4e00-\u9fff]*$","u") //중국어 정규표현식
+                    var regex_zh = new RegExp("^[\u4e00-\u9fff]*$","u") //중국어 정규표현식
                     
                     // 유효한 첫 글자의 언어를 파악하기 위함.
                     if(items.contents.length>0){
@@ -361,33 +359,33 @@ var TranslateNotification_zh = async function(req, res) {
                                 startLanguage = "en" 
                                 break;
                             }                         
-                            if(regex_chn.test(items.contents.charAt(i))){
+                            if(regex_zh.test(items.contents.charAt(i))){
                                 startLanguage = "zh"  
                                 break;
                             }    
                             i++;
                         } while (true);  
 
-                        //유효한 마지막 글자의 언어를 파악하기 위함.    
+                        //유효한 중간 글자의 언어를 파악하기 위함.    
                         do { 
-                            if(regex_kor.test(items.contents.charAt(items.contents.length-j-1))){
-                                endLanguage = "ko"   
+                            if(regex_kor.test(items.contents.charAt(Math.floor(items.contents.length/2)-j))){
+                                middleLanguage = "ko"     
                                 break;
                             } 
-                            if(regex_eng.test(items.contents.charAt(items.contents.length-j-1))){
-                                endLanguage = "en" 
+                            if(regex_eng.test(items.contents.charAt(Math.floor(items.contents.length/2)-j))){
+                                middleLanguage = "en" 
                                 break;
                             }                         
-                            if(regex_chn.test(items.contents.charAt(items.contents.length-j-1))){
+                            if(regex_zh.test(items.contents.charAt(Math.floor(items.contents.length/2)-j))){
+                                middleLanguage = "zh"   
                                 break;
                             }    
                             j++;
                         }while (true); 
                     }//if 문 닫기 
                     
-                    // 공지사항에 다국어를 쓰면 보통 한국어, 영어, 중국어 순으로 쓴다. 
-                    // 또한 한국어로만 된 게시물의 가장 끝 자리가 이메일 주소라서, 마지막 언어가 영어로 인식되는 것을 방지하기 위함
-                    var toTranslate = !((startLanguage != "zh_CN")&&(endLanguage == "zh_CN")) && startLanguage != "zh_CN"
+                   
+                    var toTranslate = (startLanguage == middleLanguage) && startLanguage != "zh"
  
                         var localcontents = items.contents  
                         var localtitle = items.title // 제목은 조건 상관없이 번역한다. 
