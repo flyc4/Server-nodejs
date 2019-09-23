@@ -10,7 +10,6 @@ const schedule = require('node-schedule');
 const api = "AIzaSyATLbXuBnhHhb1Meyv2WFa6Lpw5FCupc8I";
 const translate = require('google-translate')(api); 
 
-
 _notificationcrawl = async () => {
     let url = server_url + '/process/CrawlNotificationData'; 
         await axios.post(url)
@@ -47,7 +46,6 @@ _notificationcrawl = async () => {
             });    
   }  
 
-
 //매일 오전 9시 마다 크롤링
 let updatecrawl = schedule.scheduleJob({hour: 9, minute: 0}, async function(){
  await _notificationcrawl(); 
@@ -68,7 +66,7 @@ var CrawlNotificationData = async function(req, res) {
     console.log('Notification 모듈 안에 있는 CrawlNotificationData 호출됨.');
 
     // 데이터베이스 객체가 초기화된 경우
-	if (database.db) {  
+    if (database.db) {  
         // 해당 일자에 크롤링을 했는 지 여부 확인 
         database.NotificationModel.findOne({}, 
                 function(err,cursor){
@@ -144,7 +142,6 @@ var CrawlNotificationData = async function(req, res) {
                                 let contents = "";
                                 const $ = cheerio.load(html2.data);
                                 const $bodyList = $("div.content");
-
 
                                 if(Boolean($bodyList.find('p'))) { // DOM 요소 p를 만날 때마다 그 안의 텍스트 저장 + 개행
                                     $bodyList.find('p').each(function(i, elem) {
@@ -441,8 +438,174 @@ var TranslateNotification_zh = async function(req, res) {
         res.end(); 
         return;
     }   
-};
+}; 
+
+//사용자 조건에 맞는 (영어, 중국어, start&end Index) 공지사항들 보여줌 
+var ShowNotification = async function(req, res) {
+    console.log('Notification 모듈 안에 있는 ShowNotification 호출됨.');
+    var database = req.app.get('database');       
+    
+    var paramUserId= req.body.userid||req.query.userid || req.param.userid||"5d5373177443381df03f3040";
+    var parampostStartIndex = req.body.postStartIndex||req.query.postStartIndex || req.param.postStartIndex||0; 
+    var parampostEndIndex = req.body.postEndIndex||req.query.postEndIndex || req.param.postEndIndex||19;  
+    var paramSearch = req.body.search||" "; 
+    var paramLanguage = req.body.language||" ";
+  
+    
+    console.log("paramUserId: ",paramUserId) 
+    console.log("parampostStartIndex: ",parampostStartIndex)
+    console.log("parampostEndIndex: ",parampostEndIndex)
+    console.log("paramSearch: ",paramSearch)
+    console.log("paramLanguage: ",paramLanguage)
+    
+    /*
+    parampostStartIndex = parampostStartIndex*1;
+    parampostEndIndex = parampostEndIndex*1;
+    */ 
+    var context = {
+      postslist: [{ 
+        boardid: " ", 
+        entryid: "", 
+        userid: "", 
+        username: '', 
+        profile: '', 
+        likes: 0,
+        likespressed: false,
+        date: ' ', 
+        ismine: false, 
+        title: ' ', 
+        contents: ' ', 
+        pictures: ' ', 
+         }]};
+    
+    if (database.db){         
+        
+        //검색어가 입력 될 시 
+        if(paramSearch!=" "){
+            var query = {$or: 
+              [  
+                {nickNm: new RegExp(".*"+paramSearch+".*","gi")}
+              ], 
+              }; 
+            
+              switch(paramLanguage){
+                
+                //공지사항 언어: 영어
+                case("en"): 
+                    query.push({contents_en: new RegExp(".*"+paramSearch+".*","gi")})
+                    query.push({title_en: new RegExp(".*"+paramSearch+".*","gi")}) 
+                    break 
+
+                //공지사항 언어: 중국어 
+                case("zh"): 
+                    query.push({contents_zh: new RegExp(".*"+paramSearch+".*","gi")})
+                    query.push({title_zh: new RegExp(".*"+paramSearch+".*","gi")}) 
+                    break                    
+
+                //공지사항 언어: 한국어
+                default: 
+                    query.push({title: new RegExp(".*"+paramSearch+".*","gi")})
+                    query.push({contents: new RegExp(".*"+paramSearch+".*","gi")}) 
+                    break
+              }
+            }
+        else{
+          var query = {};
+        }   
+
+      database.db.collection("notifications").find(query).sort({
+        isnotice: -1,
+        date: -1   
+    }).toArray(function(err,data){ 
+        if(err){
+          utils.log("ShowNotification에서 collection 조회 중 수행 중 에러 발생"+ err.message);
+        }   
+         //조회된 게시물이 없을 시
+         if(data.length<1){
+            context.postslist.splice(0,1) 
+            res.json(context) 
+            res.end() 
+            return
+        }
+  
+        if(parampostEndIndex>=data.length){
+          parampostEndIndex = data.length-1;
+        } 
+        if(parampostStartIndex>=data.length){
+          parampostStartIndex = data.length-1;
+        }  
+        if(parampostStartIndex<0){
+          parampostStartIndex = 0;
+        } 
+        if(parampostEndIndex<0){
+          parampostEndIndex = 0;
+        } 
+        for(var i=parampostStartIndex;i<=parampostEndIndex;i++){  
+          var localismine = data[i].userid == paramUserId 
+          let locallikespressed = false;
+          //해당 게시물에 좋아요를 눌렀는지의 여부 확인
+          for(let j=0;j<data[i].likeslist.length;j++){
+              if(data[i].likeslist[j].userid == paramUserId){
+                locallikespressed=true; 
+                break;
+              }
+          }
+          
+          let localtitle = " "; 
+          let localcontents = " ";
+          switch(paramLanguage){
+
+            //공지사항 언어: 영어
+            case("en"): 
+                localtitle = data[i].title_en
+                localcontents = data[i].contents_en
+                break; 
+
+            //공지사항 언어: 중국어 
+            case("zh"): 
+                localtitle = data[i].title_zh
+                localcontents = data[i].contents_zh 
+                break                    
+
+            //공지사항 언어: 한국어
+            default: 
+                localtitle = data[i].title
+                localcontents = data[i].contents
+                break
+          } 
+
+          context.postslist.push(
+            {
+              boardid: "notifications", 
+              entryid: data[i]._id, 
+              userid: data[i].userid, 
+              username: data[i].nickNm, 
+              profile: data[i].profile, 
+              likes: data[i].likes,  
+              likespressed: locallikespressed,
+              date: data[i].date, 
+              ismine: localismine, 
+              title: localtitle, 
+              contents: localcontents, 
+              pictures: data[i].pictures,
+            }); 
+          } 
+      context.postslist.splice(0,1)   
+      res.json(context);
+      return;  
+    })
+    }//if(database.db) 닫기  
+  else {
+      
+      utils.log(" ShowNotification 수행 중 데이터베이스 연결 실패")
+      res.end(); 
+      return;
+  }   
+  };//ShowNotification 닫기   
+
 
 module.exports.CrawlNotificationData = CrawlNotificationData; 
 module.exports.TranslateNotification_en = TranslateNotification_en; 
-module.exports.TranslateNotification_zh = TranslateNotification_zh;
+module.exports.TranslateNotification_zh = TranslateNotification_zh; 
+module.exports.ShowNotification = ShowNotification;
+

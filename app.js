@@ -13,22 +13,11 @@
 // Express 기본 모듈 불러오기
 var express = require('express')
   , http = require('http')
-  , path = require('path')
-  , axios = require('axios') 
-  , server_url = "http://sususerver.ddns.net:3000";
-//  , forever = require('forever-monitor'); 
 
-// Express의 미들웨어 불러오기
+
+// Express의 미들웨어 불러오기. (이거 없으면 let a = req.body.~id 이런 식으로 데이터 받기 불가능)
 var bodyParser = require('body-parser')
-  , cookieParser = require('cookie-parser')
-  , static = require('serve-static')
-  , errorHandler = require('errorhandler');
 
-// 에러 핸들러 모듈 사용
-var expressErrorHandler = require('express-error-handler');
-
-// Session 미들웨어 불러오기
-var expressSession = require('express-session');
 
 //===== Passport 사용 =====// 
 var passport = require('passport'); 
@@ -44,15 +33,8 @@ var database = require('./database/database');
 // 모듈로 분리한 라우팅 파일 불러오기
 var route_loader = require('./routes/route_loader');
 
-
 // 익스프레스 객체 생성
 var app = express();
-
-//===== 뷰 엔진 설정 =====//
-app.set('views', [path.join(__dirname, 'views'),path.join(__dirname, 'views/community'),path.join(__dirname, 'views/login'),path.join(__dirname, 'views/rateclass'),path.join(__dirname, 'views/timetable')]);
-
-app.set('view engine', 'ejs');
-console.log('뷰 엔진이 ejs로 설정되었습니다.'); 
 
 //===== 서버 변수 설정 및 static으로 public 폴더 설정  =====//
 console.log('config.server_port : %d', config.server_port);
@@ -64,23 +46,6 @@ app.use(bodyParser.urlencoded({ extended: false }))
 
 // body-parser를 이용해 application/json 파싱
 app.use(bodyParser.json())
-
-// public 폴더를 static으로 오픈
-app.use('/public', static(path.join(__dirname, 'public')));
- 
-// cookie-parser 설정
-app.use(cookieParser());
-
-// 세션 설정
-app.use(expressSession({
-	secret:'my key',
-	resave:true,
-	saveUninitialized:true
-})); 
-
-
-
-
 
 
 //===== Passport 사용 설정 =====//
@@ -101,16 +66,6 @@ configPassport(app, passport);
 //패스포트 관련 함수 라우팅 
 var userPassport = require('./routes/user_passport');
 userPassport(router, passport);     
-
-//===== 404 에러 페이지 처리 =====//
-var errorHandler = expressErrorHandler({
- static: {
-   '404': './public/404.html'
- }
-});
-
-app.use( expressErrorHandler.httpError(404) );
-app.use( errorHandler );
 
 //===== 서버 시작 =====// 
 

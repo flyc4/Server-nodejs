@@ -40,7 +40,7 @@ SchemaObj.createSchema = function(mongoose) {
             created_at: {type: Date, 'default': Date.now},
         }]
 	});    
-	CourseEvaluationSchema.index({professor: 1 , subject: 1}, { autoIndex: false}, {unique: true})
+	CourseEvaluationSchema.index({professor: 1 , subject: 1}, {unique: true})
 	
 	console.log('CourseEvaluationSchema 정의함.');
 	return CourseEvaluationSchema;

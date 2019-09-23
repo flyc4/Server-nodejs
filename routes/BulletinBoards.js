@@ -108,7 +108,6 @@ var AddReport =function(req, res) {
 
 //////////////////신고와 관련된 함수 끝/////////////////////////////////
 
-
 //////////////////한 게시판(Entry 혹은 BulletinBoard 혹은 Post)과 관련된 함수 들) 시작 /////////////////////////////////
 
 //한 게시판의 모든 게시물 보여주기  
@@ -122,15 +121,11 @@ var ShowBulletinBoard = async function(req, res) {
   var parampostEndIndex = req.body.postEndIndex||req.query.postEndIndex || req.param.postEndIndex||19;  
   var paramSearch = req.body.search||" "; 
 
-  //Notifications 에서 사용자가 다른 언어(영어, 중국어 등)을 요청했을 시 사용
-  var paramLanguage = req.body.language||" ";
-
   console.log("paramboardid: ",paramboardid) 
   console.log("paramuserid: ",paramuserid) 
   console.log("parampostStartIndex: ",parampostStartIndex)
   console.log("parampostEndIndex: ",parampostEndIndex)
   console.log("paramSearch: ",paramSearch)
-  console.log("paramLanguage: ",paramLanguage)
 
   parampostStartIndex = parampostStartIndex*1;
   parampostEndIndex = parampostEndIndex*1;
@@ -153,7 +148,7 @@ var ShowBulletinBoard = async function(req, res) {
   
   if (database.db){         
 
-    if(paramSearch !=" "&& paramLanguage == " "){
+    if(paramSearch !=" "){
       var query = {$or: 
         [{contents: new RegExp(".*"+paramSearch+".*","gi")}, 
           {title: new RegExp(".*"+paramSearch+".*","gi")}, 
@@ -164,29 +159,8 @@ var ShowBulletinBoard = async function(req, res) {
     else{
         var query = {};
       } 
-    //사용자가 Notifications 에서 다른 언어 요구 시 
-    if(paramLanguage != " "&& paramboardid=="notifications"){
-      var query = {$or: 
-        [{contents: new RegExp(".*"+paramSearch+".*","gi")}, 
-          {title: new RegExp(".*"+paramSearch+".*","gi")}, 
-          {contents_en: new RegExp(".*"+paramSearch+".*","gi")}, 
-          {title_en: new RegExp(".*"+paramSearch+".*","gi")}, 
-          {nickNm: new RegExp(".*"+paramSearch+".*","gi")}
-        ], 
-        };
-    }
-    //paramboardid == notifications 일 떄, 정렬 기준을 달리하기 위함.
-    let sortvalue1 = "created_at";
-    let sortvalue2 = "created_at"; 
-
-    //notifications 컬렉션만 date의 역순으로 정렬 
-    if(paramboardid == "notifications"){
-      sortvalue1 = "isnotice"
-      sortvalue2 = "date"; 
-    } 
+   
     database.db.collection(paramboardid).find(query).sort({
-      [sortvalue1]: -1,
-      [sortvalue2]: -1, 
       created_at: -1  
   }).toArray(function(err,data){ 
       if(err){
@@ -223,24 +197,6 @@ var ShowBulletinBoard = async function(req, res) {
               break;
             }
         }
-        
-        //notifications일 경우 created_at 대신 date 반환
-        let localdate = paramboardid=='notifications'? data[i].date : data[i].created_at; 
-        let localtitle = data[i].title
-        let localcontents = data[i].contents 
-
-        //notifications이고, 사용자가 영어를 요청할 경우 
-        if(paramLanguage == "en"&& paramboardid=="notifications"){ 
-          localtitle = data[i].title_en
-          localcontents = data[i].contents_en 
-        }  
-        
-        //notifications이고, 사용자가 중국어를 요청할 경우
-        if(paramLanguage == "zh"  && paramboardid=="notifications" ){ 
-          localtitle = data[i].title_zh
-          localcontents = data[i].contents_zh
-        }
-        
         context.postslist.push(
           {
             boardid: paramboardid, 
@@ -250,10 +206,9 @@ var ShowBulletinBoard = async function(req, res) {
             profile: data[i].profile, 
             likes: data[i].likes,  
             likespressed: locallikespressed,
-            date: localdate, 
             ismine: localismine, 
-            title: localtitle, 
-            contents: localcontents, 
+            title: data[i].title, 
+            contents: data[i].contents, 
             pictures: data[i].pictures,
           }); 
         } 
@@ -333,7 +288,7 @@ if (database.db) {
           return;
         }  
         context.msg = "success";  
-        res.json(context)    			  
+        res.json(context)           
         res.end()
         return;   
       })//findOneAndUpdate 닫기 
@@ -343,7 +298,7 @@ if (database.db) {
       utils.log('AddEditEntry 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
-    }	 
+    }  
 }; //AddEditEntry 닫기
 
 //게시글 삭제
@@ -355,7 +310,6 @@ var DeleteEntry = function(req, res) {
 
   var database = req.app.get('database');
   let context = {msg: " "}
-
 
   console.log('paramBoardId: ' + paramBoardId, 'paramEntryId: ' + paramEntryId);
 
@@ -369,11 +323,11 @@ if (database.db) {
                 utils.log("DeleteEntry 안에서 삭제할 게시물 조회 중 에러 발생: "+ err.message)
                 res.end(); 
                 return;
-          }		  
+          }     
         console.log("게시물 삭제 완료"); 
         context.msg = "success";  
         console.log(context.msg)
-        res.json(context)    			  
+        res.json(context)           
         res.end() 
         return;
       })
@@ -381,7 +335,7 @@ if (database.db) {
       utils.log('DeleteEntry 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
-    }	
+    } 
 }; //DeleteEntry 닫기 
 
 //게시글에 좋아요 1 증가
@@ -450,7 +404,7 @@ var IncreLikeEntry = function(req, res) {
                       utils.log("IncreLikeEntry 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
                       res.end(); 
                       return;
-              }		  
+              }     
               context.likesinfo.push({likes: data.value.likes+1, likespressed: true}) 
               context.likesinfo.splice(0,1)  
               context.msg = "success";
@@ -465,7 +419,7 @@ var IncreLikeEntry = function(req, res) {
       utils.log('IncreLikeEntry 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
-    }	    
+    }     
 }; //IncreLikeEntry 닫기 
 
 //게시글에 좋아요 1 감소
@@ -537,7 +491,7 @@ var DecreLikeEntry = function(req, res) {
                       utils.log("DecreLikeEntry 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.message)
                       res.end(); 
                       return;
-              }		   
+              }      
               console.dir(data)
               context.likesinfo.push({likes: locallikes, likespressed: false}) 
               context.likesinfo.splice(0,1)  
@@ -553,7 +507,7 @@ var DecreLikeEntry = function(req, res) {
       utils.log('IncreLikeEntry 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
-    }	    
+    }     
 }; //DecreLikeEntry 닫기
 
 //////////////////한 게시판(Entry 혹은 BulletinBoard 혹은 Post)과 관련된 함수 들) 끝 /////////////////////////////////  
@@ -573,7 +527,6 @@ var ShowComments = function(req, res) {
   
   paramCommentStartIndex = paramCommentStartIndex*1; 
   paramCommentEndIndex = paramCommentEndIndex*1;
-
 
   console.log("paramCommentStartIndex: ",paramCommentStartIndex)
   console.log("paramCommentEndIndex: ",paramCommentEndIndex)
@@ -701,18 +654,18 @@ if (database.db) {
             created_at: utils.timestamp(), 
         }}}); 
 
-          console.log("댓글 추가함.");    		   
-        }     	
+          console.log("댓글 추가함.");          
+        }       
       context.msg = "success"; 
       res.json(context) 
-      res.end() 		 
+      res.end()      
       return;  
   })//UserModel.findOne 닫기
   } else {  
       utils.log('AddComment 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
-    }	
+    } 
 }; //AddComment 닫기
  
 var EditComment = function(req, res) {
@@ -743,14 +696,14 @@ if (database.db) {
     console.log("댓글 수정 완료")
     context.msg = "success" 
     res.json(context) 
-    res.end()  			 
+    res.end()        
     return;   
   })//findOneAndUpdate 닫기 
 } else {  
   utils.log('EditComment 수행 중 데이터베이스 연결 실패');
   res.end(); 
   return;
-}	
+} 
 }; //EditComment 닫기 
 
 //댓글 삭제
@@ -779,7 +732,7 @@ if (database.db) {
       utils.log("DeleteComment에서 collection 조회 중 수행 중 에러 발생: "+ err.message) 
       res.end();
       return;
-    }       			 
+    }              
     context.msg = "success"; 
     res.json(context) 
     res.end();
@@ -789,7 +742,7 @@ if (database.db) {
   utils.log('DeleteComment 수행 중 데이터베이스 연결 실패');
   res.end(); 
   return;
-}	
+} 
 }; //DeleteComment 닫기  
 
 //게시글에 좋아요 1 증가
@@ -892,7 +845,7 @@ var IncreLikeComment = function(req, res) {
                       utils.log("IncreLikeComment 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
                       res.end(); 
                       return;
-              }		 
+              }    
               context.likesinfo.push({likes: locallikes+1, likespressed: true}) 
               context.likesinfo.splice(0,1)  
               context.msg = "success";
@@ -907,7 +860,7 @@ var IncreLikeComment = function(req, res) {
       utils.log('IncreLikeComment 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
-    }	    
+    }     
 }; //IncreLikeComment 닫기 
 
 //댓글에 좋아요 1 감소
@@ -1018,7 +971,7 @@ var DecreLikeComment = function(req, res) {
                       utils.log("DecreLikeComment 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.message)
                       res.end(); 
                       return;
-              }		   
+              }      
               context.likesinfo.push({likes: locallikes-1, likespressed: false}) 
               context.likesinfo.splice(0,1)  
               context.msg = "success";
@@ -1033,7 +986,7 @@ var DecreLikeComment = function(req, res) {
       utils.log('IncreLikeComment 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
-    }	    
+    }     
 }; //DecreLikeComment 닫기 
 
 //////////////////한 게시판의 댓글(comments)과 관련된 함수들 끝 /////////////////////////////////
@@ -1051,3 +1004,4 @@ module.exports.EditComment = EditComment;
 module.exports.DeleteComment = DeleteComment; 
 module.exports.IncreLikeComment = IncreLikeComment;
 module.exports.DecreLikeComment = DecreLikeComment;
+
