@@ -11,37 +11,37 @@ const api = "AIzaSyATLbXuBnhHhb1Meyv2WFa6Lpw5FCupc8I";
 const translate = require('google-translate')(api); 
 
 _notificationcrawl = async () => {
-    let url = server_url + '/process/CrawlNotificationData'; 
+    let url = server_url + '/process/CrawlData'; 
         await axios.post(url)
             .then((response) => {     
                 
             })
             .catch(( err ) => {      
-                utils.log("클롤링 요청 중 에러 발생: ", err.message)  
+                utils.log("Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ", err.response)  
                 return;
             });    
   }   
 
   _translate_en = async () => {
-    let url = server_url + '/process/TranslateNotification_en'; 
+    let url = server_url + '/process/Translate_en'; 
         await axios.post(url)
             .then((response) => {    
                 
             })
             .catch(( err ) => {      
-                utils.log("공지사항 영어 번역 요청 중 에러 발생: ", err.message)  
+                utils.log("Notification 모듈 안에 있는 _translate_en에서 에러 발생: ", err.response)  
                 return;
             });    
   }   
 
   _translate_zh = async () => {
-    let url = server_url + '/process/TranslateNotification_zh'; 
+    let url = server_url + '/process/Translate_zh'; 
         await axios.post(url)
             .then((response) => {    
                 
             })
             .catch(( err ) => {      
-                utils.log("공지사항 중국어 번역 요청 중 에러 발생: ", err.message)  
+                utils.log("Notification 모듈 안에 있는 _translate_zn에서 에러 발생: ", err.toString())  
                 return;
             });    
   }  
@@ -61,9 +61,9 @@ let updatetranslate_zh =  schedule.scheduleJob({hour: 9, minute: 40}, async func
     await _translate_zh();
    }) 
 
-var CrawlNotificationData = async function(req, res) {
+var CrawlData = async function(req, res) {
     var database = req.app.get('database');
-    console.log('Notification 모듈 안에 있는 CrawlNotificationData 호출됨.');
+    console.log('Notification 모듈 안에 있는 CrawlData 호출됨.');
 
     // 데이터베이스 객체가 초기화된 경우
     if (database.db) {  
@@ -71,7 +71,7 @@ var CrawlNotificationData = async function(req, res) {
         database.NotificationModel.findOne({}, 
                 function(err,cursor){
                  if(err) {
-                    utils.log("CrawlNotificationData에서 크롤링 여부를 결정하는 중 에러 발생: ", err.message)
+                    utils.log("Notification 모듈 안에 있는 CrawlData에서 크롤링 여부를 결정하는 중 에러 발생: ", err.toString())
                     res.end(); 
                     return; 
                 }    
@@ -83,7 +83,7 @@ var CrawlNotificationData = async function(req, res) {
                         return await axios.get("https://www.dic.hanyang.ac.kr/front/student/notice?page=1&per-page=6")
                     } 
                     catch(error) {
-                        utils.log("CrawlNotificationData에서 크롤링 중 에러 발생: " + error.message);
+                        utils.log("Notification 모듈 안에 있는 CrawlData에서 크롤링 중 에러 발생: " + error.toString());
                     }
                 }
                 getHtml()
@@ -123,7 +123,7 @@ var CrawlNotificationData = async function(req, res) {
                         //cursor(크롤링 반영 전 notifications)에 원소가 하나라도 있고 
                         //notificatinos collection 안에 이미 크롤링해온 data가 있으면 크롤링 중지
                         if(cursor != undefined && cursor.title == data[i].title){ 
-                            console.log("더 이상 클롤링할 목록이 없음")
+                            console.log("Notification 모듈 안에 있는 CrawlData에서 더 이상 클롤링할 목록이 없음")
                             break;
                         } 
                         
@@ -132,7 +132,7 @@ var CrawlNotificationData = async function(req, res) {
                             try { // 파싱할 사이트의 url을 지정
                                 return await axios.get(url)
                             } catch(error) {
-                                utils.log("CrawlNotificationData에서 contents 크롤링 중 에러 발생: ", error.message);
+                                utils.log("Notification 모듈 안에 있는 CrawlData에서 contents 크롤링 중 에러 발생: ", error.toString());
                             }
                         }
                     
@@ -186,7 +186,7 @@ var CrawlNotificationData = async function(req, res) {
                                     }); 
                                     elements.saveNotification(function(err3){
                                         if(err3){
-                                            utils.log("CrawlNotificationData에서 크롤링 후 저장 중 에러 발생: ",err3.message)
+                                            utils.log("Notification 모듈 안에 있는 CrawlData에서 크롤링 후 저장 중 에러 발생: ",err3.toString())
                                         }  
                                     }) 
                                     console.log("삽입 완료") 
@@ -201,22 +201,22 @@ var CrawlNotificationData = async function(req, res) {
                 }).sort({isnotice: -1, date: -1, created_at: 1}) //database.NotificationModel.find (첫 크롤링 시)    
     } 
     else{
-        utils.log("CrawlNotificationData 수행 중 데이터베이스 연결 실패")
+        utils.log("Notification 모듈 안에 있는 CrawlData 수행 중 데이터베이스 연결 실패")
         res.end(); 
         return;
     }                
-};//CrawlNotificationData 닫기
+};//CrawlData 닫기
 
 //크롤링한 게시판의 내용을 영어로 번역 (notifications collection의 title_en, contents_en에 저장)
-var TranslateNotification_en = async function(req, res) {
-    console.log('Notification 모듈 안에 있는 TranslateNotification_en 호출됨.'); 
+var Translate_en = async function(req, res) {
+    console.log('Notification 모듈 안에 있는 Translate_en 호출됨.'); 
     var database = req.app.get('database'); 
 
     if(database.db) { 
         database.NotificationModel.find({title_en: " "},
             function(err, cursor) {
                 if(err) {
-                    utils.log("TranslateNotification_en에서 번역할 게시물 조회 중 에러 발생: ", err.message)
+                    utils.log("Notification 모듈 안에 있는 Translate_en에서 번역할 게시물 조회 중 에러 발생: ", err.toString())
                     res.end(); 
                     return;    
                 }   
@@ -273,7 +273,7 @@ var TranslateNotification_en = async function(req, res) {
                         translate
                             .translate(items.title, "en", function(err, translated_title) {
                                 if(err){
-                                    utils.log("TranslateNotification_en 중 if(toTranslate) 내에서 title 번역 중 에러 발생: ", err.message)
+                                    utils.log("Notification 모듈 안에 있는 Translate_en 중 if(toTranslate) 내에서 title 번역 중 에러 발생: ", err.toString())
                                     res.end(); 
                                     return; 
                                 } 
@@ -285,7 +285,7 @@ var TranslateNotification_en = async function(req, res) {
                             translate
                                 .translate(localcontents, "en", function(err, translated_contents) {
                                     if(err){
-                                        utils.log("TranslateNotification_en 중 if(toTranslate) 내에서 contents 번역 중 에러 발생: ", err.message)
+                                        utils.log("Notification 모듈 안에 있는 Translate_en 중 if(toTranslate) 내에서 contents 번역 중 에러 발생: ", err.toString())
                                         res.end(); 
                                         return; 
                                     }
@@ -294,7 +294,7 @@ var TranslateNotification_en = async function(req, res) {
                                         {title_en: localtitle.translatedText, contents_en: localcontents.translatedText},
                                         function(err){
                                             if(err){
-                                                utils.log("TranslateNotification_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ", err.message)
+                                                utils.log("Notification 모듈 안에 있는 Translate_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ", err.toString())
                                                 res.end(); 
                                                 return; 
                                             }
@@ -306,7 +306,7 @@ var TranslateNotification_en = async function(req, res) {
                             {title_en: localtitle.translatedText},
                             function(err){
                                 if(err){
-                                    utils.log("TranslateNotification_en 중 title_en, contents_en 삽입 중 에러 발생: ", err.message)
+                                    utils.log("Notification 모듈 안에 있는 Translate_en 중 title_en, contents_en 삽입 중 에러 발생: ", err.toString())
                                     res.end(); 
                                     return; 
                                 }
@@ -317,22 +317,22 @@ var TranslateNotification_en = async function(req, res) {
         })//NotificationModel.find 닫기         
     }//if(database) 닫기 
     else{
-        utils.log("TranslateNotification_en 수행 중 데이터베이스 연결 실패")
+        utils.log("Notification 모듈 안에 있는 Translate_en 수행 중 데이터베이스 연결 실패")
         res.end(); 
         return;
     }   
 };  
 
 //크롤링한 게시판의 내용을 중국어로 번역 (notifications collection의 title_zh, contents_zh에 저장)
-var TranslateNotification_zh = async function(req, res) {
-    console.log('Notification 모듈 안에 있는 TranslateNotification_zh 호출됨.'); 
+var Translate_zh = async function(req, res) {
+    console.log('Notification 모듈 안에 있는 Translate_zh 호출됨.'); 
     var database = req.app.get('database'); 
 
     if(database.db) { 
         database.NotificationModel.find({title_zh: " "},
             function(err, cursor) {
                 if(err) {
-                    utils.log("TranslateNotification_zh에서 번역할 게시물 조회 중 에러 발생: ", err.message)
+                    utils.log("Notification 모듈 안에 있는 Translate_zh에서 번역할 게시물 조회 중 에러 발생: ", err.toString())
                     res.end(); 
                     return;    
                 }   
@@ -390,7 +390,7 @@ var TranslateNotification_zh = async function(req, res) {
                         translate
                             .translate(items.title, "zh", function(err, translated_title) {
                                 if(err){
-                                    utils.log("TranslateNotification_zh_CN 중 if(toTranslate) 내에서 title 번역 중 에러 발생: ", err.message)
+                                    utils.log("Notification 모듈 안에 있는 Translate_zh_CN 중 if(toTranslate) 내에서 title 번역 중 에러 발생: ", err.toString())
                                     res.end(); 
                                     return; 
                                 } 
@@ -402,7 +402,7 @@ var TranslateNotification_zh = async function(req, res) {
                             translate
                                 .translate(localcontents, "zh", function(err, translated_contents) {
                                     if(err){
-                                        utils.log("TranslateNotification_zh 중 if(toTranslate) 내에서 contents 번역 중 에러 발생: ", err.message)
+                                        utils.log("Notification 모듈 안에 있는 Translate_zh 중 if(toTranslate) 내에서 contents 번역 중 에러 발생: ", err.toString())
                                         res.end(); 
                                         return; 
                                     }
@@ -411,7 +411,7 @@ var TranslateNotification_zh = async function(req, res) {
                                         {title_zh: localtitle.translatedText, contents_zh: localcontents.translatedText},
                                         function(err){
                                             if(err){
-                                                utils.log("TranslateNotification_zh 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ", err.message)
+                                                utils.log("Notification 모듈 안에 있는 Translate_zh 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ", err.toString())
                                                 res.end(); 
                                                 return; 
                                             }
@@ -423,7 +423,7 @@ var TranslateNotification_zh = async function(req, res) {
                             {title_en: localtitle.translatedText},
                             function(err){
                                 if(err){
-                                    utils.log("TranslateNotification_zh 중 title_zh, contents_zh 삽입 중 에러 발생: ", err.message)
+                                    utils.log("Notification 모듈 안에 있는 Translate_zh 중 title_zh, contents_zh 삽입 중 에러 발생: ", err.toString())
                                     res.end(); 
                                     return; 
                                 }
@@ -434,7 +434,7 @@ var TranslateNotification_zh = async function(req, res) {
         })//NotificationModel.find 닫기         
     }//if(database) 닫기 
     else{
-        utils.log("TranslateNotification_en 수행 중 데이터베이스 연결 실패")
+        utils.log("Notification 모듈 안에 있는 Translate_en 수행 중 데이터베이스 연결 실패")
         res.end(); 
         return;
     }   
@@ -492,20 +492,20 @@ var ShowNotification = async function(req, res) {
                 
                 //공지사항 언어: 영어
                 case("en"): 
-                    query.push({contents_en: new RegExp(".*"+paramSearch+".*","gi")})
-                    query.push({title_en: new RegExp(".*"+paramSearch+".*","gi")}) 
+                    query.$or.push({contents_en: new RegExp(".*"+paramSearch+".*","gi")})
+                    query.$or.push({title_en: new RegExp(".*"+paramSearch+".*","gi")}) 
                     break 
 
                 //공지사항 언어: 중국어 
                 case("zh"): 
-                    query.push({contents_zh: new RegExp(".*"+paramSearch+".*","gi")})
-                    query.push({title_zh: new RegExp(".*"+paramSearch+".*","gi")}) 
+                    query.$or.push({contents_zh: new RegExp(".*"+paramSearch+".*","gi")})
+                    query.$or.push({title_zh: new RegExp(".*"+paramSearch+".*","gi")}) 
                     break                    
 
                 //공지사항 언어: 한국어
                 default: 
-                    query.push({title: new RegExp(".*"+paramSearch+".*","gi")})
-                    query.push({contents: new RegExp(".*"+paramSearch+".*","gi")}) 
+                    query.$or.push({title: new RegExp(".*"+paramSearch+".*","gi")})
+                    query.$or.push({contents: new RegExp(".*"+paramSearch+".*","gi")}) 
                     break
               }
             }
@@ -518,29 +518,27 @@ var ShowNotification = async function(req, res) {
         date: -1   
     }).toArray(function(err,data){ 
         if(err){
-          utils.log("ShowNotification에서 collection 조회 중 수행 중 에러 발생"+ err.message);
+          utils.log("ShowNotification에서 collection 조회 중 수행 중 에러 발생"+ err.toString());
         }   
          //조회된 게시물이 없을 시
-         if(data.length<1){
+         if(data.length<1){   
             context.postslist.splice(0,1) 
             res.json(context) 
             res.end() 
             return
-        }
-  
-        if(parampostEndIndex>=data.length){
-          parampostEndIndex = data.length-1;
         } 
-        if(parampostStartIndex>=data.length){
-          parampostStartIndex = data.length-1;
-        }  
+  
         if(parampostStartIndex<0){
           parampostStartIndex = 0;
         } 
         if(parampostEndIndex<0){
           parampostEndIndex = 0;
         } 
-        for(var i=parampostStartIndex;i<=parampostEndIndex;i++){  
+        for(var i=parampostStartIndex;i<=parampostEndIndex;i++){   
+            
+            if(i>=data.length){
+                break;
+            }  
           var localismine = data[i].userid == paramUserId 
           let locallikespressed = false;
           //해당 게시물에 좋아요를 눌렀는지의 여부 확인
@@ -597,15 +595,15 @@ var ShowNotification = async function(req, res) {
     }//if(database.db) 닫기  
   else {
       
-      utils.log(" ShowNotification 수행 중 데이터베이스 연결 실패")
+      utils.log(" Notifications 모듈 안 ShowNotification 수행 중 데이터베이스 연결 실패")
       res.end(); 
       return;
   }   
   };//ShowNotification 닫기   
 
 
-module.exports.CrawlNotificationData = CrawlNotificationData; 
-module.exports.TranslateNotification_en = TranslateNotification_en; 
-module.exports.TranslateNotification_zh = TranslateNotification_zh; 
+module.exports.CrawlData = CrawlData; 
+module.exports.Translate_en = Translate_en; 
+module.exports.Translate_zh = Translate_zh; 
 module.exports.ShowNotification = ShowNotification;
 

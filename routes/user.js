@@ -123,7 +123,7 @@ var SendDM = function(req, res) {
 		 	     
         database.UserModel.findOne({_id: new ObjectId(paramSenderId)}, function(err1, sender) {
             if (err1) {
-                utils.log("SendDM에서 송신자 조회 중 에러발생: ",err1.message)
+                utils.log("SendDM에서 송신자 조회 중 에러발생: ",err1.toString())
                 context.msg = "missing" 
                 res.json(context)     
                 res.end();
@@ -143,7 +143,7 @@ var SendDM = function(req, res) {
                     },
                     function(err, receiver) {		
                     if (err) {
-                        utils.log("SendDM에서 수신자 조회 중 에러발생: ",err.message)
+                        utils.log("SendDM에서 수신자 조회 중 에러발생: ",err.toString())
                         context.msg = "missing" 
                         res.json(context)     
                         res.end();
@@ -191,7 +191,7 @@ var DeleteDM = function(req, res) {
             {$pull: { 'DM': {'_id': new ObjectId(paramDMId)}}},   
             function(err) {		
             if (err) {
-                utils.log("DeleteDM에서 DM 삭제 중 에러발생: ",err.message)
+                utils.log("DeleteDM에서 DM 삭제 중 에러발생: ",err.toString())
                 context.msg = "missing" 
                 res.json(context)     
                 res.end();
@@ -266,7 +266,7 @@ var ShowDMList = function(req, res) {
             ]).toArray(
             function(err,cursor) {		
             if (err) {
-                utils.log("ShowDMList에서 DM 조회 중 에러발생: ",err.message)
+                utils.log("ShowDMList에서 DM 조회 중 에러발생: ",err.toString())
                 context.msg = "missing" 
                 res.json(context)     
                 res.end();
@@ -337,7 +337,7 @@ var ShowUserNameList = function(req, res) {
 
         database.UserModel.find(query, function(err, users) {
             if (err) {
-                utils.log("ShowUserNameLis에서 사용자 조회 중 에러발생: ",err.message)
+                utils.log("ShowUserNameLis에서 사용자 조회 중 에러발생: ",err.toString())
                 context.msg = "missing" 
                 res.json(context)     
                 res.end();

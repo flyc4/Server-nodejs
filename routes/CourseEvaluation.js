@@ -55,15 +55,31 @@ var ShowCoursesList = async function(req, res) {
 
         database.CourseEvaluationModel.find(query, function(err, cursor){
             if(err){ 
-                utils.log('강의평가 목록 조회 중 에러 발생 : ' + err.message);
+                utils.log('CourseEvaluation 모듈 안에 있는 ShowCoursesList에서 강의평가 목록 조회 중 에러 발생 : ' + err.toString());
 				res.end();
                 return; 
             }   
-            if(paramCoursesListEndIndex>=cursor.length){
-                paramCoursesListEndIndex = cursor.length-1;
-              } 
+            //조회된 강의가 없을 시
+            if(cursor.length<1){
+                context.postslist.splice(0,1) 
+                res.json(context) 
+                res.end() 
+                return
+            }
+        
+            if(paramCoursesListStartIndex<0){
+                paramCoursesListStartIndex = 0;
+            } 
+            if(paramCoursesListEndIndex<0){
+                paramCoursesListEndIndex = 0;
+            } 
+            
             for(var i = paramCoursesListStartIndex; i<= paramCoursesListEndIndex; i++)  
             {   
+                if(i>=cursor.length){
+                    break;
+                  }
+
                 //overallrating의 합계를 구하기 위함
                 //comments에 있는 exam& assignment& difficulty& grade의 값들을 담은 array. splice(0,1) 로 제거 예정 
                 //exam, assignment, difficulty, grade의 값: comments 가 없을 때의 값
@@ -143,7 +159,7 @@ var ShowCoursesList = async function(req, res) {
         }).sort({'created_at': -1});//find 닫기 
     } 
     else{
-        utils.log("ShowCoursesList 수행 중 데이터베이스 연결 실패")
+        utils.log("CourseEvaluation 모듈 안에 있는 ShowCoursesList 수행 중 데이터베이스 연결 실패")
         res.end(); 
         return;
     } 
@@ -187,7 +203,6 @@ var ShowCommentsList = function(req, res) {
         console.log("paramCommentsListStartIndex: ",paramCommentsListStartIndex); 
         console.log("paramCommentsListEndIndex: ",paramCommentsListEndIndex);
 
-
         // 만족하는 문서 갯수 확인  
 
         database.CourseEvaluationModel.aggregate([
@@ -203,7 +218,7 @@ var ShowCommentsList = function(req, res) {
             ], function(err, cursor){
                 
                 if(err){ 
-                    utils.log('ShowCommentsList에서 댓글 조회 중 에러 발생 : ' + err.message);
+                    utils.log('CourseEvaluation 모듈 안에 있는 ShowCommentsList에서 댓글 조회 중 에러 발생 : ' + err.toString());
                     res.end();
                     return; 
                 }   
@@ -237,15 +252,15 @@ var ShowCommentsList = function(req, res) {
         }) 
     } 
     else{
-        utils.log("ShowCommentsList 수행 중 데이터베이스 연결 실패")
+        utils.log("CourseEvaluation 모듈 안에 있는 ShowCommentsList 수행 중 데이터베이스 연결 실패")
         res.end(); 
         return;
     } 
 };  
 
-var AddCourseEvaluationComment = function(req, res) {
+var AddComment = function(req, res) {
     var database = req.app.get('database');
-    console.log("CourseEvaluation 모듈 안에 있는 AddCourseEvaluationComment 호출")
+    console.log("CourseEvaluation 모듈 안에 있는 AddComment 호출")
     
     // 데이터베이스 객체가 초기화된 경우
 	if (database.db) { 
@@ -271,13 +286,13 @@ var AddCourseEvaluationComment = function(req, res) {
         // 사용자 조회  
         database.UserModel.findOne({_id: new ObjectId(paramUserId)}, function(err,user){            
             if(err){ 
-                utils.log('AddCourseEvaluationComment에서 사용자 조회 중 에러 발생: ' + err.message);
+                utils.log('CourseEvaluation 모듈 안에 있는 AddComment에서 사용자 조회 중 에러 발생: ' + err.toString());
                 res.end();
                 return; 
             }     
             // 사용자가 존재하지 않을 경우 
             if(user == null){
-                utils.log('AddCourseEvaluationComment에서 조회된 사용자가 없음') 
+                utils.log('CourseEvaluation 모듈 안에 있는 AddComment에서 조회된 사용자가 없음') 
                 res.end(); 
                 return;
             }
@@ -302,7 +317,7 @@ var AddCourseEvaluationComment = function(req, res) {
             },
             function(err2){
                 if(err2){
-                    utils.log("AddCourseEvaluationComment에서 댓글 추가 중 에러 발생: ", err2.message)
+                    utils.log("CourseEvaluation 모듈 안에 있는 AddComment에서 댓글 추가 중 에러 발생: ", err2.toString())
                     return;
                 }    
                 console.log("댓글 추가함")
@@ -315,20 +330,20 @@ var AddCourseEvaluationComment = function(req, res) {
         })//UserModel.findOne 닫기
     } 
     else{
-        utils.log("AddCourseEvaluationComment 수행 중 데이터베이스 연결 실패")
+        utils.log("CourseEvaluation 모듈 안에 있는 AddComment 수행 중 데이터베이스 연결 실패")
         res.end(); 
         return;
     } 
 }; 
 
-var EditCourseEvaluationComment = function(req, res) {
+var EditComment = function(req, res) {
     var database = req.app.get('database');
-    console.log("CourseEvaluation 모듈 안에 있는 EditCourseEvaluationComment 호출")
+    console.log("CourseEvaluation 모듈 안에 있는 CourseEvaluation 모듈 안에 있는 EditComment 호출")
     
     // 데이터베이스 객체가 초기화된 경우
 	if (database.db) { 
        
-        var paramCourseId = req.body.courseid == 'NO-ID'? '000000000000000000000001': req.body.courseid,
+        var paramCourseId = req.body.courseid == 'NO-ID'? '000000000000000000000000': req.body.courseid,
             paramCommentId = req.body.commentid,
             paramContents = req.body.contents == " "? "There is no comment":req.body.contents,
             // 숫자 0을 제대로  인식하지 못해서 이렇게 작성함
@@ -358,7 +373,7 @@ var EditCourseEvaluationComment = function(req, res) {
                 },
                 {'new':true},function(err){
                     if(err){
-                        utils.log("EditCourseEvaluationComment에서 댓글 수정 중 에러 발생: ", err.message)
+                        utils.log("CourseEvaluation 모듈 안에 있는 EditComment에서 댓글 수정 중 에러 발생: ", err.toString())
                         return;
                     }  
                     console.log("댓글 수정함")  
@@ -370,15 +385,15 @@ var EditCourseEvaluationComment = function(req, res) {
 
         } 
     else{
-        utils.log("EditCourseEvaluationComment 수행 중 데이터베이스 연결 실패")
+        utils.log("CourseEvaluation 모듈 안에 있는 EditComment 수행 중 데이터베이스 연결 실패")
         res.end(); 
         return;
     }  
 }; 
 
-var DeleteCourseEvaluationComment = function(req, res) {
+var DeleteComment = function(req, res) {
     var database = req.app.get('database');
-    console.log("CourseEvaluation 모듈 안에 있는 DeleteCourseEvaluationComment 호출")
+    console.log("CourseEvaluation 모듈 안에 있는 DeleteComment 호출")
     
     // 데이터베이스 객체가 초기화된 경우
 	if (database.db) { 
@@ -395,7 +410,7 @@ var DeleteCourseEvaluationComment = function(req, res) {
             {$pull: { 'comments': { '_id': new ObjectId(paramCommentId)}}},
             function(err){
                 if(err){
-                        utils.log("EditCourseEvaluationComment에서 댓글 삭제 중 에러 발생: ", err.message)
+                        utils.log("CourseEvaluation 모듈 안에 있는 EditComment에서 댓글 삭제 중 에러 발생: ", err.toString())
                         return;
                     }  
                     context.msg = "success" 
@@ -405,15 +420,15 @@ var DeleteCourseEvaluationComment = function(req, res) {
                 }) //updateOne 닫기 
     } 
     else{
-        utils.log("DeleteCourseEvaluationComment 수행 중 데이터베이스 연결 실패")
+        utils.log("CourseEvaluation 모듈 안에 있는 DeleteComment 수행 중 데이터베이스 연결 실패")
         res.end(); 
         return;
     }  
 }; 
 
 //댓글에 좋아요 1 증가
-var IncreLikeCourseEvaluationComment = function(req, res) {
-    console.log('CourseEvaluation 모듈 안에 있는 IncreLikeCourseEvaluationComment 호출됨.');
+var IncreLikeComment = function(req, res) {
+    console.log('CourseEvaluation 모듈 안에 있는 IncreLikeComment 호출됨.');
     
     var paramCourseId = req.body.courseid||req.query.courseid;  
     var paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000001";  
@@ -436,10 +451,10 @@ var IncreLikeCourseEvaluationComment = function(req, res) {
     if (database.db) {
         database.UserModel.findOne({_id: new ObjectId(paramUserId)},function(err,user){
             if(err){
-            utils.log("IncreLikeCourseEvaluationComment에서 좋아요를 누른 사용자 조회 중 에러 발생: ",err.message)
+            utils.log("CourseEvaluation 모듈 안에 있는 IncreLikeComment에서 좋아요를 누른 사용자 조회 중 에러 발생: ",err.toString())
             }  
             if(!user){
-            utils.log("IncreLikeCourseEvaluationComment에서 사용자를 조회할 수 없음") 
+            utils.log("CourseEvaluation 모듈 안에 있는 IncreLikeComment에서 사용자를 조회할 수 없음") 
             context.msg = "missing"
             res.json(context) 
             res.end() 
@@ -451,12 +466,12 @@ var IncreLikeCourseEvaluationComment = function(req, res) {
             },  
             function(err,post){
                 if (err) {
-                utils.log("IncreLikeCourseEvaluationComment 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.message)
+                utils.log("CourseEvaluation 모듈 안에 있는 IncreLikeComment 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.toString())
                 res.end(); 
                 return;
                 }   
                 if(!post){
-                utils.log("IncreLikeCourseEvaluationComment 안에서 게시글 조회 실패") 
+                utils.log("CourseEvaluation 모듈 안에 있는 IncreLikeComment 안에서 게시글 조회 실패") 
                 context.msg = "empty"  
                 res.json(context) 
                 res.end() 
@@ -475,7 +490,7 @@ var IncreLikeCourseEvaluationComment = function(req, res) {
                     }
                 }  
                 if(commentindex == -1){
-                utils.log("IncreLikeCourseEvaluationComment 안에서 요청 받은 댓글 조회 실패") 
+                utils.log("CourseEvaluation 모듈 안에 있는 IncreLikeComment 안에서 요청 받은 댓글 조회 실패") 
                 context.msg = "empty" 
                 res.json(context) 
                 res.end() 
@@ -485,7 +500,7 @@ var IncreLikeCourseEvaluationComment = function(req, res) {
                 //이미 좋아요를 눌렀던 상태일 경우 반환
                 for(let j=0;j<post.comments[commentindex].likeslist.length;j++){ 
                 if(post.comments[commentindex].likeslist[j].userid.toString() == paramUserId){
-                    utils.log("IncreLikeCourseEvaluationComment에서 이미 좋아요를 누른 댓글에 다시 좋아요 요청함")
+                    utils.log("CourseEvaluation 모듈 안에 있는 IncreLikeComment에서 이미 좋아요를 누른 댓글에 다시 좋아요 요청함")
                     context.msg = "duplicate" 
                     context.likesinfo.push({likes: locallikes, likespressed: true}) 
                     context.likesinfo.splice(0,1)  
@@ -507,7 +522,7 @@ var IncreLikeCourseEvaluationComment = function(req, res) {
                 },
                 function(err){
                 if (err) {
-                        utils.log("IncreLikeCourseEvaluationComment 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
+                        utils.log("CourseEvaluation 모듈 안에 있는 IncreLikeComment 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.toString())
                         res.end(); 
                         return;
                 }		 
@@ -522,15 +537,15 @@ var IncreLikeCourseEvaluationComment = function(req, res) {
             })//findOne 닫기
         })//UserModel.findOne 닫기 
     } else {  
-        utils.log('IncreLikeCourseEvaluationComment 수행 중 데이터베이스 연결 실패');
+        utils.log('CourseEvaluation 모듈 안에 있는 IncreLikeComment 수행 중 데이터베이스 연결 실패');
         res.end(); 
         return;
         }	     
-  }; //IncreLikeCourseEvaluationComment 닫기   
+  }; //IncreLikeComment 닫기   
 
   //댓글에 좋아요 1 감소
-var DecreLikeCourseEvaluationComment = function(req, res) {
-    console.log('CourseEvaluations 모듈 안에 있는 DecreLikeCourseEvaluationComment 호출됨.');
+var DecreLikeComment = function(req, res) {
+    console.log('CourseEvaluations 모듈 안에 있는 DecreLikeComment 호출됨.');
     
     var paramCourseId = req.body.courseid||req.query.courseid;  
     var paramUserId = req.body.userid||"000000000000000000000001";
@@ -552,10 +567,10 @@ var DecreLikeCourseEvaluationComment = function(req, res) {
     if (database.db) {
         database.UserModel.findOne({_id: new ObjectId(paramUserId)},function(err,user){
           if(err){
-            utils.log("DecreLikeCourseEvaluationComment에서 좋아요를 취소한 사용자 조회 중 에러 발생: ",err.message)
+            utils.log("CourseEvaluation 모듈 안에 있는 DecreLikeComment에서 좋아요를 취소한 사용자 조회 중 에러 발생: ",err.toString())
           }  
           if(!user){
-            utils.log("DecreLikeCourseEvaluationComment에서 사용자를 조회할 수 없음") 
+            utils.log("CourseEvaluation 모듈 안에 있는 DecreLikeComment에서 사용자를 조회할 수 없음") 
             context.msg = "missing"
             res.json(context) 
             res.end() 
@@ -567,12 +582,12 @@ var DecreLikeCourseEvaluationComment = function(req, res) {
             },  
             function(err,post){
               if (err) {
-                utils.log("DecreLikeCourseEvaluationComment 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.message)
+                utils.log("CourseEvaluation 모듈 안에 있는 DecreLikeComment 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.toString())
                 res.end(); 
                 return;
               }   
               if(!post){
-                utils.log("DecreLikeCourseEvaluationComment 안에서 게시글 조회 실패") 
+                utils.log("CourseEvaluation 모듈 안에 있는 DecreLikeComment 안에서 게시글 조회 실패") 
                 context.msg = "empty"  
                 res.json(context) 
                 res.end() 
@@ -592,7 +607,7 @@ var DecreLikeCourseEvaluationComment = function(req, res) {
                   }
               } 
               if(commentindex == -1){
-                utils.log("DecreLikeCourseEvaluationComment 안에서 요청 받은 댓글 조회 실패") 
+                utils.log("CourseEvaluation 모듈 안에 있는 DecreLikeComment 안에서 요청 받은 댓글 조회 실패") 
                 context.msg = "empty" 
                 res.json(context) 
                 res.end() 
@@ -608,7 +623,7 @@ var DecreLikeCourseEvaluationComment = function(req, res) {
               }
   
               if(!isinlikeslist){
-                utils.log("DecreLikeCourseEvaluationComment안에서 likeslist 안에서 요청한 사용자를 찾을 수 없음") 
+                utils.log("CourseEvaluation 모듈 안에 있는 DecreLikeComment안에서 likeslist 안에서 요청한 사용자를 찾을 수 없음") 
                 context.msg = "empty" 
                 res.json(context) 
                 res.end() 
@@ -631,7 +646,7 @@ var DecreLikeCourseEvaluationComment = function(req, res) {
                 },{upsert: true,new: true},
               function(err){
                 if (err) {
-                        utils.log("DecreLikeCourseEvaluationComment 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.message)
+                        utils.log("CourseEvaluation 모듈 안에 있는 DecreLikeComment 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.toString())
                         res.end(); 
                         return;
                 }		   
@@ -646,11 +661,11 @@ var DecreLikeCourseEvaluationComment = function(req, res) {
             })//findOne 닫기
         })//UserModel.findOne 닫기 
     } else {  
-        utils.log('DecreLikeCourseEvaluationComment 수행 중 데이터베이스 연결 실패');
+        utils.log('CourseEvaluation 모듈 안에 있는 DecreLikeComment 수행 중 데이터베이스 연결 실패');
         res.end(); 
         return;
       }	    
-  }; //DecreLikeCourseEvaluationComment 닫기 
+  }; //DecreLikeComment 닫기 
 
   var ShowProfessorProfile = function(req, res) {
     console.log('CourseEvaluation 모듈 안에 있는 ShowProfessorProfile 호출됨.');
@@ -670,12 +685,12 @@ var DecreLikeCourseEvaluationComment = function(req, res) {
         database.ProfessorModel.findOne({professor: paramProfessor},  
             function(err1, professor){
                 if (err1) {
-                  utils.log("ShowProfessorProfile 안에서 해당 교수 조회 중 에러 발생: "+ err1.message)
+                  utils.log("CourseEvaluation 모듈 안에 있는 ShowProfessorProfile 안에서 해당 교수 조회 중 에러 발생: "+ err1.toString())
                   res.end(); 
                   return;
                 }  
                 if(professor == undefined){
-                    utils.log("ShowProfessorProfile 수행 중 데이터베이스에서 교수 정보를 찾을 수 없음") 
+                    utils.log("CourseEvaluation 모듈 안에 있는 ShowProfessorProfile 수행 중 데이터베이스에서 교수 정보를 찾을 수 없음") 
                     res.end(); 
                     return;
                 }
@@ -686,7 +701,7 @@ var DecreLikeCourseEvaluationComment = function(req, res) {
                 database.CourseEvaluationModel.find({professor: paramProfessor},  
                     function(err, cursor){
                         if (err) {
-                            utils.log("ShowProfessorProfile 안에서 해당 교수의 과목들 조회 중 에러 발생: "+ err.message)
+                            utils.log("CourseEvaluation 모듈 안에 있는 ShowProfessorProfile 안에서 해당 교수의 과목들 조회 중 에러 발생: "+ err.toString())
                             res.end(); 
                             return;
                         } 
@@ -702,7 +717,7 @@ var DecreLikeCourseEvaluationComment = function(req, res) {
 
             })//ProfessorModel.findOne  닫기  
     } else {  
-        utils.log('ShowProfessorProfile 수행 중 데이터베이스 연결 실패');
+        utils.log('CourseEvaluation 모듈 안에 있는 ShowProfessorProfile 수행 중 데이터베이스 연결 실패');
         res.end(); 
         return;
       }
@@ -712,10 +727,10 @@ var DecreLikeCourseEvaluationComment = function(req, res) {
 
 module.exports.ShowCoursesList = ShowCoursesList;  
 module.exports.ShowCommentsList = ShowCommentsList;  
-module.exports.AddCourseEvaluationComment = AddCourseEvaluationComment;
-module.exports.EditCourseEvaluationComment = EditCourseEvaluationComment;
-module.exports.DeleteCourseEvaluationComment = DeleteCourseEvaluationComment; 
-module.exports.IncreLikeCourseEvaluationComment = IncreLikeCourseEvaluationComment; 
-module.exports.DecreLikeCourseEvaluationComment = DecreLikeCourseEvaluationComment;
+module.exports.AddComment = AddComment;
+module.exports.EditComment = EditComment;
+module.exports.DeleteComment = DeleteComment; 
+module.exports.IncreLikeComment = IncreLikeComment; 
+module.exports.DecreLikeComment = DecreLikeComment;
 module.exports.ShowProfessorProfile = ShowProfessorProfile;  
 
