@@ -616,7 +616,7 @@ var ShowComments = function(req, res) {
 
   console.log('paramUserId: ' + paramUserId, ', paramBoardId: ' + paramBoardId, ', paramEntryId: ' + paramEntryId);
 
-  var context = {commentslist: [{ boardid: " ", entryid: "", rootreplyid: "", parentreplyid: "", replyid: "", 
+  var context = {commentslist: [{ boardid: " ", entryid: "", parentreplyid: "", replyid: "", 
     userid: "", username: " ", profile: '', likes: 0, date: ' ', ismine: false, contents: ' ', pictures: ' ' }]};
 
   if (database.db){    
@@ -658,7 +658,6 @@ var ShowComments = function(req, res) {
             context.commentslist.push({
               boardid: paramBoardId, 
               entryid: paramEntryId, 
-              rootreplyid: result[i].comments.rootreplyid,
               parentreplyid: result[i].comments.parentreplyid, 
               replyid: result[i].comments._id, 
               userid: result[i].comments.userid, 
@@ -692,7 +691,6 @@ var AddComment = function(req, res) {
   var paramUserId = req.body.userid || req.query.userid; 
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
-  var paramRootReplyId = req.body.rootreplyid||req.query.rootreplyid||"000000000000000000000000";
   var paramParentReplyId = req.body.parentreplyid||req.query.parentreplyid||"000000000000000000000000";
   var paramContents = req.body.contents || req.query.contents|| "no contents"; 
   var paramPictures = req.body.pictures || req.query.pictures || "no pictures";
@@ -700,8 +698,7 @@ var AddComment = function(req, res) {
   var database = req.app.get('database');
   
   console.log('paramContents: ' + paramContents + ', paramBoardId: ' + 
-    paramBoardId, 'paramEntryId: ' + paramEntryId, 'paramParentReplyId: ' + paramParentReplyId, 
-    'paramRootReplyId: ' + paramRootReplyId);
+    paramBoardId, 'paramEntryId: ' + paramEntryId, 'paramParentReplyId: ' + paramParentReplyId);
 
 // 데이터베이스 객체가 초기화된 경우
 if (database.db) { 
@@ -730,7 +727,6 @@ if (database.db) {
             nickNm: user.nickNm,
             boardid: paramBoardId,   
             parentreplyid: paramParentReplyId, //부모 댓글의 id
-            rootreplyid: paramRootReplyId, //루트 댓글의 id
             likes: 0, 
             likeslist: [],
             contents: paramContents,

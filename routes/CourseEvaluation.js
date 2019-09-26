@@ -195,7 +195,7 @@ var ShowCommentsList = function(req, res) {
         }]}  
         //paramCourseId: 09-14 15:33 현재 프런트엔드: 
         // 'Components\Course_Evaluation\screen\EvaluationScreen.js'에서 courseid 값의 default를 NO-ID 로 설정함.
-        var paramCourseId = req.body.courseid == 'NO-ID'? '000000000000000000000001': req.body.courseid;
+        var paramCourseId = req.body.courseid == 'NO-ID'? '000000000000000000000000': req.body.courseid;
         var paramUserId = req.body.userid;
         var paramCommentsListStartIndex = req.body.commentsliststartindex;
         var paramCommentsListEndIndex = req.body.commentslistendindex ;   
@@ -265,7 +265,7 @@ var AddComment = function(req, res) {
     // 데이터베이스 객체가 초기화된 경우
 	if (database.db) { 
        
-        var paramCourseId = req.body.courseid == 'NO-ID'? '000000000000000000000001': req.body.courseid,
+        var paramCourseId = req.body.courseid == 'NO-ID'? '000000000000000000000000': req.body.courseid,
             paramUserId = req.body.userid,
             paramContents = req.body.contents == " "? "There is no comment":req.body.contents,
             paramExam = req.body.exam.toString() || "N/A",
@@ -398,7 +398,7 @@ var DeleteComment = function(req, res) {
     // 데이터베이스 객체가 초기화된 경우
 	if (database.db) { 
        
-        var paramCourseId = req.body.courseid == 'NO-ID'? '000000000000000000000001': req.body.courseid,
+        var paramCourseId = req.body.courseid == 'NO-ID'? '000000000000000000000000': req.body.courseid,
             paramCommentId = req.body.commentid; 
         
         let context = {msg: ""}
@@ -431,8 +431,8 @@ var IncreLikeComment = function(req, res) {
     console.log('CourseEvaluation 모듈 안에 있는 IncreLikeComment 호출됨.');
     
     var paramCourseId = req.body.courseid||req.query.courseid;  
-    var paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000001";  
-    var paramUserId = req.body.userid||"000000000000000000000001"; 
+    var paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000000";  
+    var paramUserId = req.body.userid||"000000000000000000000000"; 
     
     var database = req.app.get('database');
     console.log(
@@ -548,7 +548,7 @@ var DecreLikeComment = function(req, res) {
     console.log('CourseEvaluations 모듈 안에 있는 DecreLikeComment 호출됨.');
     
     var paramCourseId = req.body.courseid||req.query.courseid;  
-    var paramUserId = req.body.userid||"000000000000000000000001";
+    var paramUserId = req.body.userid||"000000000000000000000000";
     var paramCommentId = req.body.commentid||req.query.commentid;
   
     var database = req.app.get('database');

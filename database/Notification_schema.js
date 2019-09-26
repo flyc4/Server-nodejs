@@ -40,7 +40,6 @@ SchemaObj.createSchema = function(mongoose) {
                 nickNm: {type: String, 'default': 'noName'},
                 boardid: {type: String, trim:true, 'default': ' '}, 
                 parentreplyid: {type: mongoose.Schema.ObjectId}, //부모 댓글의 id
-                rootreplyid: {type: mongoose.Schema.ObjectId }, //루트 댓글의 id
                 likes: {type: Number, unique: false, 'default': 0},
                 contents: {type: String, trim:true, 'default': ' '},
                 pictures: {type: String, trim:true, 'default': ' '}, 
