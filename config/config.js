@@ -9,12 +9,13 @@ module.exports = {
 	db_schemas: [
         {file:'./user_schema', collection:'users', schemaName:'UserSchema', modelName:'UserModel'} 
         ,{file:'./Report_schema', collection:'reports', schemaName:'ReportSchema', modelName:'ReportModel'} 
-        ,{file: './CourseEvaluation_schema', collection: 'CourseEvaluation', schemaName: 'CourseEvaluationSchema', modelName: 'CourseEvaluationModel'} 
-        ,{file: './Professor_schema', collection: 'Professor', schemaName: 'ProfessorSchema', modelName: 'ProfessorModel'}
-        ,{file: './Notification_schema', collection: 'Notification', schemaName: 'NotificationSchema', modelName: 'NotificationModel'} 
-        ,{file:'./BulletinBoardsList_schema', collection:'BulletinBoardsList', schemaName:'BulletinBoardsListSchema', modelName:'BulletinBoardsListModel'} 
-        ,{file:'./Board1_schema', collection:'Board1', schemaName:'Board1Schema', modelName:'Board1Model'} 
-        ,{file:'./Board2_schema', collection:'Board2', schemaName:'Board2Schema', modelName:'Board2Model'}  
+        ,{file: './CourseEvaluation_schema', collection: 'courseevaluations', schemaName: 'CourseEvaluationSchema', modelName: 'CourseEvaluationModel'} 
+        ,{file: './Professor_schema', collection: 'professors', schemaName: 'ProfessorSchema', modelName: 'ProfessorModel'}
+        ,{file: './EventCalendar_schema', collection: 'eventcalendars', schemaName: 'EventCalendarSchema', modelName: 'EventCalendarModel'} 
+        ,{file: './Notification_schema', collection: 'notifications', schemaName: 'NotificationSchema', modelName: 'NotificationModel'} 
+        ,{file:'./BulletinBoardsList_schema', collection:'bulletinboardslists', schemaName:'BulletinBoardsListSchema', modelName:'BulletinBoardsListModel'} 
+        ,{file:'./Board1_schema', collection:'board1', schemaName:'Board1Schema', modelName:'Board1Model'} 
+        ,{file:'./Board2_schema', collection:'board2', schemaName:'Board2Schema', modelName:'Board2Model'}  
                
         ],
 	route_info: [
@@ -32,15 +33,13 @@ module.exports = {
         ,{file:'./BulletinBoards', path:'/process/BulletinBoards/ShowBulletinBoard', method:'ShowBulletinBoard', type:'post'} 
         ,{file:'./BulletinBoards', path:'/process/BulletinBoards/AddEditEntry', method:'AddEditEntry', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/BulletinBoards/DeleteEntry', method:'DeleteEntry', type:'post'}
-        ,{file:'./BulletinBoards', path:'/process/BulletinBoards/IncreLikeEntry', method:'IncreLikeEntry', type:'post'} 
-        ,{file:'./BulletinBoards', path:'/process/BulletinBoards/DecreLikeEntry', method:'DecreLikeEntry', type:'post'}
+        ,{file:'./BulletinBoards', path:'/process/BulletinBoards/FlipLikeEntry', method:'FlipLikeEntry', type:'post'} 
         ,{file:'./BulletinBoards', path:'/process/BulletinBoards/ShowComments', method:'ShowComments', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/BulletinBoards/AddComment', method:'AddComment', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/BulletinBoards/EditComment', method:'EditComment', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/BulletinBoards/DeleteComment', method:'DeleteComment', type:'post'} 
-        ,{file:'./BulletinBoards', path:'/process/BulletinBoards/IncreLikeComment', method:'IncreLikeComment', type:'post'}
-        ,{file:'./BulletinBoards', path:'/process/BulletinBoards/DecreLikeComment', method:'DecreLikeComment', type:'post'} 
-
+        ,{file:'./BulletinBoards', path:'/process/BulletinBoards/FlipLikeComment', method:'FlipLikeComment', type:'post'}
+        
         //CourseEvaluation과 관련된 패스들 
         ,{file:'./CourseEvaluation', path:'/process/CourseEvaluation/ShowCoursesList', method:'ShowCoursesList', type:'post'}
         ,{file:'./CourseEvaluation', path:'/process/CourseEvaluation/ShowCommentsList', method:'ShowCommentsList', type:'post'}

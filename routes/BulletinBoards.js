@@ -364,9 +364,9 @@ if (database.db) {
     } 
 }; //DeleteEntry 닫기 
 
-//게시글 또는 댓글에 좋아요 1 증가
-var IncreLikeEntry = function(req, res) {
-  console.log('BulletinBoards 모듈 안에 있는 IncreLikeEntry 호출됨.');
+//게시글 또는 댓글에 좋아요 1 증가 혹은 감소
+var FlipLikeEntry = function(req, res) {
+  console.log('BulletinBoards 모듈 안에 있는 FlipLikeEntry 호출됨.');
   
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
@@ -392,10 +392,10 @@ var IncreLikeEntry = function(req, res) {
       
       database.UserModel.findOne({_id: new ObjectId(paramUserId)},async function(err,user){
         if(err){
-          utils.log("BulletinBoards 모듈 안에 있는 IncreLikeEntry에서 좋아요를 누른 사용자 조회 중 에러 발생: ",err.message)
+          utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry에서 좋아요를 누른 사용자 조회 중 에러 발생: ",err.message)
         }  
         if(!user){
-          utils.log("BulletinBoards 모듈 안에 있는 IncreLikeEntry에서 사용자를 조회할 수 없음") 
+          utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry에서 사용자를 조회할 수 없음") 
           context.msg = "missing"
           res.json(context) 
           res.end() 
@@ -403,7 +403,7 @@ var IncreLikeEntry = function(req, res) {
         } 
         // 댓글 좋아요로 넘어감
         if(paramCommentId!=0){  
-          const url = serverURL + '/process/BulletinBoards/IncreLikeComment'
+          const url = serverURL + '/process/BulletinBoards/FlipLikeComment'
           await axios.post(url,{
             boardid: paramBoardId,   
             entryid: paramEntryId, 
@@ -418,7 +418,7 @@ var IncreLikeEntry = function(req, res) {
             return;   
           })
           .catch(( err ) => {      
-              utils.log("BulletinBoards 모듈 안에 있는 IncreLikeEntry에서 IncreLikeComment 요청 중 에러 발생: ", err.response)  
+              utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry에서 FlipLikeComment 요청 중 에러 발생: ", err.response)  
               res.end();
               return;
           });    
@@ -426,23 +426,37 @@ var IncreLikeEntry = function(req, res) {
           return; 
         } //if(paramCommentId!=0) 닫기   
 
-        //이미 좋아요를 눌렀으나 좋아요 요청을 또 다시 해온 경우, 좋아요를 반영하지 않고 반환한다. 
+        //이미 좋아요를 눌렀으나 좋아요 요청을 또 다시 해온 경우, 좋아요를 취소한다. 
         database.db.collection(paramBoardId).findOne({_id: new ObjectId(paramEntryId), 'likeslist.userid': new ObjectId(paramUserId) },  
           function(err,alreadypressed){
             if (err) {
-              utils.log("BulletinBoards 모듈 안에 있는 IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.message)
+              utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.toString())
               res.end(); 
               return;
-            }   
+            }     
             if(alreadypressed)
             {  
-              utils.log("IncreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음")
-              context.likesinfo.push({likes: alreadypressed.likes, likespressed: true}) 
-              context.likesinfo.splice(0,1)
-              console.dir(context)
+              console.log("FlipLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음")
+              //좋아요를 취소시킬 게시물을 조회 
+              database.db.collection(paramBoardId).updateOne({_id: new ObjectId(paramEntryId)},  
+              { 
+                $pull: {'likeslist': { 'userid': new ObjectId(paramUserId)}},
+                $inc: {likes: -1}, 
+              },
+            function(err,data){ 
+              if (err) {
+                      utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.toString())
+                      res.end(); 
+                      return;
+              }       
+              context.likesinfo.push({likes: data.likes-1, likespressed: false}) 
+              context.likesinfo.splice(0,1)  
+              context.msg = "success";
               res.json(context)
               res.end(); 
               return 
+              })//updateone 닫기              
+            return;
             }  
             //좋아요를 증가시킬 게시물을 조회 
             database.db.collection(paramBoardId).findOneAndUpdate({_id: new ObjectId(paramEntryId)},  
@@ -454,20 +468,20 @@ var IncreLikeEntry = function(req, res) {
                     nickNm: user.nickNm 
                 }}  
               },
-            function(err,data){
-              if (err) {
-                      utils.log("BulletinBoards 모듈 안에 있는 IncreLikeEntry 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
-                      res.end(); 
-                      return;
-              }     
-              context.likesinfo.push({likes: data.value.likes+1, likespressed: true}) 
-              context.likesinfo.splice(0,1)  
-              context.msg = "success";
-              console.dir(context)
-              res.json(context)
-              res.end(); 
-              return 
-              })//findOneAndUpdate 닫기 
+              function(err,data){
+                if (err) {
+                        utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.toString())
+                        res.end(); 
+                        return;
+                }     
+                context.likesinfo.push({likes: data.value.likes+1, likespressed: true}) 
+                context.likesinfo.splice(0,1)  
+                context.msg = "success";
+                console.dir(context)
+                res.json(context)
+                res.end(); 
+                return 
+            })//findOneAndUpdate 닫기 
           })//findOne({_id: new ObjectId(paramEntryId), 'likeslist.userid': new ObjectId(paramUserId)} 닫기
       })//UserModel.findOne 닫기 
   } else {  
@@ -475,123 +489,7 @@ var IncreLikeEntry = function(req, res) {
       res.end(); 
       return;
     }     
-}; //IncreLikeEntry 닫기 
-
-//게시글에 좋아요 1 감소
-var DecreLikeEntry = function(req, res) {
-  console.log('BulletinBoards 모듈 안에 있는 DecreLikeEntry 호출됨.');
-  
-  var paramBoardId = req.body.boardid||req.query.boardid;  
-  var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
-  var paramUserId = req.body.userid||"000000000000000000000000";
-  var paramCommentId = req.body.replyid||req.query.replyid||"000000000000000000000000";
-
-  console.log('paramBoardId: ' + paramBoardId)
-  console.log('paramEntryId: ' + paramEntryId) 
-  console.log('paramUserId: ' + paramUserId)   
-  console.log('paramCommentId' + paramCommentId);
-
-  var database = req.app.get('database');
-  
-  var context = {
-    likesinfo: [{ 
-      likes: 0, 
-      likespressed: false  
-    }], 
-    msg: " "}
-
-  // 데이터베이스 객체가 초기화된 경우
-  if (database.db) {
-      
-      database.UserModel.findOne({_id: new ObjectId(paramUserId)},async function(err,user){
-        if(err){
-          utils.log("BulletinBoards 모듈 안에 있는 DecreLikeEntry에서 좋아요를 취소한 사용자 조회 중 에러 발생: ",err.message) 
-          res.end() 
-          return;
-        }   
-        if(!user){
-          utils.log("BulletinBoards 모듈 안에 있는 DecreLikeEntry에서 사용자를 조회할 수 없음") 
-          context.msg = "missing"
-          res.json(context) 
-          res.end() 
-          return;
-        } 
-
-         // 댓글 좋아요 감소로 넘어감
-         if(paramCommentId!=0){  
-          const url = serverURL + '/process/BulletinBoards/DecreLikeComment'
-          await axios.post(url,{
-            boardid: paramBoardId,   
-            entryid: paramEntryId, 
-            userid: paramUserId,
-            replyid: paramCommentId
-          })
-          .then((response) => {    
-            context.likesinfo = response.data.likesinfo
-            context.msg = response.data.msg
-            res.json(context)  
-            res.end()
-            return;   
-          })
-          .catch(( err ) => {      
-              utils.log("BulletinBoards 모듈 안에 있는 DecreLikeEntry에서 DecreLikeComment 요청 중 에러 발생: ", err.response)  
-              res.end();
-              return;
-          });    
-          res.end() 
-          return; 
-        } //if(paramCommentId!=0) 닫기   
-
-        
-        //좋아요를 누르지 않았으나 좋아요 취소 요청을 해온 경우, 좋아요 취소를 반영하지 않고 반환한다. 
-        database.db.collection(paramBoardId).findOne({_id: new ObjectId(paramEntryId), 'likeslist.userid': new ObjectId(paramUserId)},  
-          function(err,duplicatedata){
-            if (err) {
-              utils.log("BulletinBoards 모듈 안에 있는 DecreLikeEntry 안에서 요청한 사용자가 이미 해당 게시물에 좋아요 버튼을 취소했는 지의 여부를 조회하는 중 에러 발생: "+ err.message)
-              res.end(); 
-              return;
-            }   
-            if(!duplicatedata)
-            {  
-              utils.log("BulletinBoards 모듈 안에 있는 DecreLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 취소했음") 
-              context.msg = "duplicate"
-              
-              console.dir(context)
-              res.json(context)
-              res.end(); 
-              return 
-            }   
-            //클라이언트에 보낼 좋아요 값 저장 
-            console.dir(duplicatedata)
-            let locallikes = duplicatedata.likes-1;
-            //좋아요를 취소시킬 게시물을 조회 
-            database.db.collection(paramBoardId).updateOne({_id: new ObjectId(paramEntryId)},  
-              { 
-                $pull: {'likeslist': { 'userid': new ObjectId(paramUserId)}},
-                $inc: {likes: -1}, 
-                
-              },
-            function(err,data){
-              if (err) {
-                      utils.log("BulletinBoards 모듈 안에 있는 DecreLikeEntry 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.message)
-                      res.end(); 
-                      return;
-              }      
-              context.likesinfo.push({likes: locallikes, likespressed: false}) 
-              context.likesinfo.splice(0,1)  
-              context.msg = "success";
-              res.json(context)
-              res.end(); 
-              return 
-              })//updateone 닫기 
-          })//findOne({_id: new ObjectId(paramEntryId), 'likeslist.userid': new ObjectId(paramUserId)} 닫기
-      })//UserModel.findOne 닫기 
-  } else {  
-      utils.log('BulletinBoards 모듈 안에 있는 IncreLikeEntry 수행 중 데이터베이스 연결 실패');
-      res.end(); 
-      return;
-    }     
-}; //DecreLikeEntry 닫기
+}; //FlipLikeEntry 닫기 
 
 //////////////////한 게시판(Entry 혹은 BulletinBoard 혹은 Post)과 관련된 함수 들) 끝 /////////////////////////////////  
 
@@ -810,7 +708,7 @@ if (database.db) {
   {$pull: { 'comments': { '_id': new ObjectId(paramCommentId)}}},
   function(err){ 
     if(err){
-      utils.log("BulletinBoards 모듈 안에 있는 DeleteComment에서 collection 조회 중 수행 중 에러 발생: "+ err.message) 
+      utils.log("BulletinBoards 모듈 안에 있는 DeleteComment에서 게시글 및 댓글 조회 중 수행 중 에러 발생: "+ err.message) 
       res.end();
       return;
     }              
@@ -827,8 +725,8 @@ if (database.db) {
 }; //DeleteComment 닫기  
 
 //게시글에 좋아요 1 증가
-var IncreLikeComment = function(req, res) {
-  console.log('BulletinBoards 모듈 안에 있는 IncreLikeComment 호출됨.');
+var FlipLikeComment = function(req, res) {
+  console.log('BulletinBoards 모듈 안에 있는 FlipLikeComment 호출됨.');
   
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
@@ -852,208 +750,76 @@ var IncreLikeComment = function(req, res) {
       
       database.UserModel.findOne({_id: new ObjectId(paramUserId)},function(err,user){
         if(err){
-          utils.log("BulletinBoards 모듈 안에 있는 IncreLikeComment에서 좋아요를 누른 사용자 조회 중 에러 발생: ",err.message)
+          utils.log("BulletinBoards 모듈 안에 있는 FlipLikeComment에서 좋아요를 누른 사용자 조회 중 에러 발생: ",err.message)
         }  
         if(!user){
-          utils.log("BulletinBoards 모듈 안에 있는 IncreLikeComment에서 사용자를 조회할 수 없음") 
+          utils.log("BulletinBoards 모듈 안에 있는 FlipLikeComment에서 사용자를 조회할 수 없음") 
           context.msg = "missing"
           res.json(context) 
           res.end() 
           return;
-        }
-        //이미 좋아요를 눌렀으나 좋아요 요청을 또 다시 해온 경우, 좋아요를 반영하지 않고 반환한다. 
-        database.db.collection(paramBoardId).findOne({
-            _id: new ObjectId(paramEntryId),  
-          },  
-          function(err,post){
-            if (err) {
-              utils.log("BulletinBoards 모듈 안에 있는 IncreLikeComment 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.message)
-              res.end(); 
-              return;
-            }   
-            if(!post){
-              utils.log("BulletinBoards 모듈 안에 있는 IncreLikeComment 안에서 게시글 조회 실패") 
-              context.msg = "empty"  
-              res.json(context) 
-              res.end() 
-              return;
-            }
-            
-            let commentindex = -1;
-            let locallikes = -1;    
-              
-            //댓글에 해당하는 인덱스 값(i) 찾기
-            for(let i=0;i<post.comments.length;i++){  
-              if(post.comments[i]._id.toString() == paramCommentId){
-                commentindex = i;
-                locallikes = post.comments[i].likes 
-                break;
-                }
-            }  
-            if(commentindex == -1){
-              utils.log("BulletinBoards 모듈 안에 있는 IncreLikeComment 안에서 요청 받은 댓글 조회 실패") 
-              context.msg = "empty" 
-              res.json(context) 
-              res.end() 
-              return
-            }
-            
-            //이미 좋아요를 눌렀던 상태일 경우 반환
-            for(let j=0;j<post.comments[commentindex].likeslist.length;j++){ 
-              if(post.comments[commentindex].likeslist[j].userid.toString() == paramUserId){
-                utils.log("BulletinBoards 모듈 안에 있는 IncreLikeComment에서 이미 좋아요를 누른 댓글에 다시 좋아요 요청함")
-                context.msg = "duplicate" 
-                context.likesinfo.push({likes: locallikes, likespressed: true}) 
-                context.likesinfo.splice(0,1)  
-                res.json(context)
-                res.end()   
-                return;
-              }
-            }
-
-            //좋아요를 증가시킬 댓글을 조회 
-            database.db.collection(paramBoardId).findOneAndUpdate({_id: new ObjectId(paramEntryId), 'comments._id': new ObjectId(paramCommentId)},  
-              { 
-                $inc: {'comments.$.likes': 1}, 
-                $push: { 
-                  'comments.$.likeslist': {
-                    userid: new ObjectId(paramUserId),  
-                    nickNm: user.nickNm 
-                }}  
-              },
-            function(err){
-              if (err) {
-                      utils.log("BulletinBoards 모듈 안에 있는 IncreLikeComment 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
-                      res.end(); 
-                      return;
-              }    
-              context.likesinfo.push({likes: locallikes+1, likespressed: true}) 
-              context.likesinfo.splice(0,1)  
-              context.msg = "success";
-              console.dir(context)
-              res.json(context)
-              res.end(); 
-              return 
-              })//findOneAndUpdate 닫기 
-          })//findOne 닫기
-      })//UserModel.findOne 닫기 
-  } else {  
-      utils.log('BulletinBoards 모듈 안에 있는 IncreLikeComment 수행 중 데이터베이스 연결 실패');
-      res.end(); 
-      return;
-    }     
-}; //IncreLikeComment 닫기 
-
-//댓글에 좋아요 1 감소
-var DecreLikeComment = function(req, res) {
-  console.log('BulletinBoards 모듈 안에 있는 DecreLikeComment 호출됨.');
-  
-  var paramBoardId = req.body.boardid||req.query.boardid;  
-  var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
-  var paramUserId = req.body.userid||"000000000000000000000000";
-  var paramCommentId = req.body.replyid||req.query.replyid;
-
-  var database = req.app.get('database');
-  
-  console.log('paramBoardId: ' + paramBoardId, 'paramEntryId: ' + paramEntryId, 
-    'paramUserId: ' + paramUserId, 'paramCommentId: ' + paramCommentId);
-
-  var context = {
-    likesinfo: [{ 
-      likes: 0, 
-      likespressed: true  
-    }], 
-    msg: " "}
-
-  // 데이터베이스 객체가 초기화된 경우
-  if (database.db) {
-      
-      database.UserModel.findOne({_id: new ObjectId(paramUserId)},function(err,user){
-        if(err){
-          utils.log("BulletinBoards 모듈 안에 있는 DecreLikeComment에서 좋아요를 취소한 사용자 조회 중 에러 발생: ",err.message)
         }  
-        if(!user){
-          utils.log("BulletinBoards 모듈 안에 있는 DecreLikeComment에서 사용자를 조회할 수 없음") 
-          context.msg = "missing"
-          res.json(context) 
-          res.end() 
-          return;
-        }
         
-        database.db.collection(paramBoardId).findOne({
-            _id: new ObjectId(paramEntryId),  
-          },  
-          function(err,post){
-            if (err) {
-              utils.log("BulletinBoards 모듈 안에 있는 DecreLikeComment 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.message)
-              res.end(); 
-              return;
-            }   
-            if(!post){
-              utils.log("BulletinBoards 모듈 안에 있는 DecreLikeComment 안에서 게시글 조회 실패") 
-              context.msg = "empty"  
-              res.json(context) 
-              res.end() 
-              return;
-            }
-            
-            let commentindex = -1;
-            let locallikes = -1;     
-            let isinlikeslist = false;
-              
-            //업데이트 할 댓글의 인덱스(i) 조회 및 업데이트 전 좋아요 갯수(locallikes) 설정
-            for(let i=0;i<post.comments.length;i++){  
-              if(post.comments[i]._id.toString() == paramCommentId){
-                commentindex = i;
-                locallikes = post.comments[i].likes 
-                break;
-                }
-            } 
-            if(commentindex == -1){
-              utils.log("BulletinBoards 모듈 안에 있는 DecreLikeComment 안에서 요청 받은 댓글 조회 실패") 
-              context.msg = "empty" 
-              res.json(context) 
-              res.end() 
-              return
-            }   
-
-            //좋아요를 누른 사람의 목록에 없으나 좋아요 취소 요청을 해온 경우, 좋아요 취소를 반영하지 않고 반환한다. 
-            for(let j=0;j<post.comments[commentindex].likeslist.length;j++){
-              if(post.comments[commentindex].likeslist[j].userid.toString() == paramUserId){
-                isinlikeslist = true 
-                break
+        database.db.collection(paramBoardId).aggregate
+          ([
+            {$match: { 
+                _id: new ObjectId(paramEntryId), 
+                'comments._id': new ObjectId(paramCommentId)
               }
-            }
+          },   
+          //Expand the courses array into a stream of documents
+          {$unwind: '$comments'}  
+          // Sort in ascending order  
+            ]).toArray(function(err,comment){
+          if (err) {
+            utils.log("BulletinBoards 모듈 안에 있는 FlipLikeComment 안에서 요청한 게시물/댓글 조회 중 에러 발생: "+ err.message)
+            res.end(); 
+            return;
+          }     
+          console.log("comment") 
+          console.dir(comment)
+          if(comment.length == 0){
+            utils.log("BulletinBoards 모듈 안에 있는 FlipLikeComment 안에서 게시글/댓글 조회 실패") 
+            context.msg = "empty"  
+            res.json(context) 
+            res.end() 
+            return;
+          }  
+          //이미 좋아요를 눌렀는 지의 여부 확인 
+          let locallikespressed = false 
+          let locallikes = comment[0].comments.likes
 
-            if(!isinlikeslist){
-              utils.log("BulletinBoards 모듈 안에 있는 DecreLikeComment안에서 likeslist 안에서 요청한 사용자를 찾을 수 없음") 
-              context.msg = "empty" 
-              res.json(context) 
-              res.end() 
-              return
+          //해당 사용자가 이미 해당 댓글에 좋아요를 눌렀는 지 확인
+          for(let i = 0; i<comment[0].comments.likeslist.length;i++){
+            if(comment[0].comments.likeslist[i].userid.toString() == paramUserId){
+              locallikespressed = true 
+              break;
             }
-            
+          }
+          
+          //이미 좋아요를 눌렀던 상태라면 좋아요를 감소한다.
+          if(locallikespressed){
             //좋아요를 감소시킬 댓글을 조회 및 업데이트 실행
             database.db.collection(paramBoardId).findOneAndUpdate(
               {
-                 _id: new ObjectId(paramEntryId), 
-                'comments._id': new ObjectId(paramCommentId),
-                'comments.likeslist.userid': new ObjectId(paramUserId),
-              },  
-              { 
-                $inc: {'comments.$.likes': -1}, 
-                
-                $pull: 
-                  {'comments.$.likeslist' :{'userid': new ObjectId(paramUserId)}}    
-                
-              },{upsert: true,new: true},
+                _id: new ObjectId(paramEntryId), 
+              'comments._id': new ObjectId(paramCommentId),
+              'comments.likeslist.userid': new ObjectId(paramUserId),
+            },  
+            { 
+              $inc: {'comments.$.likes': -1}, 
+              
+              $pull: 
+                {'comments.$.likeslist' :{'userid': new ObjectId(paramUserId)}}    
+              
+            },{upsert: true,new: true},
             function(err,data){
               if (err) {
                       utils.log("BulletinBoards 모듈 안에 있는 DecreLikeComment 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.message)
                       res.end(); 
                       return;
-              }      
-              context.likesinfo.push({likes: locallikes-1, likespressed: false}) 
+              }       
+              context.likesinfo.push({likes: comment[0].comments.likes-1, likespressed: false}) 
               context.likesinfo.splice(0,1)  
               context.msg = "success";
               console.dir(context)
@@ -1061,14 +827,40 @@ var DecreLikeComment = function(req, res) {
               res.end(); 
               return 
               })//findOneAndUpdate 닫기 
-          })//findOne 닫기
-      })//UserModel.findOne 닫기 
+            }// if(locallikespressed) 닫기 
+          else{
+            database.db.collection(paramBoardId).findOneAndUpdate({_id: new ObjectId(paramEntryId), 'comments._id': new ObjectId(paramCommentId)},  
+            { 
+              $inc: {'comments.$.likes': 1}, 
+              $push: { 
+                'comments.$.likeslist': {
+                  userid: new ObjectId(paramUserId),  
+                  nickNm: user.nickNm 
+              }}  
+            },
+          function(err){
+            if (err) {
+                    utils.log("BulletinBoards 모듈 안에 있는 FlipLikeComment 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
+                    res.end(); 
+                    return;
+            }    
+            context.likesinfo.push({likes: locallikes+1, likespressed: true}) 
+            context.likesinfo.splice(0,1)  
+            context.msg = "success";
+            console.dir(context)
+            res.json(context)
+            res.end(); 
+            return 
+            })//findOneAndUpdate 닫기 
+        }//else 닫기
+      })//aggregate 닫기 
+    })//findOne(user) 닫기
   } else {  
-      utils.log('BulletinBoards 모듈 안에 있는 IncreLikeComment 수행 중 데이터베이스 연결 실패');
+      utils.log('BulletinBoards 모듈 안에 있는 FlipLikeComment 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
     }     
-}; //DecreLikeComment 닫기 
+}; //FlipLikeComment 닫기 
 
 //////////////////한 게시판의 댓글(comments)과 관련된 함수들 끝 /////////////////////////////////
 
@@ -1077,12 +869,10 @@ module.exports.AddReport = AddReport;
 module.exports.ShowBulletinBoard = ShowBulletinBoard;  
 module.exports.AddEditEntry = AddEditEntry; 
 module.exports.DeleteEntry = DeleteEntry;
-module.exports.IncreLikeEntry = IncreLikeEntry; 
-module.exports.DecreLikeEntry = DecreLikeEntry;
+module.exports.FlipLikeEntry = FlipLikeEntry; 
 module.exports.ShowComments = ShowComments; 
 module.exports.AddComment = AddComment;
 module.exports.EditComment = EditComment;  
 module.exports.DeleteComment = DeleteComment; 
-module.exports.IncreLikeComment = IncreLikeComment;
-module.exports.DecreLikeComment = DecreLikeComment;
+module.exports.FlipLikeComment = FlipLikeComment;
 
