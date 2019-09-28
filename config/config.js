@@ -12,11 +12,13 @@ module.exports = {
         ,{file: './CourseEvaluation_schema', collection: 'courseevaluations', schemaName: 'CourseEvaluationSchema', modelName: 'CourseEvaluationModel'} 
         ,{file: './Professor_schema', collection: 'professors', schemaName: 'ProfessorSchema', modelName: 'ProfessorModel'}
         ,{file: './EventCalendar_schema', collection: 'eventcalendars', schemaName: 'EventCalendarSchema', modelName: 'EventCalendarModel'} 
+        ,{file: './EventCalendarRequest_schema', collection: 'eventcalendarrequests', schemaName: 'EventCalendarRequestSchema', modelName: 'EventCalendarRequestModel'}
         ,{file: './Notification_schema', collection: 'notifications', schemaName: 'NotificationSchema', modelName: 'NotificationModel'} 
         ,{file:'./BulletinBoardsList_schema', collection:'bulletinboardslists', schemaName:'BulletinBoardsListSchema', modelName:'BulletinBoardsListModel'} 
         ,{file:'./Board1_schema', collection:'board1', schemaName:'Board1Schema', modelName:'Board1Model'} 
         ,{file:'./Board2_schema', collection:'board2', schemaName:'Board2Schema', modelName:'Board2Model'}  
-               
+        ,{file:'./MainBoard_schema', collection:'mainboards', schemaName:'MainBoardSchema', modelName:'MainBoardModel'}       
+        
         ],
 	route_info: [
         //user 혹은 인증과 관련된 패스들
@@ -52,9 +54,17 @@ module.exports = {
         
         //Notification과 관련된 패스들 
         ,{file:'./Notification', path:'/process/Notification/CrawlData', method:'CrawlData', type:'post'}
+        ,{file:'./Notification', path:'/process/Notification/UpdateCrawlData', method:'UpdateCrawlData', type:'post'}
         ,{file:'./Notification', path:'/process/Notification/Translate_en', method:'Translate_en', type:'post'}
         ,{file:'./Notification', path:'/process/Notification/Translate_zh', method:'Translate_zh', type:'post'}
         ,{file:'./Notification', path:'/process/Notification/ShowNotification', method:'ShowNotification', type:'post'}
+        
+        //EventCalendar과 관련된 패스들
+        ,{file:'./EventCalendar', path:'/process/EventCalendar/ShowEventsList', method:'ShowEventsList', type:'post'}
+        ,{file:'./EventCalendar', path:'/process/EventCalendar/AddEvent', method:'AddEvent', type:'post'}
+        ,{file:'./EventCalendar', path:'/process/EventCalendar/EditEvent', method:'EditEvent', type:'post'}
+        ,{file:'./EventCalendar', path:'/process/EventCalendar/DeleteEvent', method:'DeleteEvent', type:'post'}
+        
 ],      
 };  
 
