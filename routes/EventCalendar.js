@@ -11,14 +11,15 @@ const moment = require('moment');
 const AddDays = function(StartDay,Days){
   const EndDay = moment(StartDay).add(Days,"days").format("YYYY-MM-DD")
   return EndDay
-} 
+}  
 
 const GetISODate = function(Data){
   const date = new Date(Data+"T00:00:00.000Z")
   return date
 }
 
-const type = ["Official"] //type 항목들 
+const type_official = "Official" //관리자가 작성할 때의 기본 타입. 바꾸기 용이하게 여기에 작성함. 
+const type_user = "User"  
 
 ///////////함수들  및 전역 변수 끝///////////
 
@@ -128,36 +129,104 @@ const AddEvent = function(req, res) {
   let context = {msg: " "}
 
   let paramUserId = req.body.userid
+  let paramDate = req.body.date|| "0000-0-0"
   let paramTitle = req.body.title||" " 
-  let paramContents = req.body.contents||" " 
+  let paramContents = req.body.contents||" "
+  let paramURL = req.body.url||" "  
+  let paramType = req.body.type||[]  
   
+  //일반 사용자가 일정을 등록할 때와 서버에서 Requests => Calendar 로 이동할 때를 구분 짓기 위함.
+  let paramFromServer = req.body.fromserver||false
+
   console.log('paramUserId: ', paramUserId)
-  console.log('paramTitle: ', paramTitle) 
-  console.log('paramContents: ', paramContents)
+  console.log('paramDate: ', paramDate) 
+  console.log('paramTitle: ',paramTitle)
+  console.log('paramContents: ', paramContents)  
+  console.log('paramURL: ', paramURL)  
+  console.log('paramType: ', paramType)
+  console.log('paramFromServer: ', paramFromServer)
 
   if(database.db){
 
-    database.EventCalendarModel.findOneAndUpdate({_id: new ObjectId(paramEventId)},{$set: {title: paramTitle, contents: paramContents}}, 
-    function(err,result){
-      if (err) {
-              utils.log("EventCalendar 모듈 안에 있는 EditEvent 안에서 수정할 게시물 조회 중 에러 발생: "+ err.message)
-              res.end(); 
-              return;
-      }    
-      if(result == null){
-        utils.log("EventCalendar 모듈 안에 있는 EditEvent 안에서 게시물을 조회 할 수 없음") 
-        context.msg = "empty" 
-        console.log(context.msg) 
+    database.UserModel.findOne({_id: new ObjectId(paramUserId)}, async function(err,user){
+      if(err){
+        utils.log("EventCalendar 모듈 안에 있는 AddEvent 안에서 사용자 조회 중 에러 발생: "+ err.message)
+        res.end(); 
+        return;
+      } 
+      if(user == undefined) { 
+        utils.log("EventCalendar 모듈 안에 있는 AddEvent 안에서 사용자 조회된 사용자가 없음")
+        context.msg = "missing" 
+        res.json(context)
+        res.end(); 
+        return;
+      }  
+
+      //입력한 사용자의 유형에 따라 type[0]에 들어갈 값을 다르게 한다.
+      let localtype = user.isadmin? type_official:type_user
+      paramType.push(localtype)
+      
+      //type_official 또는 type_user 가 없고 길이가 1 이상인 paramType의 경우, type_official 또는 type_user를 맨 앞으로 배치 
+      if(paramType.length>1){
+        let tmp = paramType[0] 
+        paramType[0] = paramType[paramType.length-1] 
+        paramType[paramType.length-1] = tmp
+      }       
+
+      //만약 관리자가 아닌 사용자가 요청하였고, 서버 내에서 요청한 경우가 아니라면 
+      //Request에 원소를 추가하는 함수를 수행. 
+      if(!(user.isadmin)&&!(paramFromServer)){ 
+        const url = serverURL + '/process/EventCalendarRequest/AddEvent'
+        await axios.post(url,{
+          userid: paramUserId, 
+          nickNm: user.nickNm, 
+          isadmin: user.isadmin,
+          date: GetISODate(paramDate),
+          title: paramTitle, 
+          contents: paramContents,
+          url: paramURL, 
+          type: paramType  
+        })
+        .then((response) => {    
+          context.msg = response.data.msg
+          res.json(context)  
+          res.end()
+          return;   
+        })
+        .catch(( err ) => {      
+            utils.log("EventCalendar/AddEvent => EventCalendarRequest/AddEvent 요청 중 에러 발생: " + err.message)  
+            res.end();
+            return;
+        });    
+        res.end() 
+        return; 
+      }
+      let post = new database.EventCalendarModel({
+        date: GetISODate(paramDate), 
+        title: paramTitle,
+        contents: paramContents,     
+        userid: new ObjectId(user._id),
+        nickNm: user.nickNm,  
+        adminwrote: user.isadmin, 
+        url: paramURL, 
+        type: paramType, 
+        created_at: moment().utc(Date.now(), "YYYY-MM-DD HH:mm:ss.fff")
+    });
+      post.saveEventCalendar(function(err) {
+        if (err) {
+            
+            utils.log("EventCalendar 모듈 안에 있는 AddEvent 안에서 Event 저장 중 에러 발생: "+ err.message)
+            res.end();
+            return;
+        }
+        console.log("Event 추가함.");   		    
+        context.msg = "success"
         res.json(context) 
         res.end() 
-        return 
-      }  
-      context.msg = "success";  
-      console.log(context.msg)
-      res.json(context)           
-      res.end() 
-      return;
-    }) 
+        return
+      }) 
+    })//UserModel.findOne 닫기
+
   } else {  
       utils.log('EventCalendar 모듈 안에 있는 AddEvent 수행 중 데이터베이스 연결 실패');
       res.end(); 

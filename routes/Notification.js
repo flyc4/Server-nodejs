@@ -241,7 +241,7 @@ var UpdateCrawlData = async function(req, res) {
                             database.NotificationModel.deleteOne({_id: new ObjectId(items._id)},
                             function(err){
                                 if(err){
-                                    utils.log("Notification 모듈 안 UpdateCrawl에서 게시글 삭제 중 에러 발생: ",err.message)
+                                    utils.log("Notification 모듈 안 UpdateCrawl에서 게시글 삭제 중 에러 발생: "+ err.message)
                                     res.end(); 
                                     return;
                                 }

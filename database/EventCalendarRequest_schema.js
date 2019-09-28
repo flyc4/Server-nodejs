@@ -20,6 +20,15 @@ SchemaObj.createSchema = function(mongoose) {
     });
     EventCalendarRequestSchema.index({date: -1},{autoIndex: false}, {unique: false})
     
+    EventCalendarRequestSchema.methods = {
+		saveEventCalendarRequest: function(callback) {		
+			var self = this;
+			this.validate(function(err) {
+				if (err) return callback(err);
+				self.save(callback);
+			});
+        } 
+    }
     console.log('EventCalendarRequestSchema 정의함.');
 	return EventCalendarRequestSchema;
 };

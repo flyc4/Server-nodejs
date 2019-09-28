@@ -21,7 +21,15 @@ SchemaObj.createSchema = function(mongoose) {
         created_at: {type: Date, 'default': utils.timestamp()}
     });
     EventCalendarSchema.index({date: -1},{autoIndex: false}, {unique: false})
-    
+    EventCalendarSchema.methods = {
+		saveEventCalendar: function(callback) {		
+			var self = this;
+			this.validate(function(err) {
+				if (err) return callback(err);
+				self.save(callback);
+			});
+        } 
+    }
     console.log('EventCalendarSchema 정의함.');
 	return EventCalendarSchema;
 };

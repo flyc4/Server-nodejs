@@ -65,6 +65,13 @@ module.exports = {
         ,{file:'./EventCalendar', path:'/process/EventCalendar/EditEvent', method:'EditEvent', type:'post'}
         ,{file:'./EventCalendar', path:'/process/EventCalendar/DeleteEvent', method:'DeleteEvent', type:'post'}
         
+        //EventCalendarRequest와 관련된 패스들
+        ,{file:'./EventCalendarRequest', path:'/process/EventCalendarRequest/ShowEventsList', method:'ShowEventsList', type:'post'}
+        ,{file:'./EventCalendarRequest', path:'/process/EventCalendarRequest/AddEvent', method:'AddEvent', type:'post'}
+        ,{file:'./EventCalendarRequest', path:'/process/EventCalendarRequest/EditEvent', method:'EditEvent', type:'post'}
+        ,{file:'./EventCalendarRequest', path:'/process/EventCalendarRequest/DeleteEvent', method:'DeleteEvent', type:'post'}
+        ,{file:'./EventCalendarRequest', path:'/process/EventCalendarRequest/CheckRequests', method:'CheckRequests', type:'post'}
+        ,{file:'./EventCalendarRequest', path:'/process/EventCalendarRequest/MoveToEventCalendar', method:'MoveToEventCalendar', type:'post'}
 ],      
 };  
 
