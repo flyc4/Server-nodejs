@@ -18,7 +18,8 @@ SchemaObj.createSchema = function(mongoose) {
             nickNm: {type: String, 'default': 'noName'},  
             //boardid: collection() 에 넣을 값. 
             boardid: {type: String, trim: true, default: 'board1'}, 
-            entryid: {type: mongoose.Schema.ObjectId, default: zeroId}, 
+            entryid: {type: mongoose.Schema.ObjectId, default: zeroId},  
+            parentcommentid: {type: mongoose.Schema.ObjectId, default: zeroId}, 
             commentid: {type: mongoose.Schema.ObjectId, default: zeroId},
             title: {type: String, trim:true, 'default': ''},
             contents: {type: String, trim:true, 'default': ''},

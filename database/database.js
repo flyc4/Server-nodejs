@@ -26,7 +26,7 @@ function connect(app, config) {
 	
 	// 데이터베이스 연결 : config의 설정 사용
 	mongoose.Promise = global.Promise;  // mongoose의 Promise 객체는 global의 Promise 객체 사용하도록 함
-	mongoose.connect(config.db_url, { useNewUrlParser: true }); 
+	mongoose.connect(config.db_url, { /*useNewUrlParser: true, */useMongoClient: true }); 
 	//mongoose.set('debug', true)
 	mongoose.set('useFindAndModify', false);
     mongoose.set('useCreateIndex', false);

@@ -58,21 +58,26 @@ var AddReport =function(req, res) {
   var paramUserId = req.body.userid || req.query.userid; 
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
-  var paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000000"; 
+  var paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000000";
+  var paramParentCommentId = req.body.parentcommentid||req.query.parentcommentid||"000000000000000000000000"; 
 
   let context = {msg: " "}
 
   var database = req.app.get('database');      
-  console.log('paramTitle: ' + paramTitle + ', paramContents: ' + paramContents + ', paramUserId: ' + 
-  paramUserId, ', paramBoardId: ' + paramBoardId, ', paramEntryId: ' + paramEntryId + 
-  ', paramCommentId: ' + paramCommentId);
+  console.log('paramTitle: ' + paramTitle)
+  console.log('paramContents: ' + paramContents)
+  console.log('paramUserId: ' + paramUserId)
+  console.log('paramBoardId: ' + paramBoardId)
+  console.log('paramEntryId: ' + paramEntryId) 
+  console.log('paramCommentId: ' + paramCommentId) 
+  console.log('paramParentCommentId: '+ paramParentCommentId)
 
   if (database.db){       
     
     //신고를 한 사용자 조회(populate 불가능해서 이렇게 구현함) 
     database.UserModel.findOne({_id: new ObjectId(paramUserId)}, function(err, user) {
       if (err) {
-        utils.log("BulletinBoards 모듈 안에 있는 AddReport 안에서 사용자 조회 중 에러발생: " + err.toString());
+        utils.log("BulletinBoards 모듈 안에 있는 AddReport 안에서 사용자 조회 중 에러발생: " + err.message);
         res.end();
         return;
       }  
@@ -88,7 +93,8 @@ var AddReport =function(req, res) {
             nickNm: user.nickNm,   
             boardid: paramBoardId, 
             entryid: paramEntryId, 
-            commentid: paramCommentId,
+            commentid: paramCommentId, 
+            parentcommentid: paramParentCommentId,
             title: paramTitle,
             contents: paramContents,
             created_at: utils.timestamp(), 
@@ -162,7 +168,7 @@ var ShowBulletinBoard = async function(req, res) {
       })
       .then((response) => {     
         context.postslist = response.data.postslist 
-        console.dir(context.postslist) 
+         
         res.json(context)  
         res.end()
         return;   
@@ -344,13 +350,20 @@ var DeleteEntry = function(req, res) {
 if (database.db) {
       
       //삭제할 게시물을 조회 
-      database.db.collection(paramBoardId).remove({_id: new ObjectId(paramEntryId)},{justone: true}, 
-      function(err){
+      database.db.collection(paramBoardId).findOneAndDelete({_id: new ObjectId(paramEntryId)}, 
+      function(err, result){
         if (err) {
                 utils.log("BulletinBoards 모듈 안에 있는 DeleteEntry 안에서 삭제할 게시물 조회 중 에러 발생: "+ err.message)
                 res.end(); 
                 return;
-          }     
+          }      
+        if(result.value == null){
+            utils.log("BulletinBoards 모듈 안에 있는 DeleteEntry 안에서 삭제할 게시물을 조회 할 수 없음") 
+            context.msg = "empty" 
+            res.json(context) 
+            res.end() 
+            return 
+        }
         console.log("게시물 삭제 완료"); 
         context.msg = "success";  
         res.json(context)           
@@ -430,7 +443,7 @@ var FlipLikeEntry = function(req, res) {
         database.db.collection(paramBoardId).findOne({_id: new ObjectId(paramEntryId), 'likeslist.userid': new ObjectId(paramUserId) },  
           function(err,alreadypressed){
             if (err) {
-              utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.toString())
+              utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.message)
               res.end(); 
               return;
             }     
@@ -445,11 +458,11 @@ var FlipLikeEntry = function(req, res) {
               },
             function(err,data){ 
               if (err) {
-                      utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.toString())
+                      utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.message)
                       res.end(); 
                       return;
               }       
-              context.likesinfo.push({likes: data.likes-1, likespressed: false}) 
+              context.likesinfo.push({likes: alreadypressed.likes-1, likespressed: false}) 
               context.likesinfo.splice(0,1)  
               context.msg = "success";
               res.json(context)
@@ -470,7 +483,7 @@ var FlipLikeEntry = function(req, res) {
               },
               function(err,data){
                 if (err) {
-                        utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.toString())
+                        utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
                         res.end(); 
                         return;
                 }     
@@ -549,7 +562,9 @@ var ShowComments = function(req, res) {
           } 
           
           for(var i = paramCommentStartIndex; i<=paramCommentEndIndex; i++){   
-            
+            if(i>=result.length){
+              break;
+            }
             var localismine = paramUserId == result[i].comments.userid; 
             var locallikespressed = false;  
             
@@ -776,8 +791,6 @@ var FlipLikeComment = function(req, res) {
             res.end(); 
             return;
           }     
-          console.log("comment") 
-          console.dir(comment)
           if(comment.length == 0){
             utils.log("BulletinBoards 모듈 안에 있는 FlipLikeComment 안에서 게시글/댓글 조회 실패") 
             context.msg = "empty"  

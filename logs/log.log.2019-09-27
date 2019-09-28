@@ -1,0 +1,22 @@
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-27 09:00:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-27 09:05:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-27 09:09:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-27 09:10:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-27 09:16:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-27 09:18:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-27 09:19:00"}
+{"message":"Notification 모듈 안에 있는 _translate_en에서 에러 발생: ","level":"info","timestamp":"2019-09-27 09:20:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-27 09:21:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-27 09:22:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-27 09:26:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-27 09:28:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-27 09:29:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-27 09:31:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ","level":"info","timestamp":"2019-09-27 09:33:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: errorcode: ","level":"info","timestamp":"2019-09-27 09:36:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: errorcode: ","level":"info","timestamp":"2019-09-27 09:38:00"}
+{"message":"Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: errorcode: 404, errormessage: Not Found","level":"info","timestamp":"2019-09-27 09:40:00"}
+{"message":"EventCalendar 모듈 안에 있는 ShowEventsList에서 collection 조회 중 수행 중 에러 발생$or/$and/$nor entries need to be full objects","level":"info","timestamp":"2019-09-27 22:00:56"}
+{"message":"EventCalendar 모듈 안에 있는 ShowEventsList에서 collection 조회 중 수행 중 에러 발생: $or/$and/$nor entries need to be full objects","level":"info","timestamp":"2019-09-27 22:07:43"}
+{"message":"EventCalendar 모듈 안에 있는 ShowEventsList에서 collection 조회 중 수행 중 에러 발생: Query filter must be an object, got an array ","level":"info","timestamp":"2019-09-27 22:08:40"}
+{"message":"EventCalendar 모듈 안에 있는 ShowEventsList에서 collection 조회 중 수행 중 에러 발생: Query filter must be an object, got an array ","level":"info","timestamp":"2019-09-27 22:08:50"}

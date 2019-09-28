@@ -11,53 +11,74 @@ const api = "AIzaSyATLbXuBnhHhb1Meyv2WFa6Lpw5FCupc8I";
 const translate = require('google-translate')(api); 
 
 _notificationcrawl = async () => {
-    let url = server_url + '/process/CrawlData'; 
+    let url = server_url + '/process/Notification/CrawlData'; 
         await axios.post(url)
             .then((response) => {     
                 
             })
-            .catch(( err ) => {      
-                utils.log("Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: ", err.response)  
+            .catch(( err ) => {       
+                utils.log("Notification 모듈 안에 있는 _notificationcrawl에서 클롤링 요청 중 에러 발생: errorcode: " + 
+                    err.response.status +  ", errormessage: " + err.response.statusText)  
+                return;
+            });    
+  }    
+
+  _crawlupdate = async () => {
+    let url = server_url + '/process/Notification/UpdateCrawlData'; 
+        await axios.post(url)
+            .then((response) => {     
+                
+            })
+            .catch(( err ) => {       
+                utils.log("Notification 모듈 안에 있는 _crawlupdate에서 클롤링 요청 중 에러 발생: errorcode: " + 
+                    err.response.status +  ", errormessage: " + err.response.statusText)  
                 return;
             });    
   }   
 
   _translate_en = async () => {
-    let url = server_url + '/process/Translate_en'; 
+    let url = server_url + '/process/Notification/Translate_en'; 
         await axios.post(url)
             .then((response) => {    
                 
             })
             .catch(( err ) => {      
-                utils.log("Notification 모듈 안에 있는 _translate_en에서 에러 발생: ", err.response)  
+                utils.log("Notification 모듈 안에 있는 _translate_en에서 에러 발생: errorcode: " + 
+                    err.response.status +  ", errormessage: " + err.response.statusText)  
                 return;
             });    
   }   
 
   _translate_zh = async () => {
-    let url = server_url + '/process/Translate_zh'; 
+    let url = server_url + '/process/Notification/Translate_zh'; 
         await axios.post(url)
             .then((response) => {    
                 
             })
-            .catch(( err ) => {      
-                utils.log("Notification 모듈 안에 있는 _translate_zn에서 에러 발생: ", err.toString())  
+            .catch((err) => {     
+              
+                utils.log("Notification 모듈 안에 있는 _translate_zn에서 에러 발생 errorcode: " + 
+                    err.response.status +  ", errormessage: " + err.response.statusText)  
                 return;
             });    
   }  
 
 //매일 오전 9시 마다 크롤링
-let updatecrawl = schedule.scheduleJob({hour: 9, minute: 0}, async function(){
+let newcrawl = schedule.scheduleJob({hour: 9, minute: 0}, async function(){
  await _notificationcrawl(); 
- 
-})  
+})   
+
+//매일 오전 9시 10분 마다 유효하지 않은 url을 지닌 공지사항 삭제 
+let updatetcrawl =  schedule.scheduleJob({hour: 9, minute: 10}, async function(){
+    await _crawlupdate();
+   })
+
 //매일 오전 9시 20분 마다 크롤링한 것들 영어 번역 
 let updatetranslate_en =  schedule.scheduleJob({hour: 9, minute: 20}, async function(){
     await _translate_en();
    })  
-
-//매일 오전 9시 40분 마다 크롤링한 것들 중국어 번역 
-let updatetranslate_zh =  schedule.scheduleJob({hour: 9, minute: 40}, async function(){
+//매일 오전 9시 30분 마다 크롤링한 것들 중국어 번역 
+let updatetranslate_zh =  schedule.scheduleJob({hour: 9, minute: 30}, async function(){
     await _translate_zh();
    }) 
 
@@ -68,144 +89,175 @@ var CrawlData = async function(req, res) {
     // 데이터베이스 객체가 초기화된 경우
     if (database.db) {  
         // 해당 일자에 크롤링을 했는 지 여부 확인 
-        database.NotificationModel.findOne({}, 
-                function(err,cursor){
-                 if(err) {
-                    utils.log("Notification 모듈 안에 있는 CrawlData에서 크롤링 여부를 결정하는 중 에러 발생: ", err.toString())
-                    res.end(); 
-                    return; 
-                }    
+        // 크롤링 시작
+        //파싱할 사이트의 url을 지정 
+        const getHtml = async () => {
+            try { 
+                return await axios.get("https://www.dic.hanyang.ac.kr/front/student/notice?page=1&per-page=6")
+            } 
+            catch(error) {
+                utils.log("Notification 모듈 안에 있는 CrawlData에서 크롤링 중 에러 발생: " + error.toString());
+            }
+        }
+        getHtml()
+            .then(html => {
+                let ulList = []; // 파싱한 데이터(제목, url, 날짜)를 담을 리스트 생성
+                const $ = cheerio.load(html.data);
+                
+                const $bodyList = $("ul.board-default-list").children("li"); // 각각의 제목, 날짜, url이 담겨 있는 DOM 요소(li)를 bodyList로 지정 
+        
+                $bodyList.each(function(i, elem) { // li 각각의 title, date, url을 ulList에 저장
+                    ulList[i] = {
+                        title: $(this).find('span.subject').text().trim().replace('수정됨', '').replace('새 글', '').replace(/\t/g,''),
+                        date: $(this).find('div.last span.datetime').text(),
+                        url: $(this).find('a').attr('href'),
+                        isnotice: $(this).find('a div.first span').text().replace(/\t/g,'').replace(/\n/g,'').replace('공지공지','').trim()
+                    }
+                })
+                
+                const data = ulList.filter(n => n.title);
+                
+                //클롤링한 데이터들을 비교하던 중, cursor[0].title == data[i].title이면 break 하려고 for 문 사용
+                for(let i = 0; i < data.length; i++) {
+                
+                // db에 저장하기 위해 파싱 결과를 각각의 변수에 저장
+                let title = data[i].title;
+                let url = "https://www.dic.hanyang.ac.kr" + data[i].url;
+                let date = moment(data[i].date).format('YYYY-MM-DD');
+                
+                let isnotice = (data[i].isnotice == "공지") ? 1 : 0; 
+                // 파싱을 통해 얻은 날짜의 포맷이 올바른지 여부 확인
+                var date_check = moment(date).isValid(); 
+                
+                // 포맷이 올바르지 않은 경우(N시간 전), 현재 날짜로 수정 
+                if(!date_check){ 
+                    date = moment().format('YYYY-MM-DD');  
+                }  
 
-                // 크롤링 시작
-                //파싱할 사이트의 url을 지정 
-                const getHtml = async () => {
-                    try { 
-                        return await axios.get("https://www.dic.hanyang.ac.kr/front/student/notice?page=1&per-page=6")
-                    } 
-                    catch(error) {
-                        utils.log("Notification 모듈 안에 있는 CrawlData에서 크롤링 중 에러 발생: " + error.toString());
+                const today = moment().format('YYYY-MM-DD') 
+                //오늘 새로 작성된 공지사항이 아니라면 삽입하지 않고 넘어간다.
+                if(today != date){
+                    continue;
+                }
+                //contents를 채우기 위한 크롤링 (택: crawler2)
+                const getHtml2 = async () => {
+                    try { // 파싱할 사이트의 url을 지정
+                        return await axios.get(url)
+                    } catch(error) {
+                        utils.log("Notification 모듈 안에 있는 CrawlData에서 contents 크롤링 중 에러 발생: ", error.toString());
                     }
                 }
-                getHtml()
-                    .then(html => {
-                        let ulList = []; // 파싱한 데이터(제목, url, 날짜)를 담을 리스트 생성
-                        const $ = cheerio.load(html.data);
-                        
-                        const $bodyList = $("ul.board-default-list").children("li"); // 각각의 제목, 날짜, url이 담겨 있는 DOM 요소(li)를 bodyList로 지정 
-                
-                        $bodyList.each(function(i, elem) { // li 각각의 title, date, url을 ulList에 저장
-                            ulList[i] = {
-                                title: $(this).find('span.subject').text().trim().replace('수정됨', '').replace('새 글', '').replace(/\t/g,''),
-                                date: $(this).find('div.last span.datetime').text(),
-                                url: $(this).find('a').attr('href'),
-                                isnotice: $(this).find('a div.first span').text().replace(/\t/g,'').replace(/\n/g,'').replace('공지공지','').trim()
-                            }
-                        })
-                        
-                        const data = ulList.filter(n => n.title);
-                        
-                        //클롤링한 데이터들을 비교하던 중, cursor[0].title == data[i].title이면 break 하려고 for 문 사용
-                        for(let i = 0; i < data.length; i++) {
-                        
-                        // db에 저장하기 위해 파싱 결과를 각각의 변수에 저장
-                        let title = data[i].title;
-                        let url = "https://www.dic.hanyang.ac.kr" + data[i].url;
-                        let date = moment(data[i].date).format('YYYY-MM-DD');
-                        
-                        let isnotice = (data[i].isnotice == "공지") ? 1 : 0; 
-                        // 파싱을 통해 얻은 날짜의 포맷이 올바른지 여부 확인
-                        var date_check = moment(date).isValid(); 
-                        
-                        // 포맷이 올바르지 않은 경우(N시간 전), 현재 날짜로 수정 
-                        if(!date_check){ 
-                            date = moment().format('YYYY-MM-DD');  
-                        } 
-                        //cursor(크롤링 반영 전 notifications)에 원소가 하나라도 있고 
-                        //notificatinos collection 안에 이미 크롤링해온 data가 있으면 크롤링 중지
-                        if(cursor != undefined && cursor.title == data[i].title){ 
-                            console.log("Notification 모듈 안에 있는 CrawlData에서 더 이상 클롤링할 목록이 없음")
-                            break;
-                        } 
-                        
-                        //contents를 채우기 위한 크롤링 (택: crawler2)
-                        const getHtml2 = async () => {
-                            try { // 파싱할 사이트의 url을 지정
-                                return await axios.get(url)
-                            } catch(error) {
-                                utils.log("Notification 모듈 안에 있는 CrawlData에서 contents 크롤링 중 에러 발생: ", error.toString());
-                            }
+            
+                getHtml2()
+                    .then(html2 => {
+                        let ulList2 = []; // 파싱한 데이터(글 내용, 이미지 링크)를 담을 리스트 생성
+                        let contents = "";
+                        const $ = cheerio.load(html2.data);
+                        const $bodyList = $("div.content");
+
+                        if(Boolean($bodyList.find('p'))) { // DOM 요소 p를 만날 때마다 그 안의 텍스트 저장 + 개행
+                            $bodyList.find('p').each(function(i, elem) {
+                                if(Boolean($(this).text())) {
+                                    contents = contents + $(this).text().trim() + "\n";
+                                    return contents;
+                                }  
+                            })
                         }
-                    
-                        getHtml2()
-                            .then(html2 => {
-                                let ulList2 = []; // 파싱한 데이터(글 내용, 이미지 링크)를 담을 리스트 생성
-                                let contents = "";
-                                const $ = cheerio.load(html2.data);
-                                const $bodyList = $("div.content");
 
-                                if(Boolean($bodyList.find('p'))) { // DOM 요소 p를 만날 때마다 그 안의 텍스트 저장 + 개행
-                                    $bodyList.find('p').each(function(i, elem) {
-                                        if(Boolean($(this).text())) {
-                                            contents = contents + $(this).text().trim() + "\n";
-                                            return contents;
-                                        }  
-                                    })
+                        else if(Boolean($bodyList.find('div'))) { // DOM 요소 div를 만날 때마다 그 안의 텍스트 저장 + 개행
+                            $bodyList.find('div').each(function(i, elem) {
+                                if(Boolean($(this).text())) {
+                                    contents = contents + $(this).text().trim() + "\n";
+                                    return contents;
                                 }
-
-                                else if(Boolean($bodyList.find('div'))) { // DOM 요소 div를 만날 때마다 그 안의 텍스트 저장 + 개행
-                                    $bodyList.find('div').each(function(i, elem) {
-                                        if(Boolean($(this).text())) {
-                                            contents = contents + $(this).text().trim() + "\n";
-                                            return contents;
-                                        }
-                                    })
-                                }   
-                                $bodyList.each(function(i, elem) {
-                                    ulList2[i] = {
-                                        contents: contents,
-                                        pictures: $(this).find('img').attr('src')                   
-                                    }
-                                    contents = ulList2[i].contents;
-                                    pictures = ulList2[i].pictures;             
-                                    
-                                    var elements = new database.NotificationModel({
-                                        userid: new ObjectId("5d5373177443381df03f3040"), // 관리자 계정의 ID 부여 
-                                        nickNm: "admin", //관리자 계정의 닉네임
-                                        profile: " ",// 게시글 옆 사진
-                                        likes:  0, 
-                                        likeslist: [], //게시물에 좋아요를 누른 사람들의 목록
-                                        created_at: moment().utc(Date.now(), "YYYY-MM-DD HH:mm:ss"), //bulletinboard의 created_at과 다르다
-                                        title: title,
-                                        contents: contents,
-                                        pictures: pictures,  //링크
-                                        url: url, 
-                                        date: date,
-                                        hits: 0, // 조회 수    
-                                        comments: [],
-                                        isnotice: isnotice
-                                    }); 
-                                    elements.saveNotification(function(err3){
-                                        if(err3){
-                                            utils.log("Notification 모듈 안에 있는 CrawlData에서 크롤링 후 저장 중 에러 발생: ",err3.toString())
-                                        }  
-                                    }) 
-                                    console.log("삽입 완료") 
-                                    res.end() 
-                                    return;  
-                                })// $bodyList.each 닫기 
-                            })// gethtml2 .then 닫기
-                        }//for 문 닫기  
-                        res.end(); 
-                        return;      
-                    })//.then 닫기   
-                }).sort({isnotice: -1, date: -1, created_at: 1}) //database.NotificationModel.find (첫 크롤링 시)    
+                            })
+                        }   
+                        $bodyList.each(function(i, elem) {
+                            ulList2[i] = {
+                                contents: contents,
+                                pictures: $(this).find('img').attr('src')                   
+                            }
+                            contents = ulList2[i].contents;
+                            pictures = ulList2[i].pictures;             
+                            
+                            var elements = new database.NotificationModel({
+                                userid: new ObjectId("5d5373177443381df03f3040"), // 관리자 계정의 ID 부여 
+                                nickNm: "admin", //관리자 계정의 닉네임
+                                profile: " ",// 게시글 옆 사진
+                                likes:  0, 
+                                likeslist: [], //게시물에 좋아요를 누른 사람들의 목록
+                                created_at: moment().utc(Date.now(), "YYYY-MM-DD HH:mm:ss"), //bulletinboard의 created_at과 다르다
+                                title: title,
+                                contents: contents,
+                                pictures: pictures,  //링크
+                                url: url, 
+                                date: date,
+                                hits: 0, // 조회 수    
+                                comments: [],
+                                isnotice: isnotice
+                            }); 
+                            elements.saveNotification(function(err3){
+                                if(err3){
+                                    utils.log("Notification 모듈 안에 있는 CrawlData에서 크롤링 후 저장 중 에러 발생: ",err3.messge)
+                                }  
+                            }) 
+                            console.log("삽입 완료") 
+                            res.end() 
+                            return;  
+                        })// $bodyList.each 닫기 
+                    })// gethtml2 .then 닫기
+                }//for 문 닫기  
+                res.end(); 
+                return;      
+            })//.then 닫기   
+                   
     } 
     else{
         utils.log("Notification 모듈 안에 있는 CrawlData 수행 중 데이터베이스 연결 실패")
         res.end(); 
         return;
     }                
-};//CrawlData 닫기
+};//CrawlData 닫기 
+
+//현재 공지사항 중 원본 목록에 존재하지 않은 것들을 삭제한다.
+var UpdateCrawlData = async function(req, res) {
+    var database = req.app.get('database');
+    console.log('Notification 모듈 안에 있는 UpdateCrawlData 호출됨.');
+
+    // 데이터베이스 객체가 초기화된 경우
+    if (database.db) {  
+        database.NotificationModel.find({},async function(err,results){
+            if(err){
+                utils.log("Notification 모듈 안에 있는 UpdateCrawlData에서 게시물 조회 중 에러 발생: ", err.message)
+                res.end(); 
+                return;
+            }
+            results.forEach(async (items) => {
+                await axios.post(items.url)
+                    .then((response) => {     
+                    })
+                    .catch(( err ) => {       
+                        if(err.response.status == '404'){
+                            database.NotificationModel.deleteOne({_id: new ObjectId(items._id)},
+                            function(err){
+                                if(err){
+                                    utils.log("Notification 모듈 안 UpdateCrawl에서 게시글 삭제 중 에러 발생: ",err.message)
+                                    res.end(); 
+                                    return;
+                                }
+                            })
+                            return;
+                        }    
+                    })   
+            })
+        })
+    } 
+    else{
+        utils.log("Notification 모듈 안에 있는 UpdateCrawlData 수행 중 데이터베이스 연결 실패")
+        res.end(); 
+        return;
+    }                
+};//UpdateCrawlData 닫기
 
 //크롤링한 게시판의 내용을 영어로 번역 (notifications collection의 title_en, contents_en에 저장)
 var Translate_en = async function(req, res) {
@@ -216,7 +268,7 @@ var Translate_en = async function(req, res) {
         database.NotificationModel.find({title_en: " "},
             function(err, cursor) {
                 if(err) {
-                    utils.log("Notification 모듈 안에 있는 Translate_en에서 번역할 게시물 조회 중 에러 발생: ", err.toString())
+                    utils.log("Notification 모듈 안에 있는 Translate_en에서 번역할 게시물 조회 중 에러 발생: ", err.message)
                     res.end(); 
                     return;    
                 }   
@@ -273,7 +325,7 @@ var Translate_en = async function(req, res) {
                         translate
                             .translate(items.title, "en", function(err, translated_title) {
                                 if(err){
-                                    utils.log("Notification 모듈 안에 있는 Translate_en 중 if(toTranslate) 내에서 title 번역 중 에러 발생: ", err.toString())
+                                    utils.log("Notification 모듈 안에 있는 Translate_en 중 if(toTranslate) 내에서 title 번역 중 에러 발생: ", err.message)
                                     res.end(); 
                                     return; 
                                 } 
@@ -285,7 +337,7 @@ var Translate_en = async function(req, res) {
                             translate
                                 .translate(localcontents, "en", function(err, translated_contents) {
                                     if(err){
-                                        utils.log("Notification 모듈 안에 있는 Translate_en 중 if(toTranslate) 내에서 contents 번역 중 에러 발생: ", err.toString())
+                                        utils.log("Notification 모듈 안에 있는 Translate_en 중 if(toTranslate) 내에서 contents 번역 중 에러 발생: ", err.message)
                                         res.end(); 
                                         return; 
                                     }
@@ -294,7 +346,7 @@ var Translate_en = async function(req, res) {
                                         {title_en: localtitle.translatedText, contents_en: localcontents.translatedText},
                                         function(err){
                                             if(err){
-                                                utils.log("Notification 모듈 안에 있는 Translate_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ", err.toString())
+                                                utils.log("Notification 모듈 안에 있는 Translate_en 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ", err.message)
                                                 res.end(); 
                                                 return; 
                                             }
@@ -306,7 +358,7 @@ var Translate_en = async function(req, res) {
                             {title_en: localtitle.translatedText},
                             function(err){
                                 if(err){
-                                    utils.log("Notification 모듈 안에 있는 Translate_en 중 title_en, contents_en 삽입 중 에러 발생: ", err.toString())
+                                    utils.log("Notification 모듈 안에 있는 Translate_en 중 title_en, contents_en 삽입 중 에러 발생: ", err.message)
                                     res.end(); 
                                     return; 
                                 }
@@ -332,7 +384,7 @@ var Translate_zh = async function(req, res) {
         database.NotificationModel.find({title_zh: " "},
             function(err, cursor) {
                 if(err) {
-                    utils.log("Notification 모듈 안에 있는 Translate_zh에서 번역할 게시물 조회 중 에러 발생: ", err.toString())
+                    utils.log("Notification 모듈 안에 있는 Translate_zh에서 번역할 게시물 조회 중 에러 발생: ", err.message)
                     res.end(); 
                     return;    
                 }   
@@ -390,7 +442,7 @@ var Translate_zh = async function(req, res) {
                         translate
                             .translate(items.title, "zh", function(err, translated_title) {
                                 if(err){
-                                    utils.log("Notification 모듈 안에 있는 Translate_zh_CN 중 if(toTranslate) 내에서 title 번역 중 에러 발생: ", err.toString())
+                                    utils.log("Notification 모듈 안에 있는 Translate_zh_CN 중 if(toTranslate) 내에서 title 번역 중 에러 발생: ", err.message)
                                     res.end(); 
                                     return; 
                                 } 
@@ -402,7 +454,7 @@ var Translate_zh = async function(req, res) {
                             translate
                                 .translate(localcontents, "zh", function(err, translated_contents) {
                                     if(err){
-                                        utils.log("Notification 모듈 안에 있는 Translate_zh 중 if(toTranslate) 내에서 contents 번역 중 에러 발생: ", err.toString())
+                                        utils.log("Notification 모듈 안에 있는 Translate_zh 중 if(toTranslate) 내에서 contents 번역 중 에러 발생: ", err.message)
                                         res.end(); 
                                         return; 
                                     }
@@ -411,7 +463,7 @@ var Translate_zh = async function(req, res) {
                                         {title_zh: localtitle.translatedText, contents_zh: localcontents.translatedText},
                                         function(err){
                                             if(err){
-                                                utils.log("Notification 모듈 안에 있는 Translate_zh 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ", err.toString())
+                                                utils.log("Notification 모듈 안에 있는 Translate_zh 중 if(toTranslate) 내에서 title_en, contents_en 삽입 중 에러 발생: ", err.message)
                                                 res.end(); 
                                                 return; 
                                             }
@@ -423,7 +475,7 @@ var Translate_zh = async function(req, res) {
                             {title_en: localtitle.translatedText},
                             function(err){
                                 if(err){
-                                    utils.log("Notification 모듈 안에 있는 Translate_zh 중 title_zh, contents_zh 삽입 중 에러 발생: ", err.toString())
+                                    utils.log("Notification 모듈 안에 있는 Translate_zh 중 title_zh, contents_zh 삽입 중 에러 발생: ", err.message)
                                     res.end(); 
                                     return; 
                                 }
@@ -518,7 +570,7 @@ var ShowNotification = async function(req, res) {
         date: -1   
     }).toArray(function(err,data){ 
         if(err){
-          utils.log("ShowNotification에서 collection 조회 중 수행 중 에러 발생"+ err.toString());
+          utils.log("ShowNotification에서 collection 조회 중 수행 중 에러 발생"+ err.message);
         }   
          //조회된 게시물이 없을 시
          if(data.length<1){   
@@ -601,9 +653,8 @@ var ShowNotification = async function(req, res) {
   }   
   };//ShowNotification 닫기   
 
-
 module.exports.CrawlData = CrawlData; 
 module.exports.Translate_en = Translate_en; 
 module.exports.Translate_zh = Translate_zh; 
 module.exports.ShowNotification = ShowNotification;
-
+module.exports.UpdateCrawlData = UpdateCrawlData; 
