@@ -4,7 +4,7 @@ const moment = require('moment');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken'); 
 const ObjectId = mongoose.Types.ObjectId;  
-const utils = require('../config/utils'); 
+var utils = require('../config/utils');
 require('dotenv').config() 
 const schedule = require('node-schedule');
 const api = "AIzaSyATLbXuBnhHhb1Meyv2WFa6Lpw5FCupc8I";
@@ -38,7 +38,7 @@ const connection = async function(){
 } 
 
 _notificationcrawl = async () => {
-    let url = process.env.lambda_url + '/process/Notification/CrawlData'; 
+    let url = "localhost:3000" + '/process/Notification/CrawlData'; 
         await axios.post(url)
             .then((response) => {     
                 
@@ -159,13 +159,14 @@ var CrawlData = async function(req, res) {
                 }  
 
                 const today = moment().format('YYYY-MM-DD') 
-                //오늘 새로 작성된 공지사항이 아니라면 삽입하지 않고 넘어간다.
-                
+
+                //오늘 새로 작성된 공지사항이 아니라면 삽입하지 않고 넘어간다
+                /*
                 if(today != date){
                     console.log("오늘 업로드 된 내용이 아니라서 크롤링 하지 않고 다음 항목으로 넘어감")
                     continue;
                 }  
-                
+                */
                 //contents를 채우기 위한 크롤링 (택: crawler2)
                 const getHtml2 = async () => {
                     try { // 파싱할 사이트의 url을 지정
@@ -207,13 +208,13 @@ var CrawlData = async function(req, res) {
                             contents = ulList2[i].contents;
                             pictures = ulList2[i].pictures;             
                             
-                            var elements = new database.NotificationModel({
+                            database.db.collection("notifications").insertOne({
                                 userid: new ObjectId("5d5373177443381df03f3040"), // 관리자 계정의 ID 부여 
                                 nickNm: "admin", //관리자 계정의 닉네임
                                 profile: " ",// 게시글 옆 사진
                                 likes:  0, 
                                 likeslist: [], //게시물에 좋아요를 누른 사람들의 목록
-                                created_at: moment().utc(Date.now(), "YYYY-MM-DD HH:mm:ss"), //bulletinboard의 created_at과 다르다
+                                created_at: utils.timestamp(),
                                 title: title,
                                 contents: contents,
                                 pictures: pictures,  //링크
@@ -222,8 +223,7 @@ var CrawlData = async function(req, res) {
                                 hits: 0, // 조회 수    
                                 comments: [],
                                 isnotice: isnotice
-                            }); 
-                            elements.saveNotification(function(err){
+                            }, function(err){
                                 if(err){
                                     console.log("Notification 모듈 안에 있는 CrawlData에서 크롤링 후 저장 중 에러 발생: " + err.stack)
                                 }  

@@ -34,27 +34,8 @@ const connection = async function(){
 }
 ///////////함수들 및 전역 변수 시작/////////// 
 
-const AddDays = function(StartDay,Days){
-  const EndDay = moment(StartDay).add(Days,"days").format("YYYY-MM-DD")
-  return EndDay
-}  
-
-const GetISODate = function(Data){
-  const date = new Date(Data+"T00:00:00.000Z")
-  return date
-} 
-
-const GetNormalDate = function(Data){
-  return moment(Data).format("YYYY-MM-DD")
-}
-
 const type_official = "Official" //관리자가 작성할 때의 기본 타입. 바꾸기 용이하게 여기에 작성함. 
 const type_user = "User"  
-
-const Year = new Date().getFullYear()
-const Month = new Date().getMonth() +1; 
-//startday를 못 받을 경우 시스템 월의 1일
-const defaultstartday = moment(Year + "-" + Month + "-" + "01").format("YYYY-MM-DD")
 ///////////함수들  및 전역 변수 끝///////////
 
 // paramStartDay ~ paramStartDay+paramDays-1 에 있는 이벤트들을 보여 줌. 
@@ -67,14 +48,14 @@ const ShowEventsList = async function(req, res) {
                                             adminwrote: false, ismine: false}]}]}   
 
   const paramUserId = req.body.userid;
-  const paramStartDay = req.body.startday||defaultstartday; 
+  const paramStartDay = req.body.startday||utils.defaultstartday; 
   let paramDays = req.body.days||"1" 
   paramDays = paramDays == 0 ? 1:paramDays
   const paramType = req.body.type||[];
   const paramFilter = req.body.filter||" "
-  const paramEndDay = AddDays(paramStartDay,paramDays-1)
-  const paramISOStartDay = GetISODate(paramStartDay)  
-  const paramISOEndDay = GetISODate(paramEndDay) 
+  const paramEndDay = utils.AddDays(paramStartDay,paramDays-1)
+  const paramISOStartDay = utils.GetISODate(paramStartDay)  
+  const paramISOEndDay = utils.GetISODate(paramEndDay) 
   
   console.log('paramUserId: ',paramUserId)
   console.log('paramStartDay: ',paramStartDay)
@@ -137,13 +118,13 @@ const ShowEventsList = async function(req, res) {
         let period = paramStartDay;
         while(period<=paramEndDay){
           context.EventEntries.push({Date: period,Events: [] })
-          period = AddDays(period,1)
+          period = utils.AddDays(period,1)
         } 
         results.forEach(function(items){
           let localismine = user._id.toString() == items.userid 
           //DB에 저장된 날짜 형식을 'YYYY-MM-DD' 로 변환
-          let localstartdate = GetNormalDate(items.startdate) 
-          let localenddate = GetNormalDate(items.enddate)
+          let localstartdate = utils.GetNormalDate(items.startdate) 
+          let localenddate = utils.GetNormalDate(items.enddate)
           
           //조회된 이벤트 각각을 for문 돌리면서 알맞은 eventlist에 삽입
           for(let currentdate = localstartdate;currentdate<=localenddate;){  
@@ -161,7 +142,7 @@ const ShowEventsList = async function(req, res) {
               }//if 닫기
             }// i for문 닫기 
             //context.EventEntries[i].splice(0,1)
-            currentdate = AddDays(currentdate,1)
+            currentdate = utils.AddDays(currentdate,1)
           }// currentdate for 문 닫기
         })//forEach 닫기   
       context.EventEntries.splice(0,1); 
@@ -245,8 +226,8 @@ const AddEvent = async function(req, res) {
           userid: paramUserId, 
           nickNm: user.nickNm, 
           isadmin: user.isadmin,
-          startdate: GetISODate(paramStartDate), 
-          enddate: GetISODate(paramEndDate),
+          startdate: utils.GetISODate(paramStartDate), 
+          enddate: utils.GetISODate(paramEndDate),
           title: paramTitle, 
           contents: paramContents,
           url: paramURL, 
@@ -265,10 +246,11 @@ const AddEvent = async function(req, res) {
         });    
         res.end() 
         return;  
-      } 
-      let post = new database.EventCalendarModel({
-        startdate: GetISODate(paramStartDate),
-        enddate: GetISODate(paramEndDate), 
+      }  
+      
+      database.collection("EventCalendar").insertOne({
+        startdate: utils.GetISODate(paramStartDate),
+        enddate: utils.GetISODate(paramEndDate), 
         title: paramTitle,
         contents: paramContents,     
         userid: new ObjectId(user._id),
@@ -276,15 +258,13 @@ const AddEvent = async function(req, res) {
         adminwrote: user.isadmin, 
         url: paramURL, 
         type: paramType, 
-        created_at: moment().utc(Date.now(), "YYYY-MM-DD HH:mm:ss.fff")
-    });
-      post.saveEventCalendar(function(err) {
+        created_at: utils.timestamp()
+    },function(err){
         if (err) {
             console.log("EventCalendar 모듈 안에 있는 AddEvent 안에서 Event 저장 중 에러 발생: "+ err.stack)
             res.end();
             return;
         }
-      
         console.log("Event 추가함.");   		    
         context.msg = "success"
         res.json(context) 

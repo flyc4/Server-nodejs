@@ -55,26 +55,7 @@ let updaterequests = schedule.scheduleJob({hour: 21, minute: 0}, async function(
 
 
 ///////////함수들 및 전역 변수 시작/////////// 
-
-const GetISODate = function(Data){
-  const date = new Date(Data+"T00:00:00.000Z")
-  return date
-} 
-
-const AddDays = function(StartDay,Days){
-  const EndDay = moment(StartDay).add(Days,"days").format("YYYY-MM-DD")
-  return EndDay 
-}  
-
-const Year = new Date().getFullYear()
-const Month = new Date().getMonth() +1; 
-//startday를 못 받을 경우 시스템 월의 1일
-const defaultstartday = moment(Year + "-" + Month + "-" + "01").format("YYYY-MM-DD")
-
-//eventcalendar으로 보낼 때 contents에 날짜를 포함할 거임. 그 날짜와 더불어 들어갈 내용을 정의
-const DateToContents = function(date){ 
-  return "Date: " + date;
-} 
+ 
 
 const toeventcalendar = 2;  // eventcalendar 로 이동하기 위해 필요한 요구 수 
 const displaydates = 2; // eventcalendar로 이동할 때 보여 지는 날짜의 수  
@@ -97,9 +78,9 @@ const ShowEventsList = async function(req, res) {
   const paramEndIndex = req.body.endindex||19;  
   const paramType = req.body.type||[];
   const paramFilter = req.body.filter||" "
-  const paramEndDay = AddDays(paramStartDay,paramDays)
-  const paramISOStartDay = GetISODate(paramStartDay)  
-  const paramISOEndDay = GetISODate(paramEndDay) 
+  const paramEndDay = utils.AddDays(paramStartDay,paramDays)
+  const paramISOStartDay = utils.GetISODate(paramStartDay)  
+  const paramISOEndDay = utils.GetISODate(paramEndDay) 
   
   console.log('paramUserId: ',paramUserId)
   console.log('paramStartDay: ',paramStartDay)
@@ -240,7 +221,6 @@ const AddEvent = async function(req, res) {
           res.json(context) 
           return;
         }  
-
         paramType.push(type_user)
         //type_official 또는 type_user 가 없고 길이가 1 이상인 paramType의 경우, type_official 또는 type_user를 맨 앞으로 배치 
         if(paramType.length>1){
@@ -248,8 +228,7 @@ const AddEvent = async function(req, res) {
           paramType[0] = paramType[paramType.length-1] 
           paramType[paramType.length-1] = tmp
         } 
-
-        let post = new database.EventCalendarRequestModel({
+        database.db.collection("eventcalendarrequests").insertOne({
           startdate: paramStartDate,
           enddate: paramEndDate, 
           title: paramTitle,     
@@ -258,9 +237,8 @@ const AddEvent = async function(req, res) {
           adminwrote: paramIsadmin, 
           url: paramURL, 
           type: paramType, 
-          created_at: moment().utc(Date.now(), "YYYY-MM-DD HH:mm:ss.fff")
-        });
-        post.saveEventCalendarRequest(function(err) {
+          created_at: utils.timestamp()
+        },function(err) {
           if (err) {
               console.log("EventCalendarRequest 모듈 안에 있는 AddEvent 안에서 Event 저장 중 에러 발생: "+ err.stack)
               res.end();
@@ -432,9 +410,9 @@ const CheckRequests = async function(req,res){
                     res.end() 
                     return
                   }   
-                  let localcontents = DateToContents(moment(dates[0]._id.startdate).format("YYYY-MM-DD")) + " ~ " + DateToContents(moment(dates[0]._id.enddate).format("YYYY-MM-DD"))
+                  let localcontents = utils.DateToContents(moment(dates[0]._id.startdate).format("YYYY-MM-DD")) + " ~ " + utils.DateToContents(moment(dates[0]._id.enddate).format("YYYY-MM-DD"))
                   for(let i=1;i<displaydates;i++){  
-                    localcontents = localcontents + "\n" + DateToContents(moment(dates[i]._id.startdate).format("YYYY-MM-DD")) + " ~ " + DateToContents(moment(dates[0]._id.enddate).format("YYYY-MM-DD"))   
+                    localcontents = localcontents + "\n" + utils.DateToContents(moment(dates[i]._id.startdate).format("YYYY-MM-DD")) + " ~ " + utils.DateToContents(moment(dates[0]._id.enddate).format("YYYY-MM-DD"))   
                   }  
                   //Request => EventCalendar로 저장
                   await database.db.collection("eventcalendars").insertOne({
@@ -446,7 +424,7 @@ const CheckRequests = async function(req,res){
                     adminwrote: user.isadmin, 
                     url: results[0].url, 
                     type: results[0].type, 
-                    created_at: moment().utc(Date.now(), "YYYY-MM-DD HH:mm:ss.fff")
+                    created_at: utils.timestamp()
                   }); 
                   console.log("EventCalendar에 추가 완료.");   		    
                   database.EventCalendarRequestModel.deleteMany({title: items._id.title},function(err){
