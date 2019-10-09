@@ -5,65 +5,91 @@
  * @author ChangHee
  */
 
+require('dotenv').config();
 var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken'); 
 var ObjectId = mongoose.Types.ObjectId;  
 var utils = require('../config/utils'); 
-var serverURL = "http://sususerver.ddns.net:3000";  
-const axios = require("axios");
+const axios = require("axios"); 
+const MongoClient = require("mongodb").MongoClient; 
+
+const client = new MongoClient(process.env.db_url, {
+  useNewUrlParser: true,
+});
+let database
+
+const createConn = async () => {
+  await client.connect();
+  database = client.db('db'); 
+  
+}; 
+
+const connection = async function(){  
+  if (!client.isConnected()) { 
+      // Cold start or connection timed out. Create new connection.
+      try {
+          await createConn(); 
+          console.log("connection completed")
+      } catch (e) { 
+          res.json({
+              error: e.message,
+          });
+          return;
+      }
+  }    
+}
 
 ///////////////////"bulletinboardslist" collection을 사용하는 함수 /////////////////////////////////////
 
 //게시판 목록 보여 주기 
-var ShowBulletinBoardsList = async function(req, res) {
-  console.log('BulletinBoards 모듈 안에 있는 ShowBulletinBoardsList 호출됨.');
+var ShowBulletinBoardsList = async function(req, res) {  
+  console.log('BulletinBoards 모듈 안에 있는 ShowBulletinBoardsList 호출됨.');  
+  
+  await connection()
   var context = {boardslist: [{ boardid: '', boardname: '', contents: ''}]}
-  var database = req.app.get('database');      
-
-  if (database.db){       
-
+  if (database){           
+    
     // 모든 게시판 조회 
-    database.db.collection("bulletinboardslist").find({}).toArray(function(err,data){ 
+    database.collection("bulletinboardslist").find({}).toArray(function(err,data){ 
       if(err){
-        utils.log("BulletinBoards 모듈 안에 있는 ShowBulletinBoardsList에서 collection 조회 중 수행 중 에러 발생"+ err.message)
+        console.log("BulletinBoards 모듈 안에 있는 ShowBulletinBoardsList에서 collection 조회 중 수행 중 에러 발생: "+ err.stack)
       }
       data.forEach(function(data2){ 
-        
         context.boardslist.push({boardid: data2.boardname, boardname: data2.boardname, contents: data2.contents}) 
       });   
-    context.boardslist.splice(0,1);  
+    context.boardslist.splice(0,1);   
     res.json(context);
     res.end();
     return;
     });
-  }//if(database.db) 닫기  
+  }//if(database) 닫기   
+  
   else {  
-    utils.log("BulletinBoards 모듈 안에 있는 ShowBulletinBoardsList 수행 중 데이터베이스 연결 실패")
+    console.log("BulletinBoards 모듈 안에 있는 ShowBulletinBoardsList 수행 중 데이터베이스 연결 실패")
     res.end(); 
     return;
   }   
 return;
 };//ShowBulletinBoardsList 닫기  
-
 ///////////////////"bulletinboardslist" collection을 사용하는 함수 끝 /////////////////////////////////////
 
 //////////////////신고와 관련된 함수 (댓글 도 신고 가능해서 여기에 위치 시킴)/////////////////////////////////
 
 //신고 접수한 내용을 데이터베이스에 저장
-var AddReport =function(req, res) {
-  console.log('ShowBulletinBoardsList 모듈 안에 있는 AddReport 호출됨.');
+let AddReport = async function(req, res) {
   
-  var paramTitle = req.body.title || req.query.title|| "no title";
-  var paramContents = req.body.contents || req.query.contents|| "no contents";
-  var paramUserId = req.body.userid || req.query.userid; 
-  var paramBoardId = req.body.boardid||req.query.boardid;  
-  var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
-  var paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000000";
-  var paramParentCommentId = req.body.parentcommentid||req.query.parentcommentid||"000000000000000000000000"; 
+  console.log('BulletinBoardsList 모듈 안에 있는 AddReport 호출됨.');
+  await connection()
+  let paramTitle = req.body.title || req.query.title|| "no title";
+  let paramContents = req.body.contents || req.query.contents|| "no contents";
+  let paramUserId = req.body.userid || req.query.userid; 
+  let paramBoardId = req.body.boardid||req.query.boardid;  
+  let paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
+  let paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000000";
+  let paramParentCommentId = req.body.parentcommentid||req.query.parentcommentid||"000000000000000000000000"; 
 
   let context = {msg: " "}
-
-  var database = req.app.get('database');      
+    
   console.log('paramTitle: ' + paramTitle)
   console.log('paramContents: ' + paramContents)
   console.log('paramUserId: ' + paramUserId)
@@ -72,23 +98,23 @@ var AddReport =function(req, res) {
   console.log('paramCommentId: ' + paramCommentId) 
   console.log('paramParentCommentId: '+ paramParentCommentId)
 
-  if (database.db){       
+  if (database){       
     
     //신고를 한 사용자 조회(populate 불가능해서 이렇게 구현함) 
-    database.UserModel.findOne({_id: new ObjectId(paramUserId)}, function(err, user) {
+    database.collection("users").findOne({_id: new ObjectId(paramUserId)}, function(err, user) {
       if (err) {
-        utils.log("BulletinBoards 모듈 안에 있는 AddReport 안에서 사용자 조회 중 에러발생: " + err.message);
+        console.log("BulletinBoards 모듈 안에 있는 AddReport 안에서 사용자 조회 중 에러발생: " + err.stack);
         res.end();
         return;
       }  
       if (user == undefined) {
-        utils.log('BulletinBoards 모듈 안에 있는 AddReport 안에서 사용자가 조회되지 않았습니다.'); 
+        console.log('BulletinBoards 모듈 안에 있는 AddReport 안에서 사용자가 조회되지 않았습니다.'); 
         res.end(); 
         return;
       } 
       else{   
         //사용자 조회 완료. 신고 내역 추가  
-          database.db.collection('reports').insertOne({
+          database.collection('reports').insertOne({
             userid: user._id, 
             nickNm: user.nickNm,   
             boardid: paramBoardId, 
@@ -104,10 +130,10 @@ var AddReport =function(req, res) {
             res.end() 
             return; 
       }//else{ (사용자 조회 성공 시의 else) 닫기 
-    })//UserModel.findOne 닫기
-  }//if(database.db) 닫기  
+    })//collection("users").findOne 닫기
+  }//if(database) 닫기  
   else {  
-    utils.log("BulletinBoards 모듈 안에 있는 AddReport 수행 중 데이터베이스 연결 실패")
+    console.log("BulletinBoards 모듈 안에 있는 AddReport 수행 중 데이터베이스 연결 실패")
     res.end(); 
     return;
   }   
@@ -120,7 +146,7 @@ var AddReport =function(req, res) {
 //한 게시판의 모든 게시물 보여주기  
 var ShowBulletinBoard = async function(req, res) {
   console.log('BulletinBoard 모듈 안에 있는 ShowBulletinBoard 호출됨.');
-  var database = req.app.get('database');       
+  await connection();       
   
   var paramBoardId = req.body.boardid||req.query.boardid || req.param.boardid;   
   var paramuserid= req.body.userid||req.query.userid || req.param.userid||"5d5373177443381df03f3040";
@@ -154,11 +180,11 @@ var ShowBulletinBoard = async function(req, res) {
       pictures: ' ', 
        }]};
   
-  if (database.db){         
+  if (database){         
 
     //BoardId == 'notifications' 일 경우 따로 처리 
     if(paramBoardId == 'notifications'){
-      const url = serverURL + '/process/Notification/ShowNotification'
+      const url = process.env.lambda_url + '/process/Notification/ShowNotification'
       await axios.post(url,{
         userid: paramuserid, 
         postStartIndex: parampostStartIndex, 
@@ -174,7 +200,7 @@ var ShowBulletinBoard = async function(req, res) {
         return;   
       })
       .catch(( err ) => {      
-          utils.log("BulletinBoards 모듈 안에 있는 ShowBulletinBoard에서 /process/Notification/ShowNotification 요청 중 에러 발생: ", err.response)  
+          console.log("BulletinBoards 모듈 안에 있는 ShowBulletinBoard에서 /process/Notification/ShowNotification 요청 중 에러 발생: ", err.stack)  
           res.end();
           return;
       });    
@@ -194,11 +220,11 @@ var ShowBulletinBoard = async function(req, res) {
         var query = {};
       } 
    
-    database.db.collection(paramBoardId).find(query).sort({
+    database.collection(paramBoardId).find(query).sort({
       created_at: -1  
   }).toArray(function(err,data){ 
       if(err){
-        utils.log("BulletinBoards 모듈 안에 있는 ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생"+ err.message);
+        console.log("BulletinBoards 모듈 안에 있는 ShowBulletinBoard에서 collection 조회 중 수행 중 에러 발생"+ err.stack);
       }   
 
        //조회된 게시물이 없을 시
@@ -238,10 +264,11 @@ var ShowBulletinBoard = async function(req, res) {
             profile: data[i].profile, 
             likes: data[i].likes,  
             likespressed: locallikespressed,
+            date: data[i].created_at,
             ismine: localismine, 
             title: data[i].title, 
             contents: data[i].contents, 
-            pictures: data[i].pictures,
+            pictures: data[i].pictures, 
           }); 
         }  
         
@@ -249,10 +276,10 @@ var ShowBulletinBoard = async function(req, res) {
     res.json(context);
     return;  
   })
-  }//if(database.db) 닫기  
+  }//if(database) 닫기  
 else {
     
-    utils.log("BulletinBoards 모듈 안에 있는 ShowBulletinBoard 수행 중 데이터베이스 연결 실패")
+    console.log("BulletinBoards 모듈 안에 있는 ShowBulletinBoard 수행 중 데이터베이스 연결 실패")
     res.end(); 
     return;
 }   
@@ -261,7 +288,8 @@ else {
 //param에 대해 camel 표기법 및  적용. ex. paramTitle 
 //인자로 받은 paramEntryId가 있다면 수정을, 없다면 추가를 각각 실행
 
-var AddEditEntry = function(req, res) {
+var AddEditEntry = async function(req, res) {
+  await connection()
   console.log('BulletinBoards 모듈 안에 있는 AddEditEntry 호출됨.');
   
   var paramTitle = req.body.title || req.query.title;
@@ -269,39 +297,39 @@ var AddEditEntry = function(req, res) {
   var paramUserId = req.body.userid || req.query.userid; 
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000";
-  var database = req.app.get('database'); 
+   
   var context = {msg: " "}
   
   console.log('paramTitle: ' + paramTitle + ', paramContents: ' + paramContents + ', paramBoardId: ' + 
   paramBoardId, 'paramEntryId: ' + paramEntryId);
 
 // 데이터베이스 객체가 초기화된 경우
-if (database.db) {
+if (database) {
 
       // 1. 아이디를 이용해 사용자 검색
-  database.UserModel.findOne({_id: new ObjectId(paramUserId)}, function(err, user) {
+  database.collection('users').findOne({_id: new ObjectId(paramUserId)}, function(err, user) {
     if (err) {
-      utils.log("BulletinBoards 모듈 안에 있는 AddEditEntry 안에서 사용 자 조회 중 에러발생: " + err.message);
+      console.log("BulletinBoards 모듈 안에 있는 AddEditEntry 안에서 사용 자 조회 중 에러발생: " + err.stack);
       res.end();
       return;
     } 
     if (user == undefined ) {
-      utils.log('AddEditEntry 안에서 사용자가 조회되지 않았습니다.'); 
+      console.log('AddEditEntry 안에서 사용자가 조회되지 않았습니다.'); 
       res.end(); 
       return;
     } 
     else{   
       //조회 완료한 Post의 제목 및 내용 덮어쓰기 
-      database.db.collection(paramBoardId).findOneAndUpdate({_id: new ObjectId(paramEntryId)},
+      database.collection(paramBoardId).findOneAndUpdate({_id: new ObjectId(paramEntryId)},
       {$set: {title: paramTitle, contents: paramContents}},  
        function(err,data){ 
         if(err){
-          utils.log("BulletinBoards 모듈 안에 있는 AddEditEntry에서 collection 조회 중 수행 중 에러 발생: "+ err.message)
+          console.log("BulletinBoards 모듈 안에 있는 AddEditEntry에서 collection 조회 중 수행 중 에러 발생: "+ err.stack)
         }  
          // 조회 된 data가 없다면 새로운 document 삽입
          if (data.value == null) {  
           console.log("새로운 게시물 삽입") 
-          database.db.collection(paramBoardId).insertOne({
+          database.collection(paramBoardId).insertOne({
             title: paramTitle,
             contents: paramContents,
             userid : user._id,
@@ -326,39 +354,38 @@ if (database.db) {
         return;   
       })//findOneAndUpdate 닫기 
     }
-  })//UserModel.findOne 닫기
+  })//collection("users").findOne 닫기
   } else {  
-      utils.log('BulletinBoards 모듈 안에 있는 AddEditEntry 수행 중 데이터베이스 연결 실패');
+      console.log('BulletinBoards 모듈 안에 있는 AddEditEntry 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
     }  
 }; //AddEditEntry 닫기
 
 //게시글 삭제
-var DeleteEntry = function(req, res) {
+var DeleteEntry = async function(req, res) {
   console.log('BulletinBoards 모듈 안에 있는 DeleteEntry 호출됨.');
+  await connection()
   
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000";
-
-  var database = req.app.get('database');
   let context = {msg: " "}
 
   console.log('paramBoardId: ' + paramBoardId, 'paramEntryId: ' + paramEntryId);
 
 // 데이터베이스 객체가 초기화된 경우
-if (database.db) {
+if (database) {
       
       //삭제할 게시물을 조회 
-      database.db.collection(paramBoardId).findOneAndDelete({_id: new ObjectId(paramEntryId)}, 
+      database.collection(paramBoardId).findOneAndDelete({_id: new ObjectId(paramEntryId)}, 
       function(err, result){
         if (err) {
-                utils.log("BulletinBoards 모듈 안에 있는 DeleteEntry 안에서 삭제할 게시물 조회 중 에러 발생: "+ err.message)
+                console.log("BulletinBoards 모듈 안에 있는 DeleteEntry 안에서 삭제할 게시물 조회 중 에러 발생: "+ err.stack)
                 res.end(); 
                 return;
           }      
         if(result.value == null){
-            utils.log("BulletinBoards 모듈 안에 있는 DeleteEntry 안에서 삭제할 게시물을 조회 할 수 없음") 
+            console.log("BulletinBoards 모듈 안에 있는 DeleteEntry 안에서 삭제할 게시물을 조회 할 수 없음") 
             context.msg = "empty" 
             res.json(context) 
             res.end() 
@@ -371,22 +398,21 @@ if (database.db) {
         return;
       })
   } else {  
-      utils.log('BulletinBoards 모듈 안에 있는 DeleteEntry 수행 중 데이터베이스 연결 실패');
+      console.log('BulletinBoards 모듈 안에 있는 DeleteEntry 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
     } 
 }; //DeleteEntry 닫기 
 
 //게시글 또는 댓글에 좋아요 1 증가 혹은 감소
-var FlipLikeEntry = function(req, res) {
-  console.log('BulletinBoards 모듈 안에 있는 FlipLikeEntry 호출됨.');
+var FlipLikeEntry = async function(req, res) {
+  console.log('BulletinBoards 모듈 안에 있는 FlipLikeEntry 호출됨.'); 
+  await connection()
   
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
   var paramUserId = req.body.userid||"000000000000000000000000";
   var paramCommentId = req.body.replyid||req.query.replyid||"000000000000000000000000";
-
-  var database = req.app.get('database');
   
   console.log('paramBoardId: ' + paramBoardId)
   console.log('paramEntryId: ' + paramEntryId) 
@@ -401,22 +427,23 @@ var FlipLikeEntry = function(req, res) {
     msg: " "}
 
   // 데이터베이스 객체가 초기화된 경우
-  if (database.db) {
+  if (database) {
       
-      database.UserModel.findOne({_id: new ObjectId(paramUserId)},async function(err,user){
+      database.collection("users").findOne({_id: new ObjectId(paramUserId)},async function(err,user){
         if(err){
-          utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry에서 좋아요를 누른 사용자 조회 중 에러 발생: ",err.message)
+          console.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry에서 좋아요를 누른 사용자 조회 중 에러 발생: " + err.stack)
         }  
         if(!user){
-          utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry에서 사용자를 조회할 수 없음") 
+          console.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry에서 사용자를 조회할 수 없음") 
           context.msg = "missing"
           res.json(context) 
           res.end() 
           return;
         } 
         // 댓글 좋아요로 넘어감
-        if(paramCommentId!=0){  
-          const url = serverURL + '/process/BulletinBoards/FlipLikeComment'
+        if(paramCommentId!=0){    
+          const url = process.env.lambda_url + '/process/BulletinBoards/FlipLikeComment'
+          console.log("url: ",url)
           await axios.post(url,{
             boardid: paramBoardId,   
             entryid: paramEntryId, 
@@ -431,7 +458,7 @@ var FlipLikeEntry = function(req, res) {
             return;   
           })
           .catch(( err ) => {      
-              utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry에서 FlipLikeComment 요청 중 에러 발생: ", err.response)  
+              console.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry에서 FlipLikeComment 요청 중 에러 발생: " + err.stack)  
               res.end();
               return;
           });    
@@ -440,10 +467,10 @@ var FlipLikeEntry = function(req, res) {
         } //if(paramCommentId!=0) 닫기   
 
         //이미 좋아요를 눌렀으나 좋아요 요청을 또 다시 해온 경우, 좋아요를 취소한다. 
-        database.db.collection(paramBoardId).findOne({_id: new ObjectId(paramEntryId), 'likeslist.userid': new ObjectId(paramUserId) },  
+        database.collection(paramBoardId).findOne({_id: new ObjectId(paramEntryId), 'likeslist.userid': new ObjectId(paramUserId) },  
           function(err,alreadypressed){
             if (err) {
-              utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.message)
+              console.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀는 지 조회하는 중 에러 발생: "+ err.stack)
               res.end(); 
               return;
             }     
@@ -451,14 +478,14 @@ var FlipLikeEntry = function(req, res) {
             {  
               console.log("FlipLikeEntry 안에서 요청한 사용자가 해당 게시물에 이미 좋아요를 눌렀음")
               //좋아요를 취소시킬 게시물을 조회 
-              database.db.collection(paramBoardId).updateOne({_id: new ObjectId(paramEntryId)},  
+              database.collection(paramBoardId).updateOne({_id: new ObjectId(paramEntryId)},  
               { 
                 $pull: {'likeslist': { 'userid': new ObjectId(paramUserId)}},
                 $inc: {likes: -1}, 
               },
-            function(err,data){ 
+            function(err){ 
               if (err) {
-                      utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.message)
+                      console.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.stack)
                       res.end(); 
                       return;
               }       
@@ -472,7 +499,7 @@ var FlipLikeEntry = function(req, res) {
             return;
             }  
             //좋아요를 증가시킬 게시물을 조회 
-            database.db.collection(paramBoardId).findOneAndUpdate({_id: new ObjectId(paramEntryId)},  
+            database.collection(paramBoardId).findOneAndUpdate({_id: new ObjectId(paramEntryId)},  
               { 
                 $inc: {likes: 1}, 
                 $push: { 
@@ -483,7 +510,7 @@ var FlipLikeEntry = function(req, res) {
               },
               function(err,data){
                 if (err) {
-                        utils.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
+                        console.log("BulletinBoards 모듈 안에 있는 FlipLikeEntry 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.stack)
                         res.end(); 
                         return;
                 }     
@@ -496,9 +523,9 @@ var FlipLikeEntry = function(req, res) {
                 return 
             })//findOneAndUpdate 닫기 
           })//findOne({_id: new ObjectId(paramEntryId), 'likeslist.userid': new ObjectId(paramUserId)} 닫기
-      })//UserModel.findOne 닫기 
+      })//collection("users").findOne 닫기 
   } else {  
-      utils.log('BulletinBoards 모듈 안에 있는 IncreLikeEntry 수행 중 데이터베이스 연결 실패');
+      console.log('BulletinBoards 모듈 안에 있는 IncreLikeEntry 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
     }     
@@ -509,10 +536,9 @@ var FlipLikeEntry = function(req, res) {
 //////////////////한 게시판의 댓글(comments)과 관련된 함수들 시작 /////////////////////////////////
 
 //해당 게시물의 모든 댓글 보여주기
-var ShowComments = function(req, res) {
-  console.log('BulletinBoards 모듈 안에 있는 ShowComments 호출됨.');
-  var database = req.app.get('database');      
-  
+var ShowComments = async function(req, res) {
+  console.log('BulletinBoards 모듈 안에 있는 ShowComments 호출됨.'); 
+  await connection()
   var paramBoardId = req.body.boardid||req.query.boardid || req.param.boardid;   
   var paramEntryId = req.body.entryid||req.query.entryid || req.param.entryid;
   var paramUserId = req.body.userid||req.query.userid || req.param.userid;  
@@ -530,8 +556,8 @@ var ShowComments = function(req, res) {
   var context = {commentslist: [{ boardid: " ", entryid: "", parentreplyid: "", replyid: "", 
     userid: "", username: " ", profile: '', likes: 0, date: ' ', ismine: false, contents: ' ', pictures: ' ' }]};
 
-  if (database.db){    
-    database.db.collection(paramBoardId).aggregate([
+  if (database){    
+    database.collection(paramBoardId).aggregate([
       { $match: { 
       _id: new ObjectId(paramEntryId)}},   
 
@@ -544,7 +570,7 @@ var ShowComments = function(req, res) {
       }},  
       ]).toArray(function(err,result){ 
           if(err){ 
-              utils.log('BulletinBoards 모듈 안에 있는 ShowComments 안에서 댓글 조회 중 에러 발생 : ' + err.message);
+              console.log('BulletinBoards 모듈 안에 있는 ShowComments 안에서 댓글 조회 중 에러 발생 : ' + err.stack);
               res.end(); 
               return;  
           }  
@@ -589,18 +615,19 @@ var ShowComments = function(req, res) {
           res.json(context); 
           return;
     })//aggregate 닫기
-  }//if(database.db) 닫기 
+  }//if(database) 닫기 
   else {
-  utils.log("BulletinBoards 모듈 안에 있는 ShowComment 수행 중 데이터베이스 연결 실패")
+  console.log("BulletinBoards 모듈 안에 있는 ShowComment 수행 중 데이터베이스 연결 실패")
   res.end(); 
   return;
   }  
 };//ShowComments 닫기
 
 //현재 게시판에 댓글을 다는 함수 
-var AddComment = function(req, res) {
+var AddComment = async function(req, res) {
   console.log('BulletinBoards 모듈 안에 있는 AddComment 호출됨.');
-  
+  await connection()
+
   var paramUserId = req.body.userid || req.query.userid; 
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
@@ -608,34 +635,32 @@ var AddComment = function(req, res) {
   var paramContents = req.body.contents || req.query.contents|| "no contents"; 
   var paramPictures = req.body.pictures || req.query.pictures || "no pictures";
   let context = {msg: " "}
-  var database = req.app.get('database');
+  
   
   console.log('paramContents: ' + paramContents + ', paramBoardId: ' + 
     paramBoardId, 'paramEntryId: ' + paramEntryId, 'paramParentReplyId: ' + paramParentReplyId);
 
 // 데이터베이스 객체가 초기화된 경우
-if (database.db) { 
-  
-      
+if (database) { 
       // 1. 아이디를 이용해 사용자 검색
-  database.UserModel.findOne({_id: new ObjectId(paramUserId)}, function(err, user) {
+  database.collection("users").findOne({_id: new ObjectId(paramUserId)}, function(err, user) {
     if (err) {
-      utils.log("BulletinBoards 모듈 안에 있는 AddComment 안에서 사용 자 조회 중 에러발생: " + err.message);
+      console.log("BulletinBoards 모듈 안에 있는 AddComment 안에서 사용 자 조회 중 에러발생: " + err.stack);
       res.end();
       return;
     } 
     if (user == undefined ) {
-      utils.log('BulletinBoards 모듈 안에 있는 AddComment 안에서 사용자가 조회되지 않았습니다.'); 
+      console.log('BulletinBoards 모듈 안에 있는 AddComment 안에서 사용자가 조회되지 않았습니다.'); 
       res.end(); 
       return;
     } 
     else{   
       //조회 완료한 사용자의 이름으로 댓글 추가 
       var objectid = new mongoose.Types.ObjectId();
-      database.db.collection(paramBoardId).updateOne(
+      database.collection(paramBoardId).updateOne(
         {_id: new ObjectId(paramEntryId)}, {"$push": { 
           comments: {
-            _id: objectid,
+           _id: objectid,
             userid: user._id,  
             nickNm: user.nickNm,
             boardid: paramBoardId,   
@@ -654,17 +679,18 @@ if (database.db) {
       console.dir(context)
       res.end()      
       return;  
-  })//UserModel.findOne 닫기
+  })//collection("users").findOne 닫기
   } else {  
-      utils.log('BulletinBoards 모듈 안에 있는 AddComment 수행 중 데이터베이스 연결 실패');
+      console.log('BulletinBoards 모듈 안에 있는 AddComment 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
     } 
 }; //AddComment 닫기
  
-var EditComment = function(req, res) {
+var EditComment = async function(req, res) {
   console.log('BulletinBoards 모듈 안에 있는 EditComment 호출됨.');
-  
+  await connection()
+
   var paramContents = req.body.contents || req.query.contents; 
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
@@ -672,84 +698,97 @@ var EditComment = function(req, res) {
   //나: commentid, 추: replyid
   var paramCommentId = req.body.replyid||req.query.replyid;
   let context = {msg: " "}
-  var database = req.app.get('database');
   
   console.log(' paramContents: ' + paramContents + ', paramBoardId: ' +  paramBoardId, 
     'paramEntryId: ' + paramEntryId, 'paramCommentId: ' + paramCommentId);
 
 // 데이터베이스 객체가 초기화된 경우
-if (database.db) {
+if (database) {
          
   //조회 완료한 댓글 내용 덮어쓰기 
-  database.db.collection(paramBoardId).updateOne({_id: new ObjectId(paramEntryId), 'comments._id': new ObjectId(paramCommentId)},
+  database.collection(paramBoardId).updateOne({_id: new ObjectId(paramEntryId), 'comments._id': new ObjectId(paramCommentId)},
   {$set: {'comments.$.contents': paramContents}},
-  function(err){ 
+  function(err,data){ 
     if(err){
-      utils.log("BulletinBoards 모듈 안에 있는 EditComment에서 collection 조회 중 수행 중 에러 발생: "+ err.message)
+      console.log("BulletinBoards 모듈 안에 있는 EditComment에서 collection 조회 중 수행 중 에러 발생: "+ err.stack)
     }      
+    if(data.matchedCount==0){
+      console.log("댓글 조회 불가")
+      context.msg = "empty" 
+      res.json(context) 
+      res.end() 
+      return
+    }
     console.log("댓글 수정 완료")
     context.msg = "success" 
     res.json(context) 
     res.end()        
     return;   
-  })//findOneAndUpdate 닫기 
+  })//updateOne 닫기 
 } else {  
-  utils.log('BulletinBoards 모듈 안에 있는 EditComment 수행 중 데이터베이스 연결 실패');
+  console.log('BulletinBoards 모듈 안에 있는 EditComment 수행 중 데이터베이스 연결 실패');
   res.end(); 
   return;
 } 
 }; //EditComment 닫기 
 
 //댓글 삭제
-var DeleteComment = function(req, res) {
+var DeleteComment = async function(req, res) { 
+  await connection();
   console.log('BulletinBoards 모듈 안에 있는 DeleteComment 호출됨.');
-  
-  var paramContents = req.body.contents || req.query.contents; 
+   
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
   
   //나: commentid, 추: replyid
   var paramCommentId = req.body.replyid||req.query.replyid;
 
-  var database = req.app.get('database');
+  
   let context = {msg: ""}
   console.log( 'paramBoardId: ' +  paramBoardId, 'paramEntryId: ' + paramEntryId, 'paramCommentId: ' + paramCommentId);
 
 // 데이터베이스 객체가 초기화된 경우
-if (database.db) {
+if (database) {
          
   //조회 완료한 Post의 제목 및 내용 덮어쓰기 
-  database.db.collection(paramBoardId).updateOne({_id: new ObjectId(paramEntryId)},
+  database.collection(paramBoardId).updateOne({_id: new ObjectId(paramEntryId), 'comments._id': new ObjectId(paramCommentId)},
   {$pull: { 'comments': { '_id': new ObjectId(paramCommentId)}}},
-  function(err){ 
+  function(err,data){ 
     if(err){
-      utils.log("BulletinBoards 모듈 안에 있는 DeleteComment에서 게시글 및 댓글 조회 중 수행 중 에러 발생: "+ err.message) 
+      console.log("BulletinBoards 모듈 안에 있는 DeleteComment에서 게시글 및 댓글 조회 중 수행 중 에러 발생: "+ err.stack) 
       res.end();
       return;
     }              
+    if(data.matchedCount==0){ 
+      console.log("댓글 조회 불가")
+      context.msg = "empty" 
+      res.json(context) 
+      res.end() 
+      return
+    }
     context.msg = "success"; 
+    console.log("댓글 삭제 완료")
     res.json(context) 
     res.end();
     return;   
   })//findOneAndUpdate 닫기 
 } else {  
-  utils.log('BulletinBoards 모듈 안에 있는 DeleteComment 수행 중 데이터베이스 연결 실패');
+  console.log('BulletinBoards 모듈 안에 있는 DeleteComment 수행 중 데이터베이스 연결 실패');
   res.end(); 
   return;
 } 
 }; //DeleteComment 닫기  
 
-//게시글에 좋아요 1 증가
-var FlipLikeComment = function(req, res) {
-  console.log('BulletinBoards 모듈 안에 있는 FlipLikeComment 호출됨.');
+//댓글에 좋아요 변경
+var FlipLikeComment = async function(req, res) {
+  console.log('BulletinBoards 모듈 안에 있는 FlipLikeComment 호출됨.'); 
+  await connection()
   
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
   var paramUserId = req.body.userid||"000000000000000000000000";
   var paramCommentId = req.body.replyid||req.query.replyid;
 
-  var database = req.app.get('database');
-  
   console.log('paramBoardId: ' + paramBoardId, 'paramEntryId: ' + paramEntryId, 
     'paramUserId: ' + paramUserId, 'paramCommentId: ' + paramCommentId);
 
@@ -760,22 +799,21 @@ var FlipLikeComment = function(req, res) {
     }], 
     msg: " "}
 
-  // 데이터베이스 객체가 초기화된 경우
-  if (database.db) {
+    if (database) {
       
-      database.UserModel.findOne({_id: new ObjectId(paramUserId)},function(err,user){
+      database.collection("users").findOne({_id: new ObjectId(paramUserId)},function(err,user){
         if(err){
-          utils.log("BulletinBoards 모듈 안에 있는 FlipLikeComment에서 좋아요를 누른 사용자 조회 중 에러 발생: ",err.message)
+          console.log("BulletinBoards 모듈 안에 있는 FlipLikeComment에서 좋아요를 누른 사용자 조회 중 에러 발생: " + err.stack)
         }  
         if(!user){
-          utils.log("BulletinBoards 모듈 안에 있는 FlipLikeComment에서 사용자를 조회할 수 없음") 
+          console.log("BulletinBoards 모듈 안에 있는 FlipLikeComment에서 사용자를 조회할 수 없음") 
           context.msg = "missing"
           res.json(context) 
           res.end() 
           return;
         }  
         
-        database.db.collection(paramBoardId).aggregate
+        database.collection(paramBoardId).aggregate
           ([
             {$match: { 
                 _id: new ObjectId(paramEntryId), 
@@ -787,33 +825,43 @@ var FlipLikeComment = function(req, res) {
           // Sort in ascending order  
             ]).toArray(function(err,comment){
           if (err) {
-            utils.log("BulletinBoards 모듈 안에 있는 FlipLikeComment 안에서 요청한 게시물/댓글 조회 중 에러 발생: "+ err.message)
+            console.log("BulletinBoards 모듈 안에 있는 FlipLikeComment 안에서 요청한 게시물/댓글 조회 중 에러 발생: "+ err.stack)
             res.end(); 
             return;
-          }     
-          if(comment.length == 0){
-            utils.log("BulletinBoards 모듈 안에 있는 FlipLikeComment 안에서 게시글/댓글 조회 실패") 
+          }   
+          let index = -1;
+          for(let i=0;i<comment.length;i++){
+            if(comment[i].comments._id.toString() == paramCommentId){          
+              index = i; 
+              break
+            }
+          } 
+          
+          if(comment.length == 0|| index == -1){
+            console.log("BulletinBoards 모듈 안에 있는 FlipLikeComment 안에서 게시물/댓글 조회 실패") 
             context.msg = "empty"  
             res.json(context) 
             res.end() 
             return;
           }  
+          console.log("index: ",index) 
+          console.log("comment[index]: ",comment[index])
           //이미 좋아요를 눌렀는 지의 여부 확인 
           let locallikespressed = false 
-          let locallikes = comment[0].comments.likes
+          let locallikes = comment[index].comments.likes
 
           //해당 사용자가 이미 해당 댓글에 좋아요를 눌렀는 지 확인
-          for(let i = 0; i<comment[0].comments.likeslist.length;i++){
-            if(comment[0].comments.likeslist[i].userid.toString() == paramUserId){
+          for(let i = 0; i<comment[index].comments.likeslist.length;i++){
+            if(comment[index].comments.likeslist[i].userid.toString() == paramUserId){
               locallikespressed = true 
               break;
             }
-          }
-          
+          } 
+
           //이미 좋아요를 눌렀던 상태라면 좋아요를 감소한다.
           if(locallikespressed){
             //좋아요를 감소시킬 댓글을 조회 및 업데이트 실행
-            database.db.collection(paramBoardId).findOneAndUpdate(
+            database.collection(paramBoardId).updateOne(
               {
                 _id: new ObjectId(paramEntryId), 
               'comments._id': new ObjectId(paramCommentId),
@@ -826,23 +874,23 @@ var FlipLikeComment = function(req, res) {
                 {'comments.$.likeslist' :{'userid': new ObjectId(paramUserId)}}    
               
             },{upsert: true,new: true},
-            function(err,data){
+            function(err){
               if (err) {
-                      utils.log("BulletinBoards 모듈 안에 있는 DecreLikeComment 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.message)
+                      console.log("BulletinBoards 모듈 안에 있는 DecreLikeComment 안에서 좋아요를 1 감소시킬 게시물 조회 중 에러 발생: "+ err.stack)
                       res.end(); 
                       return;
               }       
-              context.likesinfo.push({likes: comment[0].comments.likes-1, likespressed: false}) 
+              context.likesinfo.push({likes: comment[index].comments.likes-1, likespressed: false}) 
               context.likesinfo.splice(0,1)  
               context.msg = "success";
               console.dir(context)
               res.json(context)
               res.end(); 
               return 
-              })//findOneAndUpdate 닫기 
+              })//updateOne 닫기 
             }// if(locallikespressed) 닫기 
           else{
-            database.db.collection(paramBoardId).findOneAndUpdate({_id: new ObjectId(paramEntryId), 'comments._id': new ObjectId(paramCommentId)},  
+            database.collection(paramBoardId).updateOne({_id: new ObjectId(paramEntryId), 'comments._id': new ObjectId(paramCommentId)},  
             { 
               $inc: {'comments.$.likes': 1}, 
               $push: { 
@@ -853,7 +901,7 @@ var FlipLikeComment = function(req, res) {
             },
           function(err){
             if (err) {
-                    utils.log("BulletinBoards 모듈 안에 있는 FlipLikeComment 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.message)
+                    console.log("BulletinBoards 모듈 안에 있는 FlipLikeComment 안에서 좋아요를 1 증가시킬 게시물 조회 중 에러 발생: "+ err.stack)
                     res.end(); 
                     return;
             }    
@@ -864,16 +912,39 @@ var FlipLikeComment = function(req, res) {
             res.json(context)
             res.end(); 
             return 
-            })//findOneAndUpdate 닫기 
+            })//updateOne 닫기 
         }//else 닫기
       })//aggregate 닫기 
     })//findOne(user) 닫기
   } else {  
-      utils.log('BulletinBoards 모듈 안에 있는 FlipLikeComment 수행 중 데이터베이스 연결 실패');
+      console.log('BulletinBoards 모듈 안에 있는 FlipLikeComment 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
     }     
-}; //FlipLikeComment 닫기 
+}; //FlipLikeComment 닫기  
+
+//더미데이터 추가
+let AddDummy = async function(req, res) {
+  console.log('BulletinBoards 모듈 안에 있는 AddDummy 호출됨.'); 
+  await connection()  
+
+  database.collection('eventcalendarrequests').insertOne({
+
+    startdate: '2019-08-01', //행사 시작 날짜 
+    enddate: '2019-08-04', // 행사 종료 날짜 
+    title: "e1",     
+    userid: new ObjectId("5d5cac858f549f46e0b2a76f"), //작성한 사용자의 Id
+    nickNm: "guest2",  
+    adminwrote: false, //해당 이벤트가 관리자가 작성한 것인 지를 나타냄.
+    url: ' ', 
+    type: ["User"], // 행사의 type 들 ex. Official 
+    //created_at: "2019-08-21 14:11:57"
+  })  
+  res.json({"insert": "done"})
+  return; 
+
+}
+
 
 //////////////////한 게시판의 댓글(comments)과 관련된 함수들 끝 /////////////////////////////////
 
@@ -888,4 +959,4 @@ module.exports.AddComment = AddComment;
 module.exports.EditComment = EditComment;  
 module.exports.DeleteComment = DeleteComment; 
 module.exports.FlipLikeComment = FlipLikeComment;
-
+module.exports.AddDummy = AddDummy;

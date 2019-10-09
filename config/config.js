@@ -5,7 +5,7 @@
 
 module.exports = {
 	server_port: 3000,
-	db_url: 'mongodb://localhost:27017/local',
+	db_url: "mongodb+srv://test:test@cluster0-inakp.mongodb.net/db?retryWrites=true&w=majority",
 	db_schemas: [
         {file:'./user_schema', collection:'users', schemaName:'UserSchema', modelName:'UserModel'} 
         ,{file:'./Report_schema', collection:'reports', schemaName:'ReportSchema', modelName:'ReportModel'} 
@@ -17,8 +17,7 @@ module.exports = {
         ,{file:'./BulletinBoardsList_schema', collection:'bulletinboardslists', schemaName:'BulletinBoardsListSchema', modelName:'BulletinBoardsListModel'} 
         ,{file:'./Board1_schema', collection:'board1', schemaName:'Board1Schema', modelName:'Board1Model'} 
         ,{file:'./Board2_schema', collection:'board2', schemaName:'Board2Schema', modelName:'Board2Model'}  
-        ,{file:'./MainBoard_schema', collection:'mainboards', schemaName:'MainBoardSchema', modelName:'MainBoardModel'}       
-        
+        ,{file:'./MainBoard_schema', collection:'mainboards', schemaName:'MainBoardSchema', modelName:'MainBoardModel'}               
         ],
 	route_info: [
         //user 혹은 인증과 관련된 패스들
@@ -41,7 +40,11 @@ module.exports = {
         ,{file:'./BulletinBoards', path:'/process/BulletinBoards/EditComment', method:'EditComment', type:'post'}
         ,{file:'./BulletinBoards', path:'/process/BulletinBoards/DeleteComment', method:'DeleteComment', type:'post'} 
         ,{file:'./BulletinBoards', path:'/process/BulletinBoards/FlipLikeComment', method:'FlipLikeComment', type:'post'}
+        //Add Dummy 
+        ,{file:'./BulletinBoards', path:'/process/BulletinBoards/AddDummy', method:'AddDummy', type:'post'}
         
+
+
         //CourseEvaluation과 관련된 패스들 
         ,{file:'./CourseEvaluation', path:'/process/CourseEvaluation/ShowCoursesList', method:'ShowCoursesList', type:'post'}
         ,{file:'./CourseEvaluation', path:'/process/CourseEvaluation/ShowCommentsList', method:'ShowCommentsList', type:'post'}

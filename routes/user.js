@@ -123,7 +123,7 @@ var SendDM = function(req, res) {
 		 	     
         database.UserModel.findOne({_id: new ObjectId(paramSenderId)}, function(err1, sender) {
             if (err1) {
-                utils.log("SendDM에서 송신자 조회 중 에러발생: ",err1.toString())
+                console.log("SendDM에서 송신자 조회 중 에러발생: ",err1.toString())
                 context.msg = "missing" 
                 res.json(context)     
                 res.end();
@@ -143,14 +143,14 @@ var SendDM = function(req, res) {
                     },
                     function(err, receiver) {		
                     if (err) {
-                        utils.log("SendDM에서 수신자 조회 중 에러발생: ",err.toString())
+                        console.log("SendDM에서 수신자 조회 중 에러발생: ",err.toString())
                         context.msg = "missing" 
                         res.json(context)     
                         res.end();
                         return;
                     }
                     if(!receiver){
-                        utils.log("SendDM에서 수신자 조회 실패")
+                        console.log("SendDM에서 수신자 조회 실패")
                         context.msg = "missing" 
                         res.json(context)     
                         res.end();
@@ -165,7 +165,7 @@ var SendDM = function(req, res) {
         })// sender 조회 닫기   
 
     } else {
-        utils.log('sendDM 수행 중 데이터베이스 연결 실패');
+        console.log('sendDM 수행 중 데이터베이스 연결 실패');
         res.end(); 
         return;
         }   
@@ -191,7 +191,7 @@ var DeleteDM = function(req, res) {
             {$pull: { 'DM': {'_id': new ObjectId(paramDMId)}}},   
             function(err) {		
             if (err) {
-                utils.log("DeleteDM에서 DM 삭제 중 에러발생: ",err.toString())
+                console.log("DeleteDM에서 DM 삭제 중 에러발생: ",err.toString())
                 context.msg = "missing" 
                 res.json(context)     
                 res.end();
@@ -203,7 +203,7 @@ var DeleteDM = function(req, res) {
             return;  
         })//findOne 조회 닫기   
     } else {
-        utils.log('DeleteDM 수행 중 데이터베이스 연결 실패');
+        console.log('DeleteDM 수행 중 데이터베이스 연결 실패');
         res.end(); 
         return;
         }   
@@ -266,7 +266,7 @@ var ShowDMList = function(req, res) {
             ]).toArray(
             function(err,cursor) {		
             if (err) {
-                utils.log("ShowDMList에서 DM 조회 중 에러발생: ",err.toString())
+                console.log("ShowDMList에서 DM 조회 중 에러발생: ",err.toString())
                 context.msg = "missing" 
                 res.json(context)     
                 res.end();
@@ -310,7 +310,7 @@ var ShowDMList = function(req, res) {
             return;  
         })//find 닫기   
     } else {
-        utils.log('ShowDMList 수행 중 데이터베이스 연결 실패');
+        console.log('ShowDMList 수행 중 데이터베이스 연결 실패');
         res.end(); 
         return;
         }   
@@ -337,7 +337,7 @@ var ShowUserNameList = function(req, res) {
 
         database.UserModel.find(query, function(err, users) {
             if (err) {
-                utils.log("ShowUserNameLis에서 사용자 조회 중 에러발생: ",err.toString())
+                console.log("ShowUserNameLis에서 사용자 조회 중 에러발생: ",err.toString())
                 context.msg = "missing" 
                 res.json(context)     
                 res.end();
@@ -355,7 +355,7 @@ var ShowUserNameList = function(req, res) {
             } 
         })//find 닫기
     } else {
-        utils.log('ShowUserNameList 수행 중 데이터베이스 연결 실패');
+        console.log('ShowUserNameList 수행 중 데이터베이스 연결 실패');
         res.end(); 
         return;
         }   

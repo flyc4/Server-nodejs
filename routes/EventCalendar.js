@@ -2,10 +2,36 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken'); 
 const ObjectId = mongoose.Types.ObjectId;  
 const utils = require('../config/utils'); 
-const serverURL = "http://sususerver.ddns.net:3000";  
+require('dotenv').config()
 const axios = require("axios");  
 const moment = require('moment'); 
+const MongoClient = require("mongodb").MongoClient; 
 
+const client = new MongoClient(process.env.db_url, {
+  useNewUrlParser: true,
+});
+let database
+
+const createConn = async () => {
+  await client.connect();
+  database = client.db('db'); 
+  
+}; 
+
+const connection = async function(){  
+  if (!client.isConnected()) { 
+      // Cold start or connection timed out. Create new connection.
+      try {
+          await createConn(); 
+          console.log("connection completed")
+      } catch (e) { 
+          res.json({
+              error: e.message,
+          });
+          return;
+      }
+  }    
+}
 ///////////함수들 및 전역 변수 시작/////////// 
 
 const AddDays = function(StartDay,Days){
@@ -16,28 +42,37 @@ const AddDays = function(StartDay,Days){
 const GetISODate = function(Data){
   const date = new Date(Data+"T00:00:00.000Z")
   return date
+} 
+
+const GetNormalDate = function(Data){
+  return moment(Data).format("YYYY-MM-DD")
 }
 
 const type_official = "Official" //관리자가 작성할 때의 기본 타입. 바꾸기 용이하게 여기에 작성함. 
 const type_user = "User"  
 
+const Year = new Date().getFullYear()
+const Month = new Date().getMonth() +1; 
+//startday를 못 받을 경우 시스템 월의 1일
+const defaultstartday = moment(Year + "-" + Month + "-" + "01").format("YYYY-MM-DD")
 ///////////함수들  및 전역 변수 끝///////////
 
 // paramStartDay ~ paramStartDay+paramDays-1 에 있는 이벤트들을 보여 줌. 
-const ShowEventsList = function(req, res) {
-    
+const ShowEventsList = async function(req, res) {
+  await connection()
   console.log('EventCalendar 모듈 안에 있는 ShowEventsList 호출됨.');
-  const database = req.app.get('database');    
+      
   let context = {isadmin: false,
       EventEntries: [{Date: ' ', Events: [{ eventID: '',title : ' ', type: [], contents: ' ', 
                                             adminwrote: false, ismine: false}]}]}   
-    
+
   const paramUserId = req.body.userid;
-  const paramStartDay = req.body.startday||'0000-0-0'; 
-  const paramDays = req.body.days.toString()||'1'
+  const paramStartDay = req.body.startday||defaultstartday; 
+  let paramDays = req.body.days||"1" 
+  paramDays = paramDays == 0 ? 1:paramDays
   const paramType = req.body.type||[];
   const paramFilter = req.body.filter||" "
-  const paramEndDay = AddDays(paramStartDay,paramDays)
+  const paramEndDay = AddDays(paramStartDay,paramDays-1)
   const paramISOStartDay = GetISODate(paramStartDay)  
   const paramISOEndDay = GetISODate(paramEndDay) 
   
@@ -50,10 +85,11 @@ const ShowEventsList = function(req, res) {
   console.log('paramISOStartDay: ',paramISOStartDay)
   console.log('paramISOEndDay: ',paramISOEndDay)
   
-  if (database.db){       
+  if (database){        
+    const database = req.app.get('database');
     let query_type = {} 
     let query_filter = {}
-
+    
     if(paramType.length !=0){
       query_type = {type: {$all: paramType}} 
     }   
@@ -68,42 +104,68 @@ const ShowEventsList = function(req, res) {
     }  
     database.UserModel.findOne({_id: new ObjectId(paramUserId)},function(err,user){ 
       if(err){
-        utils.log("EventCalendar 모듈 안에 있는 ShowEventsLis에서 사용자 조회 중 에러 발생: "+ err.message) 
+        console.log("EventCalendar 모듈 안에 있는 ShowEventsLis에서 사용자 조회 중 에러 발생: "+ err.stack) 
         res.end() 
         return;
       }  
-      
-      context.isadmin = user.isadmin 
-
-      //밑에서 forEach 돌릴 때, 현재의 Date 값을 가리킴.
-      let currentISOdate = GetISODate('0000-01-01') 
-      let EventEntriesIndex = 0;
-      
-      database.EventCalendarModel.find({$and: [{date: {$gte: paramISOStartDay, $lt: paramISOEndDay}}, query_type,query_filter]},
+      if(!user){
+        console.log("EventCalendar/ShowEventsList에서 사용자 조회 불가")  
+        res.json({msg: "missing"}) 
+        return;
+      }
+      context.isadmin = user.isadmin  
+      database.EventCalendarModel.find(
+        { 
+          $or: [
+            {startdate: {$gte: paramISOStartDay, $lte: paramISOEndDay}}, 
+            {enddate: {$gte: paramISOStartDay, $lte: paramISOEndDay}},
+            //일정이 조회 보다 길 경우
+            {
+              $and: 
+                [
+                    {startdate: {$lte: paramISOStartDay}}, 
+                    {enddate: {$gte: paramISOEndDay}},
+                ]
+            }
+          ]//or 닫기
+        },query_filter,query_type,
       function(err,results){ 
         if(err){
-          utils.log("EventCalendar 모듈 안에 있는 ShowEventsList에서 collection 조회 중 에러 발생: "+ err.message)
-        }
-        results.forEach(function(items){ 
+          console.log("EventCalendar 모듈 안에 있는 ShowEventsList에서 collection 조회 중 에러 발생: "+ err.stack)
+        }  
 
-          let localismine = user._id.toString() == items.userid
-          //날짜가 바뀔 때 EventEntries, Events에서 push
-          if(!(items.date.toString() == currentISOdate.toString())){  
-              currentISOdate = items.date 
-              let inputdate = moment(currentISOdate).format("YYYY-MM-DD") 
-              context.EventEntries.push({Date: inputdate, Events: [{ eventID: items._id,title : items.title, 
-                                  type: items.type, contents: items.contents, adminwrote: items.adminwrote, ismine: localismine}]}) 
-              EventEntriesIndex++;
-          } 
-          //날짜가 안 바뀔 때 Events에서 push
-          else{ 
-          context.EventEntries[EventEntriesIndex].Events.push({eventID: items._id, title : items.title, 
-                                                                type: items.type, contents: items.contents,
-                                                                adminwrote: items.adminwrote, ismine: localismine})  
-          }
+        let period = paramStartDay;
+        while(period<=paramEndDay){
+          context.EventEntries.push({Date: period,Events: [] })
+          period = AddDays(period,1)
+        } 
+        results.forEach(function(items){
+          let localismine = user._id.toString() == items.userid 
+          //DB에 저장된 날짜 형식을 'YYYY-MM-DD' 로 변환
+          let localstartdate = GetNormalDate(items.startdate) 
+          let localenddate = GetNormalDate(items.enddate)
+          
+          //조회된 이벤트 각각을 for문 돌리면서 알맞은 eventlist에 삽입
+          for(let currentdate = localstartdate;currentdate<=localenddate;){  
+            for(let i=0;i<context.EventEntries.length;i++){
+              if(currentdate==context.EventEntries[i].Date){
+                
+                context.EventEntries[i].Events.push({
+                  eventID: items._id, 
+                  title : items.title, 
+                  type: items.type, 
+                  contents: items.contents,
+                  adminwrote: items.adminwrote, 
+                  ismine: localismine 
+                })//push 닫기
+              }//if 닫기
+            }// i for문 닫기 
+            //context.EventEntries[i].splice(0,1)
+            currentdate = AddDays(currentdate,1)
+          }// currentdate for 문 닫기
         })//forEach 닫기   
       context.EventEntries.splice(0,1); 
-      console.dir(context)
+      
       //Event 별로 잘 들어왔나 테스트 
       context.EventEntries.forEach((items)=> 
         console.dir(items.Events)
@@ -111,25 +173,26 @@ const ShowEventsList = function(req, res) {
       res.json(context);
       res.end();
       return;
-      }).sort({date: 1}); 
+      })
   })//UserModel.findOne 닫기
   }//if(database.db) 닫기  
   else {  
-    utils.log("EventCalendar 모듈 안에 있는 ShowEventsList 수행 중 데이터베이스 연결 실패")
+    console.log("EventCalendar 모듈 안에 있는 ShowEventsList 수행 중 데이터베이스 연결 실패")
     res.end(); 
     return;
   }      
   };//ShowEventsList 닫기   
 
 //EventCalendar에 이벤트 추가 
-const AddEvent = function(req, res) {
-  
+const AddEvent = async function(req, res) { 
+
+  await connection()
   console.log('EventCalendar 모듈 안에 있는 AddEvent 호출됨.');  
-  const database = req.app.get('database');
   let context = {msg: " "}
 
   let paramUserId = req.body.userid
-  let paramDate = req.body.date|| "0000-0-0"
+  let paramStartDate = req.body.startdate|| "0000-0-0"
+  let paramEndDate = req.body.enddate|| "0000-0-0"
   let paramTitle = req.body.title||" " 
   let paramContents = req.body.contents||" "
   let paramURL = req.body.url||" "  
@@ -139,23 +202,24 @@ const AddEvent = function(req, res) {
   let paramFromServer = req.body.fromserver||false
 
   console.log('paramUserId: ', paramUserId)
-  console.log('paramDate: ', paramDate) 
+  console.log('paramStartDate: ', paramStartDate)
+  console.log('paramEndDate: ', paramEndDate) 
   console.log('paramTitle: ',paramTitle)
   console.log('paramContents: ', paramContents)  
   console.log('paramURL: ', paramURL)  
   console.log('paramType: ', paramType)
   console.log('paramFromServer: ', paramFromServer)
 
-  if(database.db){
-
+  if(database){
+    const database = req.app.get('database');
     database.UserModel.findOne({_id: new ObjectId(paramUserId)}, async function(err,user){
       if(err){
-        utils.log("EventCalendar 모듈 안에 있는 AddEvent 안에서 사용자 조회 중 에러 발생: "+ err.message)
+        console.log("EventCalendar 모듈 안에 있는 AddEvent 안에서 사용자 조회 중 에러 발생: "+ err.stack)
         res.end(); 
         return;
       } 
       if(user == undefined) { 
-        utils.log("EventCalendar 모듈 안에 있는 AddEvent 안에서 사용자 조회된 사용자가 없음")
+        console.log("EventCalendar 모듈 안에 있는 AddEvent 안에서 사용자 조회된 사용자가 없음")
         context.msg = "missing" 
         res.json(context)
         res.end(); 
@@ -175,13 +239,14 @@ const AddEvent = function(req, res) {
 
       //만약 관리자가 아닌 사용자가 요청하였고, 서버 내에서 요청한 경우가 아니라면 
       //Request에 원소를 추가하는 함수를 수행. 
-      if(!(user.isadmin)&&!(paramFromServer)){ 
-        const url = serverURL + '/process/EventCalendarRequest/AddEvent'
+      if(!(user.isadmin)&&!(paramFromServer)){  
+        const url = process.env.lambda_url + '/process/EventCalendarRequest/AddEvent'
         await axios.post(url,{
           userid: paramUserId, 
           nickNm: user.nickNm, 
           isadmin: user.isadmin,
-          date: GetISODate(paramDate),
+          startdate: GetISODate(paramStartDate), 
+          enddate: GetISODate(paramEndDate),
           title: paramTitle, 
           contents: paramContents,
           url: paramURL, 
@@ -194,15 +259,16 @@ const AddEvent = function(req, res) {
           return;   
         })
         .catch(( err ) => {      
-            utils.log("EventCalendar/AddEvent => EventCalendarRequest/AddEvent 요청 중 에러 발생: " + err.message)  
+            console.log("EventCalendar/AddEvent => EventCalendarRequest/AddEvent 요청 중 에러 발생: " + err.stack)  
             res.end();
             return;
         });    
         res.end() 
-        return; 
-      }
+        return;  
+      } 
       let post = new database.EventCalendarModel({
-        date: GetISODate(paramDate), 
+        startdate: GetISODate(paramStartDate),
+        enddate: GetISODate(paramEndDate), 
         title: paramTitle,
         contents: paramContents,     
         userid: new ObjectId(user._id),
@@ -214,52 +280,75 @@ const AddEvent = function(req, res) {
     });
       post.saveEventCalendar(function(err) {
         if (err) {
-            
-            utils.log("EventCalendar 모듈 안에 있는 AddEvent 안에서 Event 저장 중 에러 발생: "+ err.message)
+            console.log("EventCalendar 모듈 안에 있는 AddEvent 안에서 Event 저장 중 에러 발생: "+ err.stack)
             res.end();
             return;
         }
+      
         console.log("Event 추가함.");   		    
         context.msg = "success"
         res.json(context) 
         res.end() 
         return
-      }) 
+      })
     })//UserModel.findOne 닫기
 
   } else {  
-      utils.log('EventCalendar 모듈 안에 있는 AddEvent 수행 중 데이터베이스 연결 실패');
+      console.log('EventCalendar 모듈 안에 있는 AddEvent 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
     } 
 }; //AddEvent 닫기
 
 //요청 받은 게시글의 title, contents 수정 
-const EditEvent = function(req, res) {
-  
+const EditEvent = async function(req, res) {
+  await connection()
   console.log('EventCalendar 모듈 안에 있는 EditEvent 호출됨.');  
-  const database = req.app.get('database');
+  
   let context = {msg: " "}
 
   let paramEventId = req.body.eventid
   let paramTitle = req.body.title||" " 
-  let paramContents = req.body.contents||" " 
+  let paramContents = req.body.contents||" "  
+  let paramStartDate = req.body.startdate||" " 
+  let paramEndDate = req.body.enddate||" " 
   
   console.log('paramEventId: ', paramEventId)
   console.log('paramTitle: ', paramTitle) 
   console.log('paramContents: ', paramContents)
+  console.log('paramStartDate: ', paramStartDate)
+  console.log('paramEndDate: ', paramEndDate)
 
-  if(database.db){
-
-    database.EventCalendarModel.findOneAndUpdate({_id: new ObjectId(paramEventId)},{$set: {title: paramTitle, contents: paramContents}}, 
+  let set_query; 
+  //paramStartDate 와 paramEndDate가 비어져 있는 지의 여부에 따라 $set에 들어갈 값을 달리 함.
+  if(paramStartDate == " "&&paramEndDate== " "){
+    set_query = {title: paramTitle, contents: paramContents}
+  } 
+  else{
+    if(paramStartDate == " "){
+      set_query = {enddate: paramEndDate, title: paramTitle, contents: paramContents}
+    } 
+    else{
+      if(paramEndDate == " "){
+        set_query = {startdate: paramStartDate,title: paramTitle, contents: paramContents}
+      } 
+      else{
+        set_query = {startdate: paramStartDate, enddate: paramEndDate, title: paramTitle, contents: paramContents}
+      }
+    }
+  } 
+  if(database){
+    const database = req.app.get('database');
+    database.EventCalendarModel.findOneAndUpdate({_id: new ObjectId(paramEventId)},
+      {$set: set_query}, 
     function(err,result){
       if (err) {
-              utils.log("EventCalendar 모듈 안에 있는 EditEvent 안에서 수정할 게시물 조회 중 에러 발생: "+ err.message)
+              console.log("EventCalendar 모듈 안에 있는 EditEvent 안에서 수정할 게시물 조회 중 에러 발생: "+ err.stack)
               res.end(); 
               return;
       }    
       if(result == null){
-        utils.log("EventCalendar 모듈 안에 있는 EditEvent 안에서 게시물을 조회 할 수 없음") 
+        console.log("EventCalendar 모듈 안에 있는 EditEvent 안에서 게시물을 조회 할 수 없음") 
         context.msg = "empty" 
         console.log(context.msg) 
         res.json(context) 
@@ -273,34 +362,34 @@ const EditEvent = function(req, res) {
       return;
     }) 
   } else {  
-      utils.log('EventCalendar 모듈 안에 있는 EditEvent 수행 중 데이터베이스 연결 실패');
+      console.log('EventCalendar 모듈 안에 있는 EditEvent 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
     } 
 }; //EditEvent 닫기
 
 //자신이 작성한 일정 혹은 관리자일 경우 선택한 일정 삭제 
-const DeleteEvent = function(req, res) {
-  
+const DeleteEvent = async function(req, res) {
+  await connection()
   console.log('EventCalendar 모듈 안에 있는 DeleteEvent 호출됨.');  
-  const database = req.app.get('database');
+  
   let context = {msg: " "}
 
   let paramEventId = req.body.eventid
 
   console.log('paramEventId: ', paramEventId)
 
-if(database.db){
-             
+if(database){
+  const database = req.app.get('database');         
     database.db.collection("eventcalendars").findOneAndDelete({_id: new ObjectId(paramEventId)}, 
     function(err,result){
       if (err) {
-              utils.log("EventCalendar 모듈 안에 있는 DeleteEvent 안에서 삭제할 게시물 조회 중 에러 발생: "+ err.message)
+              console.log("EventCalendar 모듈 안에 있는 DeleteEvent 안에서 삭제할 게시물 조회 중 에러 발생: "+ err.stack)
               res.end(); 
               return;
       }     
       if(result.value == null){
-        utils.log("EventCalendar 모듈 안에 있는 DeleteEvent 안에서 삭제할 게시물을 조회 할 수 없음") 
+        console.log("EventCalendar 모듈 안에 있는 DeleteEvent 안에서 삭제할 게시물을 조회 할 수 없음") 
         context.msg = "empty" 
         res.json(context) 
         res.end() 
@@ -312,7 +401,7 @@ if(database.db){
       return;
     })
   } else {  
-      utils.log('EventCalendar 모듈 안에 있는 DeleteEvent 수행 중 데이터베이스 연결 실패');
+      console.log('EventCalendar 모듈 안에 있는 DeleteEvent 수행 중 데이터베이스 연결 실패');
       res.end(); 
       return;
     } 

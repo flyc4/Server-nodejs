@@ -13,15 +13,15 @@
 // Express 기본 모듈 불러오기
 var express = require('express')
   , http = require('http')
-
+const serverless = require('serverless-http');
 
 // Express의 미들웨어 불러오기. (이거 없으면 let a = req.body.~id 이런 식으로 데이터 받기 불가능)
 var bodyParser = require('body-parser')
-
+const MongoClient = require("mongodb").MongoClient;
 
 //===== Passport 사용 =====// 
 var passport = require('passport'); 
-var flash = require('connect-flash');
+var flash = require('connect-flash'); 
 
 
 // 모듈로 분리한 설정 파일 불러오기
@@ -34,9 +34,9 @@ var database = require('./database/database');
 var route_loader = require('./routes/route_loader');
 
 // 익스프레스 객체 생성
-var app = express();
+var app = express(); 
 
-//===== 서버 변수 설정 및 static으로 public 폴더 설정  =====//
+//===== 서버 변수 설정 및 연결  =====//
 console.log('config.server_port : %d', config.server_port);
 app.set('port', process.env.PORT || 3000);
  
@@ -67,7 +67,34 @@ configPassport(app, passport);
 var userPassport = require('./routes/user_passport');
 userPassport(router, passport);     
 
-//===== 서버 시작 =====// 
+//===== 서버 시작 =====//  
+const client = new MongoClient(process.env.db_url, {
+	useNewUrlParser: true,
+  }); 
+
+  let databases
+
+  const createConn = async () => {
+	await client.connect();
+	databases = client.db('db');  
+  }; 
+  
+  const connection = async function(){  
+	if (!client.isConnected()) { 
+		// Cold start or connection timed out. Create new connection.
+		try {
+			await createConn(); 
+			console.log("connection completed")
+		} catch (e) { 
+			res.json({
+				error: e.message,
+			});
+			return;
+		}
+	}    
+  }
+
+
 
 //확인되지 않은 예외 처리 - 서버 프로세스 종료하지 않고 유지함
 process.on('uncaughtException', function (err) {
@@ -96,6 +123,7 @@ var server = http.createServer(app).listen(app.get('port'), function(){
 
 	// 데이터베이스 초기화
 	database.init(app, config); 
-
 });
+
+module.exports.handler = serverless(app)  
 
