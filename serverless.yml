@@ -63,4 +63,6 @@ functions:
     events:
         - http: ANY /
         - http: 'ANY {proxy+}' 
-  
+        - schedule:
+            rate: cron(30 22 * * ? *)
+ 

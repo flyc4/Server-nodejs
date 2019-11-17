@@ -48,15 +48,14 @@ const ShowEventsList = async function(req, res) {
                                             adminwrote: false, ismine: false}]}]}   
 
   const paramUserId = req.body.userid;
-  const paramStartDay = req.body.startday||utils.defaultstartday; 
+  const paramStartDay = req.body.startday||utils.defaultstartday;  
   let paramDays = req.body.days||"1" 
   paramDays = paramDays == 0 ? 1:paramDays
-  const paramType = req.body.type||[];
+const paramType = req.body.type||[];
   const paramFilter = req.body.filter||" "
   const paramEndDay = utils.AddDays(paramStartDay,paramDays-1)
   const paramISOStartDay = utils.GetISODate(paramStartDay)  
   const paramISOEndDay = utils.GetISODate(paramEndDay) 
-  
   console.log('paramUserId: ',paramUserId)
   console.log('paramStartDay: ',paramStartDay)
   console.log('paramDays: ',paramDays) 
@@ -88,7 +87,7 @@ const ShowEventsList = async function(req, res) {
         console.log("EventCalendar 모듈 안에 있는 ShowEventsLis에서 사용자 조회 중 에러 발생: "+ err.stack) 
         res.end() 
         return;
-      }  
+      }   
       if(!user){
         console.log("EventCalendar/ShowEventsList에서 사용자 조회 불가")  
         res.json({msg: "missing"}) 
@@ -248,7 +247,7 @@ const AddEvent = async function(req, res) {
         return;  
       }  
       
-      database.collection("EventCalendar").insertOne({
+      database.db.collection("eventcalendars").insertOne({
         startdate: utils.GetISODate(paramStartDate),
         enddate: utils.GetISODate(paramEndDate), 
         title: paramTitle,

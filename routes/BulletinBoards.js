@@ -928,18 +928,90 @@ let AddDummy = async function(req, res) {
   console.log('BulletinBoards 모듈 안에 있는 AddDummy 호출됨.'); 
   await connection()  
 
-  database.collection('eventcalendarrequests').insertOne({
-
-    startdate: '2019-08-01', //행사 시작 날짜 
-    enddate: '2019-08-04', // 행사 종료 날짜 
-    title: "e1",     
-    userid: new ObjectId("5d5cac858f549f46e0b2a76f"), //작성한 사용자의 Id
-    nickNm: "guest2",  
-    adminwrote: false, //해당 이벤트가 관리자가 작성한 것인 지를 나타냄.
-    url: ' ', 
-    type: ["User"], // 행사의 type 들 ex. Official 
-    //created_at: "2019-08-21 14:11:57"
-  })  
+  database.collection('courseevaluations').insertOne({
+    professorid : ObjectId("5d9ee593c727dd36a8345218"),
+    subject : "sub11",
+    professor : "pro1",
+    institution : "HYU",
+    overallrating : 0,
+    exam : " ",
+    assignment : " ",
+    difficulty : " ",
+    grade : " ",
+    comments : [ 
+        {
+            _id : ObjectId("5d8aa439298f96aee9332656"),
+            userid : ObjectId("5d5373177443381df03f3040"),
+            nickNm : "admin",
+            contents : "no comment",
+            exam : "2",
+            assignment : "2",
+            grade : "A+",
+            difficulty : "Easy",
+            rating : 0,
+            likes : 0,
+            likeslist : [],
+            created_at: utils.timestamp()
+        }, 
+        {
+            _id : ObjectId("5d8ac7e1393bb62978398897"),
+           userid : ObjectId("5d5374268c9da625c018277e"),
+            nickNm : "guest",
+            contents : "no comment",
+            exam: "1",
+            assignment : "1",
+            grade : "B+",
+            difficulty : "Hard",
+            rating : 2,
+            likes : 0,
+            likeslist : [],
+            created_at: utils.timestamp()
+        }, 
+        {
+            _id : ObjectId("5d8ac99dc6c3646222a5d88e"),
+            userid : ObjectId("5d5cac858f549f46e0b2a76f"),
+            nickNm : "guest2",
+            contents : "no comment",
+            exam : "4",
+            assignment : "3",
+            grade : "C0",
+            difficulty : "Very Hard",
+            rating : 4,
+            likes : 0,
+            likeslist : [],
+            created_at: utils.timestamp()
+        }, 
+        {
+            _id : ObjectId("5d8ac99dc6c3646222a5d88e"),
+            userid : ObjectId("5d5cac858f549f46e0b2a76f"),
+            nickNm : "dummy",
+            contents : "no comment",
+            exam : "3",
+            assignment : "4",
+            grade : "E",
+            difficulty : "Average",
+            rating : 3,
+            likes : 0,
+            likeslist : [],
+            created_at: utils.timestamp()
+        }, 
+        {
+            _id : ObjectId("5d8aca6fbe835f6ad03a9587"),
+            userid : ObjectId("5d7211661f2d6247d4fd2dbd"),
+            nickNm : "Cool",
+            contents : "no comment",
+            exam : "3",
+            assignment : "5",
+            grade: "F",
+            difficulty : "Very Hard",
+            rating : 1,
+            likes : 0,
+            likeslist : [],
+            created_at: utils.timestamp()
+        }
+    ], 
+    created_at: utils.timestamp()  
+})
   res.json({"insert": "done"})
   return; 
 

@@ -76,7 +76,8 @@ var ShowCoursesList = async function(req, res) {
 
         // 만족하는 문서 갯수 확인  
 
-        database.collection("courseevaluations").find(query).toArray(function(err, cursor){
+        database.collection("courseevaluations").find(query).sort({'created_at': -1})
+        .toArray(function(err, cursor){
             if(err){ 
                 console.log('CourseEvaluation 모듈 안에 있는 ShowCoursesList에서 강의평가 목록 조회 중 에러 발생 : ' + err.stack);
 				res.end();
@@ -176,7 +177,7 @@ var ShowCoursesList = async function(req, res) {
             context.courseslist.splice(0,1)  
             res.json(context); 
             return;
-        }).sort({'created_at': -1});//find 닫기 
+        });//find 닫기 
     } 
     else{
         console.log("CourseEvaluation 모듈 안에 있는 ShowCoursesList 수행 중 데이터베이스 연결 실패")

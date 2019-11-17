@@ -18,7 +18,7 @@ SchemaObj.createSchema = function(mongoose) {
         adminwrote: {type: Boolean, default: false}, //해당 이벤트가 관리자가 작성한 것인 지를 나타냄.
         url: {type: String, 'default': ' '}, 
         type: [], // 행사의 type 들 ex. Official 
-        created_at: {type: Date, 'default': utils.timestamp()}
+        created_at: {type: Date, default: Date.now()}
     });
     EventCalendarSchema.index({date: -1},{autoIndex: false}, {unique: false})
     EventCalendarSchema.methods = {

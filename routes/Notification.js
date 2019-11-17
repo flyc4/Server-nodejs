@@ -38,7 +38,7 @@ const connection = async function(){
 } 
 
 _notificationcrawl = async () => {
-    let url = "localhost:3000" + '/process/Notification/CrawlData'; 
+    let url = process.env.lambda_url + '/process/Notification/CrawlData'; 
         await axios.post(url)
             .then((response) => {     
                 
@@ -87,21 +87,21 @@ _notificationcrawl = async () => {
   } 
   
 //매일 오전 9시 마다 크롤링
-let newcrawl = schedule.scheduleJob({hour: 9, minute: 0}, async function(){
+let newcrawl = schedule.scheduleJob({hour: 22, minute: 31}, async function(){
  await _notificationcrawl(); 
 })   
 
 //매일 오전 9시 10분 마다 유효하지 않은 url을 지닌 공지사항 삭제 
-let updatetcrawl =  schedule.scheduleJob({hour: 9, minute: 10}, async function(){
+let updatetcrawl =  schedule.scheduleJob({hour: 16, minute: 50}, async function(){
     await _crawlupdate();
    })
 
 //매일 오전 9시 20분 마다 크롤링한 것들 영어 번역 
-let updatetranslate_en =  schedule.scheduleJob({hour: 9, minute: 20}, async function(){
+let updatetranslate_en =  schedule.scheduleJob({hour: 17, minute: 0}, async function(){
     await _translate_en();
    })  
 //매일 오전 9시 30분 마다 크롤링한 것들 중국어 번역 
-let updatetranslate_zh =  schedule.scheduleJob({hour: 9, minute: 30}, async function(){
+let updatetranslate_zh =  schedule.scheduleJob({hour: 17, minute: 10}, async function(){
     await _translate_zh();
    })  
 
@@ -161,12 +161,12 @@ var CrawlData = async function(req, res) {
                 const today = moment().format('YYYY-MM-DD') 
 
                 //오늘 새로 작성된 공지사항이 아니라면 삽입하지 않고 넘어간다
-                /*
+                
                 if(today != date){
                     console.log("오늘 업로드 된 내용이 아니라서 크롤링 하지 않고 다음 항목으로 넘어감")
                     continue;
                 }  
-                */
+                
                 //contents를 채우기 위한 크롤링 (택: crawler2)
                 const getHtml2 = async () => {
                     try { // 파싱할 사이트의 url을 지정
@@ -216,7 +216,11 @@ var CrawlData = async function(req, res) {
                                 likeslist: [], //게시물에 좋아요를 누른 사람들의 목록
                                 created_at: utils.timestamp(),
                                 title: title,
-                                contents: contents,
+                                contents: contents, 
+                                title_en: "", 
+                                contents_en: "", 
+                                title_zh: "", 
+                                contents_zh: "",
                                 pictures: pictures,  //링크
                                 url: url, 
                                 date: date,
@@ -300,7 +304,8 @@ var Translate_en = async function(req, res) {
                     console.log("Notification 모듈 안에 있는 Translate_en에서 번역할 게시물 조회 중 에러 발생: "+ err.stack)
                     res.end(); 
                     return;    
-                }   
+                }    
+                
                 cursor.map( (items) =>  {   
                     var startLanguage = "und"; //첫 글자 언어
                     var middleLanguage = "und"; // 중간 글자 언어  

@@ -37,7 +37,7 @@ SchemaObj.createSchema = function(mongoose) {
                 userid: {type: mongoose.Schema.ObjectId, ref: 'users'},  
                 nickNm: {type: String, 'default': 'noName'}
             }], //게시물에 좋아요를 누른 사람들의 목록  
-            created_at: {type: Date, 'default': Date.now},
+            created_at: {type: Date, default: Date.now},
         }]
 	});    
 	CourseEvaluationSchema.index({professor: 1 , subject: 1}, {unique: true})
