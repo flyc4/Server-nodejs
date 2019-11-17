@@ -184,7 +184,7 @@ var ShowBulletinBoard = async function(req, res) {
 
     //BoardId == 'notifications' 일 경우 따로 처리 
     if(paramBoardId == 'notifications'){
-      const url = process.env.lambda_url + '/process/Notification/ShowNotification'
+      const url = process.env.lambda_url + '/Notification/ShowNotification'
       await axios.post(url,{
         userid: paramuserid, 
         postStartIndex: parampostStartIndex, 
@@ -200,7 +200,7 @@ var ShowBulletinBoard = async function(req, res) {
         return;   
       })
       .catch(( err ) => {      
-          console.log("BulletinBoards 모듈 안에 있는 ShowBulletinBoard에서 /process/Notification/ShowNotification 요청 중 에러 발생: ", err.stack)  
+          console.log("BulletinBoards 모듈 안에 있는 ShowBulletinBoard에서 /Notification/ShowNotification 요청 중 에러 발생: ", err.stack)  
           res.end();
           return;
       });    
@@ -442,7 +442,7 @@ var FlipLikeEntry = async function(req, res) {
         } 
         // 댓글 좋아요로 넘어감
         if(paramCommentId!=0){    
-          const url = process.env.lambda_url + '/process/BulletinBoards/FlipLikeComment'
+          const url = process.env.lambda_url + '/BulletinBoards/FlipLikeComment'
           console.log("url: ",url)
           await axios.post(url,{
             boardid: paramBoardId,   
@@ -1016,7 +1016,6 @@ let AddDummy = async function(req, res) {
   return; 
 
 }
-
 
 //////////////////한 게시판의 댓글(comments)과 관련된 함수들 끝 /////////////////////////////////
 

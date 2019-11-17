@@ -220,7 +220,7 @@ const AddEvent = async function(req, res) {
       //만약 관리자가 아닌 사용자가 요청하였고, 서버 내에서 요청한 경우가 아니라면 
       //Request에 원소를 추가하는 함수를 수행. 
       if(!(user.isadmin)&&!(paramFromServer)){  
-        const url = process.env.lambda_url + '/process/EventCalendarRequest/AddEvent'
+        const url = process.env.lambda_url + '/EventCalendarRequest/AddEvent'
         await axios.post(url,{
           userid: paramUserId, 
           nickNm: user.nickNm, 

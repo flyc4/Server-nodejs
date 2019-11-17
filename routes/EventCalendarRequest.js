@@ -36,7 +36,7 @@ const connection = async function(){
 ///////////주기적으로 실행하는 함수 시작/////////// 
 _checkrequests = async () => { 
  
-  let url = process.env.lambda_url + '/process/EventCalendarRequest/CheckRequests'; 
+  let url = process.env.lambda_url + '/EventCalendarRequest/CheckRequests'; 
       await axios.post(url)
           .then((response) => {    
           })

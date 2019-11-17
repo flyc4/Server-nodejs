@@ -38,7 +38,7 @@ const connection = async function(){
 } 
 
 _notificationcrawl = async () => {
-    let url = process.env.lambda_url + '/process/Notification/CrawlData'; 
+    let url = process.env.lambda_url + '/Notification/CrawlData'; 
         await axios.post(url)
             .then((response) => {     
                 
@@ -50,7 +50,7 @@ _notificationcrawl = async () => {
   }    
 
   _crawlupdate = async () => {
-    let url = process.env.lambda_url + '/process/Notification/UpdateCrawlData'; 
+    let url = process.env.lambda_url + '/Notification/UpdateCrawlData'; 
         await axios.post(url)
             .then((response) => {     
                 
@@ -62,7 +62,7 @@ _notificationcrawl = async () => {
   }   
 
   _translate_en = async () => {
-    let url = process.env.lambda_url + '/process/Notification/Translate_en'; 
+    let url = process.env.lambda_url + '/Notification/Translate_en'; 
         await axios.post(url)
             .then((response) => {   
             }) 
@@ -73,7 +73,7 @@ _notificationcrawl = async () => {
   }   
 
   _translate_zh = async () => {
-    let url = process.env.lambda_url + '/process/Notification/Translate_zh'; 
+    let url = process.env.lambda_url + '/Notification/Translate_zh'; 
         await axios.post(url)
             .then((response) => {    
                 

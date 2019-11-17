@@ -21,81 +21,11 @@ function connectDB() {
 }
 module.exports = function(router, passport) {
     console.log('user_passport 호출됨.');
-
-    // 홈 화면
-    router.route('/').get(function(req, res) {
-        console.log('/ 패스 요청됨.');
-
-        console.log('req.user의 정보');
-        console.dir(req.user);
-
-        // 인증 안된 경우
-        if (!req.user) {
-            console.log('사용자 인증 안된 상태임.');
-            res.render('public/login.html');//res.render('index.ejs', {login_success:false}); : 원래 코드
-        } else {
-            console.log('사용자 인증된 상태임.');
-            res.render('public/login.html');//res.render('index.ejs', {login_success:true}); : 원래 코드
-        }
-    });
-     
-    // 회원가입 화면
-    router.route('/signup').get(function(req, res) {
-        console.log('/signup 패스 요청됨.');
-        res.render('signup.ejs', {message: req.flash('signupMessage')});
-    });
-	 
-    // 로그인 후 홈 화면
-    router.route('/home').get(function(req, res) {
-        console.log('/home 패스 요청됨.');
-
-        // 인증된 경우, req.user 객체에 사용자 정보 있으며, 인증안된 경우 req.user는 false값임
-        console.log('req.user 객체의 값');
-        console.dir(req.user);
-
-        // 인증 안된 경우
-        if (!req.user) {
-            console.log('계정 없이 홈 들어옴.');
-            res.redirect('/');
-        } else {
-            console.log('사용자 인증된 상태임.');
-            console.log('/home 패스 요청됨.');
-            console.dir(req.user); 
-            expressSession.nickNm = req.user.nickNm;
-            res.render('home.ejs');
-            }
-    });  
-    // 커뮤니티 접속 화면
-    router.route('/community').get(function(req, res) {
-    console.log('/community 패스 요청됨.');
-    console.log('req.user 객체의 값');
-    console.dir(req.user);
-        // 인증 안된 경우
-    if (!req.user) {
-        console.log('계정 없이 홈 들어옴.');
-        res.redirect('/');
-    } else {
-        console.log('사용자 인증된 상태임.');
-        console.log('/community 패스 요청됨.');
-        console.dir(req.user);
-        res.render('community.ejs');
-        }
-    });  
     
 //-------------------react native 와 연동---------------------------------------    
-    //데이터 전송을 하기 위한 테스트 용도 
-    router.route('/data').post(function(req, res) {     
-        console.log("/data 패스 요청됨");
-        var account = {
-            id: req.body.loginId,
-            password: req.body.password} 
-            console.log("account.id: ",account.id);
-            console.log("account.password: ",account.password); 
-            res.send(account);
-    }) 
-
     //로그인
     router.route('/login').post(function(req, res, next){
+        console.log("in login")
 
         passport.authenticate('local-login', {session: false},function (err, user, msg) {        
     
