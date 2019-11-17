@@ -1,11 +1,8 @@
-
-/*
- * 설정. 에러 처리 포함
- */
+require('dotenv').config()
 
 module.exports = {
 	server_port: 3000,
-	db_url: "mongodb+srv://test:test@cluster0-inakp.mongodb.net/db?retryWrites=true&w=majority",
+	db_url: process.env.db_url,
 	db_schemas: [
         {file:'./user_schema', collection:'users', schemaName:'UserSchema', modelName:'UserModel'} 
         ,{file:'./Report_schema', collection:'reports', schemaName:'ReportSchema', modelName:'ReportModel'} 
