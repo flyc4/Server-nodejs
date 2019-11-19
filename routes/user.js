@@ -198,7 +198,6 @@ const Verify = async function(req, res) {
                 return; 
             }   
             else{   
-                console.log(user.isverified)
                 res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
                 res.write('<td style="width:100%; height:100%;">'); 
                 res.write('<h4 style="position:absolute;top: 20%; font-size: 40pt">Welcome! Turn your app on!</h4></td>');    

@@ -541,9 +541,10 @@ var FlipLikeEntry = async function(req, res) {
 var ShowComments = async function(req, res) {
   console.log('BulletinBoards 모듈 안에 있는 ShowComments 호출됨.'); 
   await connection()
+
+  var paramUserId = utils.JWTVerify_id(req.body.jwt);
   var paramBoardId = req.body.boardid||req.query.boardid || req.param.boardid;   
-  var paramEntryId = req.body.entryid||req.query.entryid || req.param.entryid;
-  var paramUserId = req.body.userid||req.query.userid || req.param.userid;  
+  var paramEntryId = req.body.entryid||req.query.entryid || req.param.entryid;  
   var paramCommentStartIndex = req.body.commentstartindex||req.query.commentstartindex || req.param.commentstartindex||0; 
   var paramCommentEndIndex = req.body.commentendindex||req.query.commentendindex || req.param.commentendindex||19; 
   
@@ -630,7 +631,7 @@ var AddComment = async function(req, res) {
   console.log('BulletinBoards 모듈 안에 있는 AddComment 호출됨.');
   await connection()
 
-  var paramUserId = req.body.userid || req.query.userid; 
+  var paramUserId = utils.JWTVerify_id(req.body.jwt); 
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
   var paramParentReplyId = req.body.parentreplyid||req.query.parentreplyid||"000000000000000000000000";
@@ -786,9 +787,9 @@ var FlipLikeComment = async function(req, res) {
   console.log('BulletinBoards 모듈 안에 있는 FlipLikeComment 호출됨.'); 
   await connection()
   
+  var paramUserId = utils.JWTVerify_id(req.body.jwt);
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
-  var paramUserId = req.body.userid||"000000000000000000000000";
   var paramCommentId = req.body.replyid||req.query.replyid;
 
   console.log('paramBoardId: ' + paramBoardId, 'paramEntryId: ' + paramEntryId, 
