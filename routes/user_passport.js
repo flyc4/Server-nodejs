@@ -25,7 +25,7 @@ function connectDB() {
 module.exports = function(router, passport) {
     console.log('user_passport 호출됨.');
     
-//-------------------react native 와 연동---------------------------------------    
+    
     //로그인
     router.route('/login').post(function(req, res, next){
         console.log("login 호출 됨")

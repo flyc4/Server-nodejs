@@ -23,6 +23,8 @@ module.exports = {
         ,{file:'./user', path:'/user/CheckVerified', method:'CheckVerified', type:'post'}
         ,{file:'./user', path:'/user/Verify', method:'Verify', type:'get'} 
         ,{file:'./user', path:'/user/DeleteAccount', method:'DeleteAccount', type:'post'} 
+        ,{file:'./user', path:'/user/GetCurrentUserName', method:'GetCurrentUserName', type:'post'}
+        //DM 관련
         ,{file:'./user', path:'/user/SendDM', method:'SendDM', type:'post'} 
         ,{file:'./user', path:'/user/ShowUserNameList', method:'ShowUserNameList', type:'post'} 
         ,{file:'./user', path:'/user/DeleteDM', method:'DeleteDM', type:'post'}

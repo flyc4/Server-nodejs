@@ -27,12 +27,12 @@ module.exports = new LocalStrategy({
                         console.log('기존에 계정이 있는 지 확인하는 과정에서 에러 발생.');
                         return done(null, false, '기존에 계정이 있는 지 확인하는 과정에서 에러 발생');
                     }
-                    /* 기존에 사용자 정보가 있는 경우
+                    //기존에 사용자 정보가 있는 경우
                     else if (user) {
                         console.log('사용 중인 아이디');
                         return done(null, false, 'Somebody is already using the account.');
                     }     
-                    */ 
+                    
                     //토큰 생성 
                     else{ 
                     

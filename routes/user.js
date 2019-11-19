@@ -168,7 +168,7 @@ const CheckVerified = async function(req, res) {
 //사용자의 계정 활성화 
 const Verify = async function(req, res) {
     await connection();
-    console.log('user/CheckVerify 호출됨.');
+    console.log('user/Verify 호출됨.');
 
     // paramjwt: 요청한 사용자의 jwt 
     // secret: paramjwt decode 위해서 선언  
@@ -198,6 +198,7 @@ const Verify = async function(req, res) {
                 return; 
             }   
             else{   
+                console.log(user.isverified)
                 res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
                 res.write('<td style="width:100%; height:100%;">'); 
                 res.write('<h4 style="position:absolute;top: 20%; font-size: 40pt">Welcome! Turn your app on!</h4></td>');    
@@ -244,7 +245,18 @@ const DeleteAccount = async function(req, res) {
         res.end();
         return;
     }
-}; //DeleteAccount 닫기
+}; //DeleteAccount 닫기 
+
+const GetCurrentUserName = async function(req,res){ 
+    await connection();
+    console.log('user/GetCurrentUserName 호출됨.');
+    
+    let paramnickNm = jwt.verify(req.body.jwt, utils.secret).nickNm;
+    console.log('paramnickNm: ' + paramnickNm); 
+    res.json({name: paramnickNm})
+    res.end()
+    return;
+}//GetCurrentUserName 닫기
 
 ////////////////////////////////////////////////DM 관련 함수 시작
 
@@ -517,4 +529,5 @@ module.exports.DeleteDM = DeleteDM;
 module.exports.ShowDMList = ShowDMList;
 module.exports.ShowUserNameList = ShowUserNameList; 
 module.exports.ShowDMList = ShowDMList; 
-module.exports.DeleteAccount = DeleteAccount;
+module.exports.DeleteAccount = DeleteAccount; 
+module.exports.GetCurrentUserName = GetCurrentUserName; 
