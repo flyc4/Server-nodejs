@@ -1,11 +1,9 @@
 var Entities = require('html-entities').AllHtmlEntities;
-
 var mongoose = require('mongoose');
 var expressSession = require('express-session');
 var jwt = require('jsonwebtoken'); 
-
 var ObjectId = mongoose.Types.ObjectId;  
-var utils = require('../config/utils');
+var utils = require('../config/utils'); 
 
 var permittednickNm = {permittednickNm: false}
 
@@ -98,6 +96,142 @@ var getuserid = function(req, res) {
         res.end();
         }   
 };//getuserid 닫기
+
+//사용자 계정의 활성화 여부 체크
+let CheckVerified = function(req, res) {
+    console.log('user/CheckVerified 호출됨.');
+
+    // paramjwt: 요청한 사용자의 jwt 
+    // secret: paramjwt decode 위해서 선언  
+    // paramnickNm: paramjwt를 verify해서 얻은 nickNm. 요청한 사용자의 nickNm
+    
+    var paramjwt = req.body.jwt || req.query.jwt || req.params.jwt; 
+    var secret = "HS256";
+    var paramnickNm = jwt.verify(paramjwt,secret).nickNm;  
+    var context = {msg: " ", isverified: false}
+    var database = req.app.get('database'); 
+    
+
+    console.log("요청 파라미터: paramjwt: ",paramjwt, " , ", "paramnickNm: ",paramnickNm)
+    
+    // 데이터베이스 객체가 초기화된 경우
+	if (database.db) {
+					     
+        database.UserModel.findOne({nickNm: paramnickNm}, function(err, user) {
+            if (err) {
+                console.log('user/CheckVerified에서 사용자 조회 중 에러 발생 : ' + err.stack);
+                res.end();
+                return;
+            } 
+            if(user == null){
+                console.log("user/CheckVerified에서 요청 받은 사용자를 찾을 수 없음"); 
+                res.json(context);
+                res.end();      
+                return;
+            }   
+            else{     
+                console.log("user/CheckVerified에서 계정 찾음") 
+                context.isverified = user.isverified; 
+                res.json(context);
+                res.end(); 
+                return;
+            }
+        });//UserModel.findOne 닫기 
+    } else {
+        console.log("user/CheckVerified에서 데이터베이스 조회 불가")
+        res.end(); 
+        return
+        }   
+};//CheckVerified 닫기
+
+//사용자의 계정 활성화 
+const Verify = function(req, res) {
+    console.log('user/CheckVerify 호출됨.');
+
+    // paramjwt: 요청한 사용자의 jwt 
+    // secret: paramjwt decode 위해서 선언  
+    // paramnickNm: paramjwt를 verify해서 얻은 nickNm. 요청한 사용자의 nickNm
+    
+    var paramjwt = req.query.jwt || req.params.jwt; 
+    var secret = "HS256";
+    var paramnickNm = jwt.verify(paramjwt,secret).nickNm;  
+    var database = req.app.get('database'); 
+     
+
+    console.log("요청 파라미터: paramjwt: ",paramjwt, " , ", "paramnickNm: ",paramnickNm)
+    
+    // 데이터베이스 객체가 초기화된 경우
+	if (database.db) {
+					     
+        database.UserModel.findOne({nickNm: paramnickNm}, function(err, user) {
+            if (err) {
+                console.log('user/Verify에서 사용자 조회 중 에러 발생 : ' + err.stack);
+                res.end();
+                return;
+            } 
+            if(user == null){
+                console.log("user/Verify에서 요청 받은 사용자를 찾을 수 없음"); 
+                context.msg = "missing";
+                res.json(context) 
+                res.end();      
+                return;
+            }   
+            else{   
+                database.UserModel.findOneAndUpdate({ _id: new ObjectId(user._id)},{isverified: true}, function(err){
+                    if(err){
+                        console.log('user/Verify에서 업데이트 중 에러 발생 : ' + err.stack);
+                        res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                        res.write('<td style="width:100%; height:100%;">'); 
+                        res.write('<h4 style="position:absolute;top: 20%; font-size: 300%">Sorry, we cannot find your account. Please ask us</h4></td>');     
+                        res.end();
+                        return;
+                    }   
+                    res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                    res.write('<td style="width:100%; height:100%;">'); 
+                    res.write('<h4 style="position:absolute;top: 20%; font-size: 40pt">Welcome! Turn your app on!</h4></td>');    
+                    res.end(); 
+                    return;
+                });//findOneAndUpdate 닫기
+            }
+        });//UserModel.findOne 닫기 
+    } else {
+        console.log("user/Verify에서 데이터베이스 조회 불가")
+        res.end(); 
+        return
+        }   
+};//Verify 닫기 
+
+//계정 삭제 
+const DeleteAccount = function(req, res) {
+    console.log('user/DeleteAccount 호출됨.');
+
+    let paramjwt = req.body.jwt; 
+    console.log("paramjwt: ",paramjwt)
+    let secret = "HS256";
+    let paramnickNm = jwt.verify(paramjwt,secret).nickNm;
+    
+    var database = req.app.get('database');
+    console.log('요청 파라미터 : ' + paramnickNm);
+
+    // 데이터베이스 객체가 초기화된 경우
+    if (database.db) {
+        // 1. 아이디를 이용해 사용자 검색
+        database.UserModel.deleteOne({nickNm: paramnickNm}, function(err) {
+            if (err) {
+                console.log("user/DeleteAccuount에서 에러 발생")
+                res.end();
+                return;
+            } 
+            res.end() 
+            return; 
+            }) 
+    }  
+    else{
+        console.log("user/DeleteAccount에서 데이터베이스 조회 불가"); 
+        res.end();
+        return;
+    }
+}; //DeleteAccount 닫기
 
 ////////////////////////////////////////////////DM 관련 함수 시작
 
@@ -362,11 +496,13 @@ var ShowUserNameList = function(req, res) {
 };//ShowUserNameList 닫기
 ////////////////////////////////////////////////DM 관련 함수 끝
 
-
 module.exports.checknickNm = checknickNm;
-module.exports.getuserid = getuserid;
+module.exports.getuserid = getuserid; 
+module.exports.CheckVerified = CheckVerified; 
+module.exports.Verify = Verify;
 module.exports.SendDM = SendDM;
 module.exports.DeleteDM = DeleteDM;  
 module.exports.ShowDMList = ShowDMList;
 module.exports.ShowUserNameList = ShowUserNameList; 
-module.exports.ShowDMList = ShowDMList;
+module.exports.ShowDMList = ShowDMList; 
+module.exports.DeleteAccount = DeleteAccount;

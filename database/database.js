@@ -6,7 +6,7 @@
  * @date 2016-11-10
  * @author Mike
  */
-
+require('dotenv').config()
 var mongoose = require('mongoose');
 mongoose.set('useCreateIndex', true); // 워닝 안 뜨게 하려는 거 
 
@@ -21,7 +21,7 @@ database.init = function(app, config) {
 }
 
 //데이터베이스에 연결하고 응답 객체의 속성으로 db 객체 추가
-function connect(app, config) {
+function connect(app, config) { 
 	console.log('connect() 호출됨.');
 	
 	// 데이터베이스 연결 : config의 설정 사용

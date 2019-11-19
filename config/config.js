@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv').config();
 
 module.exports = {
 	server_port: 3000,
@@ -19,11 +19,15 @@ module.exports = {
 	route_info: [
         //user 혹은 인증과 관련된 패스들
          {file:'./user', path:'/user/checknickNm', method:'checknickNm', type:'post'} 
-        ,{file:'./user', path:'/user/getuserid', method:'getuserid', type:'post'}
+        ,{file:'./user', path:'/user/getuserid', method:'getuserid', type:'post'} 
+        ,{file:'./user', path:'/user/CheckVerified', method:'CheckVerified', type:'post'}
+        ,{file:'./user', path:'/user/Verify', method:'Verify', type:'get'} 
+        ,{file:'./user', path:'/user/DeleteAccount', method:'DeleteAccount', type:'post'} 
         ,{file:'./user', path:'/user/SendDM', method:'SendDM', type:'post'} 
         ,{file:'./user', path:'/user/ShowUserNameList', method:'ShowUserNameList', type:'post'} 
         ,{file:'./user', path:'/user/DeleteDM', method:'DeleteDM', type:'post'}
-        ,{file:'./user', path:'/user/ShowDMList', method:'ShowDMList', type:'post'}
+        ,{file:'./user', path:'/user/ShowDMList', method:'ShowDMList', type:'post'} 
+        
 
         //BulluetinBoards와 관련된 패스들
         ,{file:'./BulletinBoards', path:'/BulletinBoards/ShowBulletinBoardsList', method:'ShowBulletinBoardsList', type:'post'}

@@ -31,7 +31,7 @@ const GetNormalDate = function(Data){
 //eventcalendar으로 보낼 때 contents에 날짜를 포함할 거임. 그 날짜와 더불어 들어갈 내용을 정의
 const DateToContents = function(date){ 
   return "Date: " + date;
-}
+} 
 
 module.exports.timestamp = timestamp; 
 module.exports.GetISODate = GetISODate; 

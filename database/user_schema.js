@@ -14,20 +14,18 @@ Schema.createSchema = function(mongoose) {
 	// password를 hashed_password로 변경, 각 칼럼에 default 속성 모두 추가, salt 속성 추가
 	UserSchema = mongoose.Schema({
       loginId: {type: String, 'default': '', required: true}, // 한양인 ID. 로그인 사용자 정보 조회에서 가져옴.  
-      userNm: {type: String, 'default': 'dummy', required: true}, //실명
-      gaeinNo: {type: Number, 'default': '20170812', /*unique: true*/ required: true}, //학번 
-      sosokEnm: {type: String, 'default': 'NaN' , required: true}, // Department Of Information Systems
       nickNm: {type: String, 'default': 'no name', /*unique: true*/},// 앱 내에서 표시될 이름 
       salt: {type: String}, //임시 비밀 번호 암호화를 위해 필요
       hashed_password: {type: String, 'default':''},// 임시 비밀 번호   
-	  isadmin: {type: Boolean, default: false}, 
+	  isadmin: {type: Boolean, default: false}, //관리지 여부
+	  isverified: {type: Boolean, default: false}, //가입 후 이메일 인증을 통하여 계정 활성화 하는 버튼
 	  DM: [{
 		sendername: {type: String, 'default': 'no name'},
 		senderid: {type: mongoose.Schema.ObjectId, ref: 'users'},
 		title: {type: String, trim:true, 'default': ' '},
 		contents: {type: String, trim:true, 'default': ' '}, 
 		created_at: {type: Date, 'default': Date.now},
-	  }] 
+	  }], 
     });
     
 	// password를 virtual 메소드로 정의 : MongoDB에 저장되지 않는 가상 속성임. 
@@ -109,8 +107,6 @@ Schema.createSchema = function(mongoose) {
 			.exec(callback);
 		}     
     }
-
-
 
 	/*
     UserSchema.static('findByloginId', function(loginId, callback){ //로그인 아이디 기반 검색.

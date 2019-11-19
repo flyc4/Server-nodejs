@@ -10,7 +10,7 @@ module.exports = new LocalStrategy({
     var database = req.app.get('database');
 	    database.UserModel.findOne({ 'loginId' :  loginId }, function(err, user) {
 	    	if (err) { 
-                console.log('계정 조회 중 에러 발생');
+				console.log('계정 조회 중 에러 발생: ' + err.stack);
 		        return done(null, false, '계정 조회 중 에러 발생'); 
             }
 	    	// 등록된 사용자가 없는 경우
@@ -22,7 +22,7 @@ module.exports = new LocalStrategy({
 			var authenticated = user.authenticate(password, user._doc.salt, user._doc.hashed_password);
 			if (!authenticated) {
 				console.log('비밀번호 불일치');
-				return done(null, false,'비밀번호 불일치');
+				return done(null, false,'Cannot find your account. Please check your email and password again');
 			} 
 			// 정상인 경우
 			console.log('계정과 비밀번호가 일치함.');
