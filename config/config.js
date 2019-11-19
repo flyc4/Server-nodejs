@@ -18,8 +18,8 @@ module.exports = {
         ],
 	route_info: [
         //user 혹은 인증과 관련된 패스들
-         {file:'./user', path:'/user/checknickNm', method:'checknickNm', type:'post'} 
-        ,{file:'./user', path:'/user/getuserid', method:'getuserid', type:'post'} 
+         {file:'./user', path:'/user/CheckNickNm', method:'CheckNickNm', type:'post'} 
+        ,{file:'./user', path:'/user/GetUserId', method:'GetUserId', type:'post'} 
         ,{file:'./user', path:'/user/CheckVerified', method:'CheckVerified', type:'post'}
         ,{file:'./user', path:'/user/Verify', method:'Verify', type:'get'} 
         ,{file:'./user', path:'/user/DeleteAccount', method:'DeleteAccount', type:'post'} 

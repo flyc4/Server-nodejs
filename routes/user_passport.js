@@ -9,7 +9,8 @@ const router = express.Router();
 const nodemailer = require('nodemailer');
 var mongoose = require('mongoose');
 var expressSession = require('express-session');
-var jwt = require('jsonwebtoken'); 
+var jwt = require('jsonwebtoken');  
+var utils = require('../config/utils')
 require('dotenv').config();
 
 function connectDB() {
@@ -41,9 +42,8 @@ module.exports = function(router, passport) {
             res.end(); 
             return;
         }    
-        logininfo.islogin = true;
-        var secret = "HS256";    
-        logininfo.accesstoken = jwt.sign({ loginId: user.loginId, nickNm: user.nickNm},secret);
+        logininfo.islogin = true;  
+        logininfo.accesstoken = jwt.sign({ nickNm: user.nickNm, userid: user._id},utils.secret);
         logininfo.msg = msg;
         res.json(logininfo);
         res.end(); 
@@ -67,8 +67,8 @@ module.exports = function(router, passport) {
             } 
             
             signupinfo.issignup = true;
-            var secret = "HS256";    
-            signupinfo.accesstoken = jwt.sign({ loginId: user.loginId, nickNm: user.nickNm},secret);
+               
+            signupinfo.accesstoken = jwt.sign({ nickNm: user.nickNm, userid: user._id},utils.secret);
             signupinfo.msg = msg;
             
             //이메일 전송    

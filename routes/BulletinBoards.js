@@ -5,7 +5,7 @@
  * @author ChangHee
  */
 
-require('dotenv').config();
+require('dotenv').config(); 
 var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken'); 
 var ObjectId = mongoose.Types.ObjectId;  
@@ -45,14 +45,16 @@ const connection = async function(){
 var ShowBulletinBoardsList = async function(req, res) {  
   console.log('BulletinBoards 모듈 안에 있는 ShowBulletinBoardsList 호출됨.');  
   
-  await connection()
+  await connection();
   var context = {boardslist: [{ boardid: '', boardname: '', contents: ''}]}
   if (database){           
     
     // 모든 게시판 조회 
     database.collection("bulletinboardslist").find({}).toArray(function(err,data){ 
       if(err){
-        console.log("BulletinBoards 모듈 안에 있는 ShowBulletinBoardsList에서 collection 조회 중 수행 중 에러 발생: "+ err.stack)
+        console.log("BulletinBoards 모듈 안에 있는 ShowBulletinBoardsList에서 collection 조회 중 수행 중 에러 발생: "+ err.stack) 
+        res.end(); 
+        return;
       }
       data.forEach(function(data2){ 
         context.boardslist.push({boardid: data2.boardname, boardname: data2.boardname, contents: data2.contents}) 
@@ -79,10 +81,11 @@ return;
 let AddReport = async function(req, res) {
   
   console.log('BulletinBoardsList 모듈 안에 있는 AddReport 호출됨.');
-  await connection()
+  await connection() 
+
+  let paramUserId = utils.JWTVerify_id(req.body.jwt)  
   let paramTitle = req.body.title || req.query.title|| "no title";
-  let paramContents = req.body.contents || req.query.contents|| "no contents";
-  let paramUserId = req.body.userid || req.query.userid; 
+  let paramContents = req.body.contents || req.query.contents|| "no contents"; 
   let paramBoardId = req.body.boardid||req.query.boardid;  
   let paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
   let paramCommentId = req.body.commentid||req.query.commentid||"000000000000000000000000";
@@ -147,16 +150,15 @@ let AddReport = async function(req, res) {
 var ShowBulletinBoard = async function(req, res) {
   console.log('BulletinBoard 모듈 안에 있는 ShowBulletinBoard 호출됨.');
   await connection();       
-  
+  var paramUserId = utils.JWTVerify_id(req.body.jwt);
   var paramBoardId = req.body.boardid||req.query.boardid || req.param.boardid;   
-  var paramuserid= req.body.userid||req.query.userid || req.param.userid||"5d5373177443381df03f3040";
   var parampostStartIndex = req.body.postStartIndex||req.query.postStartIndex || req.param.postStartIndex||0; 
   var parampostEndIndex = req.body.postEndIndex||req.query.postEndIndex || req.param.postEndIndex||19;  
   var paramSearch = req.body.search||" ";  
   var paramLanguage = req.body.language|| " ";
 
-  console.log("paramBoardId: ",paramBoardId) 
-  console.log("paramuserid: ",paramuserid) 
+  console.log("paramUserId: ",paramUserId)
+  console.log("paramBoardId: ",paramBoardId)  
   console.log("parampostStartIndex: ",parampostStartIndex)
   console.log("parampostEndIndex: ",parampostEndIndex)
   console.log("paramSearch: ",paramSearch)
@@ -184,9 +186,10 @@ var ShowBulletinBoard = async function(req, res) {
 
     //BoardId == 'notifications' 일 경우 따로 처리 
     if(paramBoardId == 'notifications'){
-      const url = process.env.lambda_url + '/Notification/ShowNotification'
+      //const url = process.env.lambda_url + '/Notification/ShowNotification'
+      const url = 'localhost:3000/Notification/ShowNotification'
       await axios.post(url,{
-        userid: paramuserid, 
+        userid: paramUserId, 
         postStartIndex: parampostStartIndex, 
         postEndIndex: parampostEndIndex,  
         search: paramSearch,
@@ -246,11 +249,11 @@ var ShowBulletinBoard = async function(req, res) {
         if(i>=data.length){
           break;
         }
-        var localismine = data[i].userid == paramuserid 
+        var localismine = data[i].userid == paramUserId;
         let locallikespressed = false;
         //해당 게시물에 좋아요를 눌렀는지의 여부 확인
         for(let j=0;j<data[i].likeslist.length;j++){
-            if(data[i].likeslist[j].userid == paramuserid){
+            if(data[i].likeslist[j].userid == paramUserId){
               locallikespressed=true; 
               break;
             }
@@ -289,12 +292,11 @@ else {
 //인자로 받은 paramEntryId가 있다면 수정을, 없다면 추가를 각각 실행
 
 var AddEditEntry = async function(req, res) {
-  await connection()
+  await connection();
   console.log('BulletinBoards 모듈 안에 있는 AddEditEntry 호출됨.');
-  
+  var paramUserId = utils.JWTVerify_id(req.body.jwt);
   var paramTitle = req.body.title || req.query.title;
-  var paramContents = req.body.contents || req.query.contents;
-  var paramUserId = req.body.userid || req.query.userid; 
+  var paramContents = req.body.contents || req.query.contents; 
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000";
    
@@ -407,16 +409,16 @@ if (database) {
 //게시글 또는 댓글에 좋아요 1 증가 혹은 감소
 var FlipLikeEntry = async function(req, res) {
   console.log('BulletinBoards 모듈 안에 있는 FlipLikeEntry 호출됨.'); 
-  await connection()
+  await connection();
   
+  var paramUserId = utils.JWTVerify_id(req.body.jwt);
   var paramBoardId = req.body.boardid||req.query.boardid;  
   var paramEntryId = req.body.entryid||req.query.entryid||"000000000000000000000000"; 
-  var paramUserId = req.body.userid||"000000000000000000000000";
   var paramCommentId = req.body.replyid||req.query.replyid||"000000000000000000000000";
   
+  console.log('paramUserId: ' + paramUserId)
   console.log('paramBoardId: ' + paramBoardId)
-  console.log('paramEntryId: ' + paramEntryId) 
-  console.log('paramUserId: ' + paramUserId)   
+  console.log('paramEntryId: ' + paramEntryId)    
   console.log('paramCommentId' + paramCommentId);
 
   var context = {

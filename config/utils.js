@@ -1,4 +1,6 @@
 const moment = require('moment')
+const jwt = require('jsonwebtoken');
+
 
 //현재 시간을 ISO 형식으로 반환
 const timestamp = function(){         
@@ -33,9 +35,15 @@ const DateToContents = function(date){
   return "Date: " + date;
 } 
 
+const JWTVerify_id = function(token){
+  return jwt.verify(token,"HS256").userid;
+}
+
 module.exports.timestamp = timestamp; 
 module.exports.GetISODate = GetISODate; 
 module.exports.AddDays = AddDays; 
 module.exports.defaultstartday = defaultstartday; 
 module.exports.GetNormalDate = GetNormalDate 
-module.exports.DateToContents = DateToContents; 
+module.exports.DateToContents = DateToContents;
+module.exports.secret = "HS256"; 
+module.exports.JWTVerify_id = JWTVerify_id;
