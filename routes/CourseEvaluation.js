@@ -1,10 +1,3 @@
-/*
- * 강의평가를 위한 라우팅 함수 정의
- *
- * @date 2018-09-13
- * @author ChangHee
- */
-
 var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken'); 
 var ObjectId = mongoose.Types.ObjectId;  

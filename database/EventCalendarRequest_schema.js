@@ -1,7 +1,3 @@
-/**
- *  EventCalendarRequest에 대한 스키마
- * 
- */ 
 let utils = require('../config/utils')
 
 let SchemaObj = {};

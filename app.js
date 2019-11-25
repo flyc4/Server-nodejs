@@ -1,15 +1,3 @@
-/**
-/**
- * 패스포트 사용하기
- * 
- * 패스포트 모듈에서 로그인 인증을 처리하도록 함
- * 데이터베이스에 저장된 사용자 정보를 사용해 인증할 수 있도록 LocalStrategy를 인증방식으로 사용함.
- *
- * @date 2016-11-10
- * @author Mike
- */
- 
-
 // Express 기본 모듈 불러오기
 var express = require('express')
   , http = require('http')

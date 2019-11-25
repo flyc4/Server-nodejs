@@ -1,8 +1,4 @@
-/**
- *  EventCalendar에 대한 스키마
- * 
- */ 
-let utils = require('../config/utils')
+ let utils = require('../config/utils')
 
 let SchemaObj = {};
 SchemaObj.createSchema = function(mongoose) {

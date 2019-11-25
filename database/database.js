@@ -1,11 +1,3 @@
-
-/*
- * 데이터베이스 스키마 로딩
- * 기본 파일이며 개발자 수정 필요없음
- *
- * @date 2016-11-10
- * @author Mike
- */
 require('dotenv').config()
 var mongoose = require('mongoose');
 mongoose.set('useCreateIndex', true); // 워닝 안 뜨게 하려는 거 

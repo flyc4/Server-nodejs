@@ -1,8 +1,3 @@
-/**
- * 게시판 목록을 위한 데이터베이스 스키마를 정의하는 모듈
- * 
- */
-
 var moment = require('moment')  
 var timestamp = function(){            
     return moment().format("YYYY-MM-DD HH:mm:ss");

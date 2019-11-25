@@ -1,10 +1,3 @@
-/**
- * 강의 평가 게시물을 위한 데이터베이스 스키마를 정의하는 모듈
- *
- * @date 2019-09-13
- * @author 김창희
- */
-
 var utils = require('../config/utils')
 var SchemaObj = {};
 SchemaObj.createSchema = function(mongoose) {

@@ -1,4 +1,3 @@
-//402쪽 
 var LocalStrategy = require('passport-local').Strategy; 
 var jwt = require('jsonwebtoken');
 
@@ -12,9 +11,6 @@ module.exports = new LocalStrategy({
         var parampassword = req.body.password || req.query.password;
         var paramnickNm = req.body.nickNm || req.query.nickNm; 
         console.log('passport의 local-signup 호출됨 : ' + paramloginId + ' , ' + paramnickNm);
-
-
-
             // 요청 파라미터 중 name 파라미터 확인
             
             // findOne 메소드가 blocking되지 않도록 하고 싶은 경우, async 방식으로 변경

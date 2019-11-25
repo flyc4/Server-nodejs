@@ -1,10 +1,3 @@
-/*
- * 게시판을 위한 라우팅 함수 정의
- *
- * @date 2018-09-04
- * @author ChangHee
- */
-
 require('dotenv').config(); 
 var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken'); 

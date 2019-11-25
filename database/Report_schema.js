@@ -1,8 +1,3 @@
-/**
- * 신고 게시판을 위한 데이터베이스 스키마를 정의하는 모듈
- * 
- */
-
 var mongoose = require('mongoose');
 var ObjectId = mongoose.Types.ObjectId; 
 var zeroId = new ObjectId('000000000000000000000000');  

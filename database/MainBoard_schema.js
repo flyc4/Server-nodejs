@@ -1,10 +1,4 @@
-/**
- *  Board1에 대한 스키마
- * 
- */ 
-
 var utils = require('../config/utils')
-
 var SchemaObj = {};
 SchemaObj.createSchema = function(mongoose) {
 	

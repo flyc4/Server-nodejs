@@ -1,9 +1,3 @@
-/**
- * 패스포트 라우팅 함수 정의
- *
- * @date 2016-11-10
- * @author Mike
- */
 const express = require('express');
 const router = express.Router();     
 const nodemailer = require('nodemailer');
@@ -67,7 +61,6 @@ module.exports = function(router, passport) {
             } 
             
             signupinfo.issignup = true;
-               
             signupinfo.accesstoken = jwt.sign({ nickNm: user.nickNm, userid: user._id},utils.secret);
             signupinfo.msg = msg;
             
@@ -84,7 +77,7 @@ module.exports = function(router, passport) {
                 from: process.env.email_id,    // 발송 메일 주소 (위에서 작성한 gmail 계정 아이디)
                 to: user.loginId,                     // 수신 메일 주소
                 subject: 'Show you by clicking the button below',   // 제목
-                html: "<a href='" + process.env.temp_url+ "/user/Verify/?jwt="+ signupinfo.accesstoken +"'>Verify</a>"
+                html: "<a href='" + process.env.lambda_url+ "/user/Verify/?jwt="+ signupinfo.accesstoken +"'>Verify</a>"
             }; 
         transporter.sendMail(mailOptions, function(error, info){
             if (error) {
