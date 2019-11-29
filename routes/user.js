@@ -165,7 +165,7 @@ const CheckVerified = async function(req, res) {
         }   
 };//CheckVerified 닫기
 
-//사용자의 계정 활성화 
+/*사용자의 계정 활성화. 현재 미 사용. 로컬 테스트 완료 했으나 lambda에서 사용 불가. 
 const Verify = async function(req, res) {
     await connection();
     console.log('user/Verify 호출됨.');
@@ -214,7 +214,7 @@ const Verify = async function(req, res) {
         return;
     }   
 };//Verify 닫기 
-
+*/
 //계정 삭제 
 const DeleteAccount = async function(req, res) {
     await connection();
@@ -522,7 +522,7 @@ let ShowUserNameList = async function(req, res) {
 module.exports.CheckNickNm = CheckNickNm;
 module.exports.GetUserId = GetUserId; 
 module.exports.CheckVerified = CheckVerified; 
-module.exports.Verify = Verify;
+//module.exports.Verify = Verify;
 module.exports.SendDM = SendDM;
 module.exports.DeleteDM = DeleteDM;  
 module.exports.ShowDMList = ShowDMList;

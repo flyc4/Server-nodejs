@@ -21,7 +21,7 @@ module.exports = {
          {file:'./user', path:'/user/CheckNickNm', method:'CheckNickNm', type:'post'} 
         ,{file:'./user', path:'/user/GetUserId', method:'GetUserId', type:'post'} 
         ,{file:'./user', path:'/user/CheckVerified', method:'CheckVerified', type:'post'}
-        ,{file:'./user', path:'/user/Verify', method:'Verify', type:'get'} 
+        //,{file:'./user', path:'/user/Verify', method:'Verify', type:'get'} 
         ,{file:'./user', path:'/user/DeleteAccount', method:'DeleteAccount', type:'post'} 
         ,{file:'./user', path:'/user/GetCurrentUserName', method:'GetCurrentUserName', type:'post'}
         //DM 관련

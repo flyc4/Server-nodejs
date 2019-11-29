@@ -48,7 +48,7 @@ module.exports = function(router, passport) {
     router.route('/signup').post(function(req, res){
 
 
-        passport.authenticate('local-signup', {session: false},function (err, user, msg) {        
+        passport.authenticate('local-signup', {session: false},async function (err, user, msg) {        
             
             var signupinfo = {issignup: false, accesstoken: '', msg: ''} 
             //회원 가입 완료 여부, accesstoken, 가입 실패 시 메시지  
@@ -64,31 +64,6 @@ module.exports = function(router, passport) {
             signupinfo.accesstoken = jwt.sign({ nickNm: user.nickNm, userid: user._id},utils.secret);
             signupinfo.msg = msg;
             
-            //이메일 전송    
-            let transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.email_id,    // gmail 계정 아이디
-                    pass: process.env.email_password // gmail 계정의 비밀번호
-                }
-            });
-
-            let mailOptions = {  
-                from: process.env.email_id,    // 발송 메일 주소 (위에서 작성한 gmail 계정 아이디)
-                to: user.loginId,                     // 수신 메일 주소
-                subject: 'Show you by clicking the button below',   // 제목
-                html: "<a href='" + process.env.lambda_url+ "/user/Verify/?jwt="+ signupinfo.accesstoken +"'>Verify</a>"
-            }; 
-        transporter.sendMail(mailOptions, function(error, info){
-            if (error) {
-                console.log(error);
-            }
-            else {
-                console.log('Email sent: ' + info.response);
-            }
-        });   
-        console.log("이메일 전송 완료"); 
-
         //사용자에게 전송할 정보 가공
         res.json(signupinfo); 
         res.end()

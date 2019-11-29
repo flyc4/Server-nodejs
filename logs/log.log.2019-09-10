@@ -1,1 +1,0 @@
-{"message":"DeleteEntry 안에서 삭제할 게시물 조회 중 에러 발생: Cannot apply $pull to a non-array value","level":"info","timestamp":"2019-09-10 14:46:55"}

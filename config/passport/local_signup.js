@@ -1,9 +1,37 @@
 var LocalStrategy = require('passport-local').Strategy; 
-var jwt = require('jsonwebtoken');
+var jwt = require('jsonwebtoken'); 
+const MongoClient = require("mongodb").MongoClient;
+require('dotenv').config();
 
+
+const client = new MongoClient(process.env.db_url, {
+	useNewUrlParser: true,
+  });
+  let database
+  
+  const createConn = async () => {
+	await client.connect();
+	database = client.db('db'); 
+	
+  }; 
+  
+  const connection = async function(){  
+	if (!client.isConnected()) { 
+		// Cold start or connection timed out. Create new connection.
+		try {
+			await createConn(); 
+			console.log("connection completed")
+		} catch (e) { 
+			res.json({
+				error: e.message,
+			});
+			return;
+		}
+	}    
+  }
 module.exports = new LocalStrategy({
         
-        usernameField : 'loginId',
+    usernameField : 'loginId',
 		passwordField : 'password',
 		passReqToCallback : true    // 이 옵션을 설정하면 아래 콜백 함수의 첫번째 파라미터로 req 객체 전달됨
 	}, function(req,loginId,password,done) {
@@ -15,9 +43,10 @@ module.exports = new LocalStrategy({
             
             // findOne 메소드가 blocking되지 않도록 하고 싶은 경우, async 방식으로 변경
             
-            process.nextTick(function() {
-                var database = req.app.get('database'); 
-                database.UserModel.findOne( { 'loginId' :  loginId}, function(err, user) {
+            process.nextTick(async function() {
+                await connection(); 
+                if(database){
+                database.collection('users').findOne( { 'loginId' :  loginId}, function(err, user) {
                     // 에러 발생 시
                     if (err) {
                         console.log('기존에 계정이 있는 지 확인하는 과정에서 에러 발생.');
@@ -31,20 +60,26 @@ module.exports = new LocalStrategy({
                     
                     //토큰 생성 
                     else{ 
-                    
-                    var newuser = new database.UserModel({'loginId':paramloginId, 'password':parampassword, 'nickNm': paramnickNm}); 
-                    newuser.save(function(err) {
-                            if (err) {
-                                throw err;
-                            }
-                            console.log("사용자 데이터 추가함.");  
-                    });    
-                    return done(null, newuser, "Welcome!");
+                      var db = req.app.get('database')
+                      var newuser = db.UserModel({'loginId':paramloginId, 'password':parampassword, 'nickNm': paramnickNm}); 
+                      database.collection("users").insertOne(newuser, async function(err){
+                        if(err){
+                          console.log('local_signup에서 사용자 등록 중 에러 발생: ' + err.stack); 
+                          return;
+                        } 
+                        return done(null, newuser, "Welcome!");
+                      })
+                          
                     }
-                    
+                      
             }) //findOne 닫기 
+          }//if(database)  
+          else{
+            console.log("local_signup에서 데이터베이스 연결 불가: " + err.stack); 
+            return;
+          }
         }); //nextTick 닫기 
-    
+        
 }) //LocalStrategty 닫기
     
 
