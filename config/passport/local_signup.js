@@ -1,85 +1,76 @@
-var LocalStrategy = require('passport-local').Strategy; 
-var jwt = require('jsonwebtoken'); 
-const MongoClient = require("mongodb").MongoClient;
-require('dotenv').config();
+/**
+ * @description 로컬 회원가입 인증 방식 설정. 
+ * config/passport 에서 passport.use('local-signup', local_signup); 로써 'local-signup'이라는 이름의 strategy를 등록 
+ * config/user_passport에 있는 'passport.authenticate('local-signup', ...)' 
+ * 가 호출될 때(+passport.authenticate의 콜백함수 실행 전) 호출 되는 함수.
+ * 'local-signup'이라는 이름의 strategy에 대한 콜백 함수를 정의한다. 
+ * 한 파일에 정의하는 함수의 갯수가 1개 이므로 module.exports에 함수를 직접 할당 하였다.   
+ * @author Chang Hee
+ */
 
+const LocalStrategy = require('passport-local').Strategy;  
+const localDB = require('../../database/database');
+const getDatabase = require('../../database/database').getDatabase; 
 
-const client = new MongoClient(process.env.db_url, {
-	useNewUrlParser: true,
-  });
-  let database
-  
-  const createConn = async () => {
-	await client.connect();
-	database = client.db('db'); 
-	
-  }; 
-  
-  const connection = async function(){  
-	if (!client.isConnected()) { 
-		// Cold start or connection timed out. Create new connection.
-		try {
-			await createConn(); 
-			console.log("connection completed")
-		} catch (e) { 
-			res.json({
-				error: e.message,
-			});
-			return;
-		}
-	}    
-  }
+/**
+ * @description 'local-signup' 이라는 이름으로 접근 가능한 LocalStrategy 및 콜백 함수 정의   
+ * @param {String} logindId - 클라이언트 쪽의 'loginId' 이름의 필드 값을 전달 받음. 
+ * @param {String} password - 클라이언트 쪽의 'password' 이름의 필드 값을 전달 받음. 
+ * @param {function(): null, Object, String} done - passport 모듈의 done 함수.
+ * @returns {function(): null, Object, String} done - passport 모듈의 done 함수. 에러 혹은 인증 실패시 Object 자리에 false 삽입.  
+ */
 module.exports = new LocalStrategy({
         
-    usernameField : 'loginId',
-		passwordField : 'password',
-		passReqToCallback : true    // 이 옵션을 설정하면 아래 콜백 함수의 첫번째 파라미터로 req 객체 전달됨
-	}, function(req,loginId,password,done) {
-        var paramloginId = req.body.loginId || req.query.loginId;  
-        var parampassword = req.body.password || req.query.password;
-        var paramnickNm = req.body.nickNm || req.query.nickNm; 
-        console.log('passport의 local-signup 호출됨 : ' + paramloginId + ' , ' + paramnickNm);
-            // 요청 파라미터 중 name 파라미터 확인
+    usernameField : 'loginId', //클라이언트 쪽의 'loginId' 이름의 필드 값을 전달 받음. 콜백함수의 파라미터로 사용
+		passwordField : 'password', //클라이언트 쪽의 'password' 이름의 필드 값을 전달 받음. 콜백함수의 파라미터로 사용
+		passReqToCallback : false    // 이 옵션을 true로 설정하면 아래 콜백 함수의 첫번째 파라미터로 req 객체 전달됨
+	}, async function(nickNm, loginId, password, done) {
+    console.log('config/passport/local_signup에서의 local-login 호출됨'); 
+    const database = await getDatabase(); 
+    
+    console.log('nickNm: ', nickNm);
+    console.log('logindId: ', loginId);
+    console.log('password: ', password);
+  
+    if(database){
+      database
+        .collection('users')
+        .findOne({ loginId :  loginId }, function(err, user) {
+          if (err) { 
+            console.log('config/passport/local_signup에서 계정 조회 중 에러 발생: ' + err.stack);
             
-            // findOne 메소드가 blocking되지 않도록 하고 싶은 경우, async 방식으로 변경
-            
-            process.nextTick(async function() {
-                await connection(); 
-                if(database){
-                database.collection('users').findOne( { 'loginId' :  loginId}, function(err, user) {
-                    // 에러 발생 시
-                    if (err) {
-                        console.log('기존에 계정이 있는 지 확인하는 과정에서 에러 발생.');
-                        return done(null, false, '기존에 계정이 있는 지 확인하는 과정에서 에러 발생');
-                    }
-                    //기존에 사용자 정보가 있는 경우
-                    else if (user) {
-                        console.log('사용 중인 아이디');
-                        return done(null, false, 'Somebody is already using the account.');
-                    }     
-                    
-                    //토큰 생성 
-                    else{ 
-                      var db = req.app.get('database')
-                      var newuser = db.UserModel({'loginId':paramloginId, 'password':parampassword, 'nickNm': paramnickNm}); 
-                      database.collection("users").insertOne(newuser, async function(err){
-                        if(err){
-                          console.log('local_signup에서 사용자 등록 중 에러 발생: ' + err.stack); 
-                          return;
-                        } 
-                        return done(null, newuser, "Welcome!");
-                      })
-                          
-                    }
-                      
-            }) //findOne 닫기 
-          }//if(database)  
-          else{
-            console.log("local_signup에서 데이터베이스 연결 불가: " + err.stack); 
-            return;
+            //passport.authenticate('local-login' function(){})의 콜백함수의 인자로 null, false, msg 전달. 
+            // msg: 사용자 화면에 띄울 메시지
+            return done(null, false, 'err occured during checking the account');  
           }
-        }); //nextTick 닫기 
-        
-}) //LocalStrategty 닫기
+          // 등록된 사용자가 경우
+          if (user) {
+            console.log('config/passport/local_signup에서 해당 아이디와 일치하는 계정이 있음');
+            return done(null, false, "Someone is already using the ID.");
+          } 
+          const newUser = localDB.UserModel({
+              nickNm: nickNm,
+              loginId: loginId, 
+              password: password
+          }); 
+          database 
+            .collection('users')
+            .insertOne(newUser, function(err){
+              if (err) {
+                console.log('config/passport/local_signup에서 사용자 추가 중 에러 발생: '+ err.stack); 
+                res.end(); 
+                return;
+              } 
+              return;
+            })
+          console.log('회원가입 완료.');
+          return done(null, newUser,'Welcome!'); 
+        }); 
+    } 
+    else{
+      console.log("config/passport/local_signup에서 데이터베이스 연결 불가: " + err.stack); 
+      return done(null, user,'err occured in database');
+    }
+  });
     
 

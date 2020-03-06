@@ -1,6 +1,22 @@
-var local_login = require('./passport/local_login');
-var local_signup = require('./passport/local_signup');
+/**
+ * @description 회원가입 혹은 로그인 이후의 세션 관련 함수. 현재는 모바일만 구현 중이기에 미 사용. 
+ * 웹 페이지 개설을 대비해 파일을 남겨 둠.
+ * serializeUser: 세션 생성 후 저장할 정보를 두 번째 파라미터(done)로 넘김 
+ * deserializeUser: serializeUser 이후 사용자의 요청 시 마다 serializeUser에서 저장한 내용을 읽어옴. 
+ * 
+ * config/passport 에서 passport.use('local-login', local_login); 로만 쓰임. 
+ * 'local-login'이라는 이름의 strategy에 대한 콜백 함수를 정의한다. 
+ * 한 파일에 정의하는 함수의 갯수가 1개 이므로 module.exports에 함수를 직접 할당 하였다.   
+ * @author Chang Hee
+ */
+const local_login = require('./passport/local_login');
+const local_signup = require('./passport/local_signup');
 
+/**
+ * @description passport 모듈의 serializeUser 와 deserializeUser 설정 후 현재 서버에 적용 
+ * @param {Object} app - passport 설정을 적용할 app.  
+ * @param {Object} passport - 파라미터로 받은 app에 적용할 passport 모듈의 설정들을 정의 
+ */
 module.exports = function (app, passport) {
 	console.log('config/passport 호출됨.');
 
@@ -26,8 +42,7 @@ module.exports = function (app, passport) {
         done(null, user);  
     });
 
-	// 인증방식 설정
+    // 인증방식 설정. passport.use(스트래터지 이름, 인증 방식을 정의한 객체)
 	passport.use('local-login', local_login);
-	passport.use('local-signup', local_signup);
-	
+	passport.use('local-signup', local_signup);	
 };

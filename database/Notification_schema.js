@@ -1,63 +1,64 @@
-var utils = require('../config/utils')
+/**
+ * @description 공지사항의 스키마 정의
+ * @author Chang Hee
+ */
 
-var SchemaObj = {};
+const utils = require('../config/utils');
+//createSchema 함수를 저장할 객체. module.exports에 할당하기 위함
+let SchemaObj = {}; 
+
+/**
+ * @description 공지사항의 스키마 정의 
+ * @param {Object} mongoose
+ * @returns {Object} notificationSchema
+ */
 SchemaObj.createSchema = function(mongoose) {
 	
 	// 공지사항 스키마 정의
-	var NotificationSchema = mongoose.Schema({ 
-    
-            userid: {type: mongoose.Schema.ObjectId, ref: 'users'}, 
-            nickNm: {type: String, 'default': 'noName'},
-            profile: {type: String, trim:true, 'default': ' '},// 게시글 옆 사진
-            likes: {type: Number, unique: false, 'default': 0}, 
-            likeslist: [{
-                userid: {type: mongoose.Schema.ObjectId, ref: 'users'},  
-                nickNm: {type: String, 'default': 'noName'}
+	const notificationSchema = mongoose.Schema({ 
+ 
+            userId: {type: mongoose.Schema.ObjectId, ref: 'users'}, 
+            nickNm: {type: String, default: 'noName'},
+            profile: {type: String, trim:true, default: ' '},// 게시글 옆 사진
+            likes: {type: Number, unique: false, default: 0}, 
+            likesList: [{
+                userId: {type: mongoose.Schema.ObjectId, ref: 'users'},  
+                nickNm: {type: String, default: 'noName'}
             }], 
-            created_at: {type: Date, 'default': utils.timestamp(), index: {unique: false}}, //크롤링한 날짜
-            title: {type: String, trim:true, 'default': ' '},
-            contents: {type: String, trim:true, 'default': ' '}, 
-            // 다른 언어로 번역된 title, contents_ 뒤에 붙는 언어 명: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
-            title_en: {type: String, trim:true, 'default': ' '},
-            contents_en: {type: String, trim:true, 'default': ' '}, 
-            title_en: {type: String, trim:true, 'default': ' '},
-            contents_en: {type: String, trim:true, 'default': ' '}, 
-            title_zh: {type: String, trim:true, 'default': ' '},
-            contents_zh: {type: String, trim:true, 'default': ' '}, 
+            created_at: {type: Date, default: utils.timestamp(), index: {unique: false}}, //크롤링한 날짜
+            title: {type: String, trim:true, default: ' '},
+            contents: {type: String, trim:true, default: ' '}, 
+            /* 다른 언어로 번역된 title, contents_ 뒤에 붙는 언어 명: 
+            https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes 
+            */
+            title_en: {type: String, trim:true, default: ' '},
+            contents_en: {type: String, trim:true, default: ' '}, 
+            title_en: {type: String, trim:true, default: ' '},
+            contents_en: {type: String, trim:true, default: ' '}, 
+            title_zh: {type: String, trim:true, default: ' '},
+            contents_zh: {type: String, trim:true, default: ' '}, 
             // 다른 언어로 번역된 title, contents_ 끝
-            pictures: {type: String, trim:true, 'default': ' '},  //링크
-            hits: {type: Number, unique: false, 'default': 0}, // 조회 수     
-            url: {type: String, trim:true, 'default': ' '}, 
-            date: {type: Date, 'default': utils.timestamp()}, //게시글 작성일. '4시간 전' 이런 식으로 작성되어있으면 현재 날짜로
-            isnotice: {type: Number, unique: false, 'default': 0}, 
+            pictures: {type: String, trim:true, default: ' '},  //게시글에 첨부된 사진
+            hits: {type: Number, unique: false, default: 0}, // 조회 수     
+            url: {type: String, trim:true, default: ' '}, //원본 url
+            date: {type: Date, default: utils.timestamp()}, //게시글 작성일.
+            isNotice: {type: Boolean, unique: false, default: false}, // 웹 페이지에서 '공지'라고 분류된 글이 따로 있음
             comments: [{   // 댓글           
-                userid: {type: mongoose.Schema.ObjectId, ref: 'users'},  
-                nickNm: {type: String, 'default': 'noName'},
-                boardid: {type: String, trim:true, 'default': ' '}, 
-                parentreplyid: {type: mongoose.Schema.ObjectId}, //부모 댓글의 id
-                likes: {type: Number, unique: false, 'default': 0},
-                contents: {type: String, trim:true, 'default': ' '},
-                pictures: {type: String, trim:true, 'default': ' '}, 
-                created_at: {type: Date, 'default': utils.timestamp()}, 
+                _id: {type: mongoose.Schema.ObjectId, default: new mongoose.Types.ObjectId()},
+                userId: {type: mongoose.Schema.ObjectId, ref: 'users'},  
+                nickNm: {type: String, default: 'noName'},
+                boardId: {type: String, trim:true, default: ' '}, 
+                parentReplyId: {type: mongoose.Schema.ObjectId, default: new mongoose.Types.ObjectId(utils.ZEROID)}, //부모 댓글의 id
+                likes: {type: Number, unique: false, default: 0},
+                contents: {type: String, trim:true, default: ' '},
+                pictures: {type: String, trim:true, default: ' '}, 
+                created_at: {type: Date, default: utils.timestamp()}, 
             }]
     });  
-    NotificationSchema.index({created_at: -1},{ autoIndex: false}, {unique: false})
-
-    NotificationSchema.methods = {
-		saveNotification: function(callback) {		// 글 저장
-			var self = this;
-			
-			this.validate(function(err) {
-				if (err) return callback(err);
-				
-				self.save(callback);
-			});
-        } 
-    }
-    console.log('NotificationSchema 정의함.');
-	return NotificationSchema;
+    notificationSchema.index({created_at: -1},{autoIndex: false}, {unique: false});
+    console.log('notificationSchema 정의함.');
+	return notificationSchema;
 };
 
-// module.exports에 NotificationSchema 객체 직접 할당
 module.exports = SchemaObj;
 
